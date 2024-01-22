@@ -143,5 +143,5 @@ class TestConfiguredStorageAddonRelatedView(TestCase):
         _content = json.loads(_resp.rendered_content)
         self.assertEqual(
             _content["data"]["id"],
-            str(self._csa.authorized_storage_account_id),
+            str(self._csa.authorized_resource_id),
         )

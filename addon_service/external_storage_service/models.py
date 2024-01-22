@@ -9,6 +9,7 @@ class ExternalStorageService(AddonsServiceBaseModel):
 
     auth_uri = models.URLField(null=False)
 
+    storage_interface_key = models.TextField(null=False)
     credentials_issuer = models.ForeignKey(
         "addon_service.CredentialsIssuer",
         on_delete=models.CASCADE,
