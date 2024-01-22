@@ -14,7 +14,6 @@ from addon_service.tests import _factories
 from addon_service.tests._helpers import get_test_request
 
 
-# smoke-test api
 class TestAuthorizedStorageAccountAPI(APITestCase):
     @classmethod
     def setUpTestData(cls):
@@ -84,7 +83,7 @@ class TestAuthorizedStorageAccountModel(TestCase):
         _accounts = set(
             _factories.ConfiguredStorageAddonFactory.create_batch(
                 size=3,
-                authorized_storage_account=self._asa,
+                base_account=self._asa,
             )
         )
         self.assertEqual(
@@ -157,7 +156,7 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
     def test_get_related__several(self):
         _addons = _factories.ConfiguredStorageAddonFactory.create_batch(
             size=5,
-            authorized_storage_account=self._asa,
+            base_account=self._asa,
         )
         _resp = self._related_view(
             get_test_request(),

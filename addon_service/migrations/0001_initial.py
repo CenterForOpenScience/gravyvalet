@@ -215,7 +215,7 @@ class Migration(migrations.Migration):
                 ("modified", models.DateTimeField()),
                 ("root_folder", models.CharField()),
                 (
-                    "authorized_storage_account",
+                    "base_account",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="configured_storage_addons",
@@ -223,7 +223,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "internal_resource",
+                    "authorized_resource",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="configured_storage_addons",

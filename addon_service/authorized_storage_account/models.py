@@ -5,7 +5,7 @@ from addon_service.common.base_model import AddonsServiceBaseModel
 
 
 class AuthorizedStorageAccount(AddonsServiceBaseModel):
-    # TODO: capabilities = ArrayField(...)
+    # TODO: authorized_capabilities = ArrayField(...)
     default_root_folder = models.CharField(blank=True)
 
     external_storage_service = models.ForeignKey(

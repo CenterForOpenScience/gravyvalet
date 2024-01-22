@@ -13,7 +13,6 @@ from addon_service.tests import _factories
 from addon_service.tests._helpers import get_test_request
 
 
-# smoke-test api
 class TestExternalStorageServiceAPI(APITestCase):
     @classmethod
     def setUpTestData(cls):

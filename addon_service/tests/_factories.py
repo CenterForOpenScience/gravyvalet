@@ -70,5 +70,5 @@ class ConfiguredStorageAddonFactory(DjangoModelFactory):
         model = db.ConfiguredStorageAddon
 
     root_folder = "/"
-    authorized_storage_account = factory.SubFactory(AuthorizedStorageAccountFactory)
-    internal_resource = factory.SubFactory(InternalResourceFactory)
+    base_account = factory.SubFactory(AuthorizedStorageAccountFactory)
+    authorized_resource = factory.SubFactory(InternalResourceFactory)

@@ -6,12 +6,12 @@ from addon_service.common.base_model import AddonsServiceBaseModel
 class ConfiguredStorageAddon(AddonsServiceBaseModel):
     root_folder = models.CharField()
 
-    authorized_storage_account = models.ForeignKey(
+    base_account = models.ForeignKey(
         "addon_service.AuthorizedStorageAccount",
         on_delete=models.CASCADE,
         related_name="configured_storage_addons",
     )
-    internal_resource = models.ForeignKey(
+    authorized_resource = models.ForeignKey(
         "addon_service.InternalResource",
         on_delete=models.CASCADE,
         related_name="configured_storage_addons",

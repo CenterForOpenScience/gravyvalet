@@ -41,7 +41,7 @@ class Command(LabelCommand):
                     resource_uri=f"http://osf.example/r{label}{_j}",
                 )
                 _csa = db.ConfiguredStorageAddon.objects.create(
-                    authorized_storage_account=_asa,
-                    internal_resource=_ir,
+                    base_account=_asa,
+                    authorized_resource=_ir,
                 )
         return str(_csa)

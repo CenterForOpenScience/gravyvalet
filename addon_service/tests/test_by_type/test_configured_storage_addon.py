@@ -12,7 +12,6 @@ from addon_service.tests import _factories
 from addon_service.tests._helpers import get_test_request
 
 
-# smoke-test api
 class TestConfiguredStorageAddonAPI(APITestCase):
     @classmethod
     def setUpTestData(cls):
@@ -78,7 +77,13 @@ class TestConfiguredStorageAddonViewSet(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls._csa = _factories.ConfiguredStorageAddonFactory()
-        cls._view = ConfiguredStorageAddonViewSet.as_view({"get": "retrieve"})
+        cls._view = ConfiguredStorageAddonViewSet.as_view(
+            {
+                "post": "create",
+                "get": "retrieve",
+                "patch": "update",
+            }
+        )
 
     def test_get(self):
         _resp = self._view(
@@ -96,8 +101,8 @@ class TestConfiguredStorageAddonViewSet(TestCase):
         self.assertEqual(
             set(_content["data"]["relationships"].keys()),
             {
-                "authorized_storage_account",
-                "internal_resource",
+                "base_account",
+                "authorized_resource",
             },
         )
 
@@ -115,6 +120,10 @@ class TestConfiguredStorageAddonViewSet(TestCase):
         )
         self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
 
+    # def test_create(self):
+    #     _post_req = get_test_request(user=self._user, method='post')
+    #     self._view(_post_req, pk=
+
 
 class TestConfiguredStorageAddonRelatedView(TestCase):
     @classmethod
@@ -128,7 +137,7 @@ class TestConfiguredStorageAddonRelatedView(TestCase):
         _resp = self._related_view(
             get_test_request(),
             pk=self._csa.pk,
-            related_field="authorized_storage_account",
+            related_field="base_account",
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         _content = json.loads(_resp.rendered_content)

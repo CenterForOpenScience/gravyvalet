@@ -3,50 +3,62 @@ import unittest
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
+from django.db.models.query import QuerySet
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from addon_service import models as db
-from addon_service.internal_resource.views import InternalResourceViewSet
+from addon_service.internal_user.views import InternalUserViewSet
 from addon_service.tests import _factories
 from addon_service.tests._helpers import get_test_request
 
 
-# smoke-test api
-class TestInternalResourceAPI(APITestCase):
+class TestInternalUserAPI(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._resource = _factories.InternalResourceFactory()
+        cls._user = _factories.InternalUserFactory()
 
     @property
     def _detail_path(self):
-        return reverse("internal-resources-detail", kwargs={"pk": self._resource.pk})
+        return reverse("internal-users-detail", kwargs={"pk": self._user.pk})
 
     @property
     def _list_path(self):
-        return reverse("internal-resources-list")
+        return reverse("internal-users-list")
 
     @property
-    def _related_configured_storage_addons_path(self):
+    def _related_accounts_path(self):
         return reverse(
-            "internal-resources-related",
+            "internal-users-related",
             kwargs={
-                "pk": self._resource.pk,
-                "related_field": "configured_storage_addons",
+                "pk": self._user.pk,
+                "related_field": "authorized_storage_accounts",
             },
         )
 
     def test_get(self):
         _resp = self.client.get(self._detail_path)
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
-        self.assertEqual(_resp.data["resource_uri"], self._resource.resource_uri)
+        _content = json.loads(_resp.rendered_content)
+        self.assertEqual(
+            set(_content["data"]["attributes"].keys()),
+            {
+                "user_uri",
+            },
+        )
+        self.assertEqual(
+            set(_content["data"]["relationships"].keys()),
+            {
+                "authorized_storage_accounts",
+            },
+        )
 
     def test_methods_not_allowed(self):
         _methods_not_allowed = {
             self._detail_path: {"patch", "put", "post"},
             # TODO: self._list_path: {'get', 'patch', 'put', 'post'},
-            self._related_configured_storage_addons_path: {"patch", "put", "post"},
+            self._related_accounts_path: {"patch", "put", "post"},
         }
         for _path, _methods in _methods_not_allowed.items():
             for _method in _methods:
@@ -57,63 +69,61 @@ class TestInternalResourceAPI(APITestCase):
 
 
 # unit-test data model
-class TestInternalResourceModel(TestCase):
+class TestInternalUserModel(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._resource = _factories.InternalResourceFactory()
+        cls._user = _factories.InternalUserFactory()
 
     def test_can_load(self):
-        _resource_from_db = db.InternalResource.objects.get(id=self._resource.id)
-        self.assertEqual(self._resource.resource_uri, _resource_from_db.resource_uri)
+        _user_from_db = db.InternalUser.objects.get(id=self._user.id)
+        self.assertEqual(self._user.user_uri, _user_from_db.user_uri)
 
-    def test_configured_storage_addons__empty(self):
-        self.assertEqual(
-            list(self._resource.configured_storage_addons.all()),
-            [],
-        )
+    def test_authorized_storage_accounts__empty(self):
+        _authed_storage_accounts_qs = self._user.authorized_storage_accounts
+        self.assertIsInstance(_authed_storage_accounts_qs, QuerySet)
+        self.assertEqual(list(_authed_storage_accounts_qs), [])
 
-    def test_configured_storage_addons__several(self):
+    def test_authorized_storage_accounts__several(self):
         _accounts = set(
-            _factories.ConfiguredStorageAddonFactory.create_batch(
+            _factories.AuthorizedStorageAccountFactory.create_batch(
                 size=3,
-                internal_resource=self._resource,
+                external_account__owner=self._user,
             )
         )
-        self.assertEqual(
-            set(self._resource.configured_storage_addons.all()),
-            _accounts,
-        )
+        _authed_storage_accounts_qs = self._user.authorized_storage_accounts
+        self.assertIsInstance(_authed_storage_accounts_qs, QuerySet)
+        self.assertEqual(set(_authed_storage_accounts_qs), _accounts)
 
     def test_validation(self):
-        self._resource.resource_uri = "not a uri"
+        self._user.user_uri = "not a uri"
         with self.assertRaises(ValidationError):
-            self._resource.clean_fields(exclude=["modified"])
+            self._user.clean_fields(exclude=["modified"])
 
 
 # unit-test viewset (call the view with test requests)
-class TestInternalResourceViewSet(TestCase):
+class TestInternalUserViewSet(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._resource = _factories.InternalResourceFactory()
-        cls._view = InternalResourceViewSet.as_view({"get": "retrieve"})
+        cls._user = _factories.InternalUserFactory()
+        cls._view = InternalUserViewSet.as_view({"get": "retrieve"})
 
     def test_get(self):
         _resp = self._view(
-            get_test_request(),
-            pk=self._resource.pk,
+            get_test_request(user=self._user),
+            pk=self._user.pk,
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         _content = json.loads(_resp.rendered_content)
         self.assertEqual(
             set(_content["data"]["attributes"].keys()),
             {
-                "resource_uri",
+                "user_uri",
             },
         )
         self.assertEqual(
             set(_content["data"]["relationships"].keys()),
             {
-                "configured_storage_addons",
+                "authorized_storage_accounts",
             },
         )
 
@@ -132,36 +142,34 @@ class TestInternalResourceViewSet(TestCase):
         self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
 
 
-class TestInternalResourceRelatedView(TestCase):
+class TestInternalUserRelatedView(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._resource = _factories.InternalResourceFactory()
-        cls._related_view = InternalResourceViewSet.as_view(
-            {"get": "retrieve_related"},
-        )
+        cls._user = _factories.InternalUserFactory()
+        cls._related_view = InternalUserViewSet.as_view({"get": "retrieve_related"})
 
     def test_get_related__empty(self):
         _resp = self._related_view(
-            get_test_request(),
-            pk=self._resource.pk,
-            related_field="configured_storage_addons",
+            get_test_request(user=self._user),
+            pk=self._user.pk,
+            related_field="authorized_storage_accounts",
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         self.assertEqual(_resp.data, [])
 
     def test_get_related__several(self):
-        _addons = _factories.ConfiguredStorageAddonFactory.create_batch(
+        _accounts = _factories.AuthorizedStorageAccountFactory.create_batch(
             size=5,
-            internal_resource=self._resource,
+            external_account__owner=self._user,
         )
         _resp = self._related_view(
-            get_test_request(),
-            pk=self._resource.pk,
-            related_field="configured_storage_addons",
+            get_test_request(user=self._user),
+            pk=self._user.pk,
+            related_field="authorized_storage_accounts",
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         _content = json.loads(_resp.rendered_content)
         self.assertEqual(
             {_datum["id"] for _datum in _content["data"]},
-            {str(_addon.pk) for _addon in _addons},
+            {str(_account.pk) for _account in _accounts},
         )
