@@ -1,15 +1,16 @@
 import dataclasses
 
-from addon_service.namespaces import GRAVY
 from addon_service.models import (
     AuthorizedStorageAccount,
     ConfiguredStorageAddon,
 )
+from addon_service.namespaces import GRAVY
+
 from .capabilities import (
+    action_capability,
     immediate_capability,
     proxy_capability,
     redirect_capability,
-    action_capability,
 )
 from .interfaces import (
     BaseAddonInterface,

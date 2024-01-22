@@ -1,5 +1,3 @@
-
-
 def immediate_capability(fn):
     return fn  # decorator stub
 

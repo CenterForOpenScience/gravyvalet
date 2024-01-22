@@ -1,7 +1,8 @@
 import dataclasses
 import inspect
 
-from primitive_metadata import gather, primitive_rdf as rdf
+from primitive_metadata import gather
+from primitive_metadata import primitive_rdf as rdf
 
 from addon_service.models import (
     AuthorizedStorageAccount,
@@ -9,7 +10,7 @@ from addon_service.models import (
 )
 
 
-GRAVY = rdf.IriNamespace('https://gravyvalet.example/vocab/')
+GRAVY = rdf.IriNamespace("https://gravyvalet.example/vocab/")
 
 
 storage_norms = gather.GatheringNorms(
@@ -41,17 +42,17 @@ def gather_item_id(item_focus: gather.Focus):
 @storage_norms.gatherer(
     GRAVY.item_download_url,
     kwargs={
-        'item_id': GRAVY.item_id,
+        "item_id": GRAVY.item_id,
     },
 )
 def gather_download_url(item_focus, item_id):
-    return f'http://foo.example/download{item_id}'
+    return f"http://foo.example/download{item_id}"
 
 
 @storage_norms.async_gatherer(
     GRAVY.get_item_description,
     kwargs={
-        'item_id': GRAVY.item_id,
+        "item_id": GRAVY.item_id,
     },
 )
 async def gather_item_description(item_focus, item_id):

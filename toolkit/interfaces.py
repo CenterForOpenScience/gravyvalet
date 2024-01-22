@@ -1,5 +1,8 @@
 import dataclasses
-from typing import Awaitable, Callable
+from typing import (
+    Awaitable,
+    Callable,
+)
 
 from addon_service.models import (
     AuthorizedStorageAccount,
@@ -10,7 +13,7 @@ from addon_service.models import (
 @dataclasses.dataclass
 class PagedResult:  # (TODO: move to gravyvalet)
     page: list
-    get_next_page: Callable[[], Awaitable['PagedResult']]  # (TODO: cursor?)
+    get_next_page: Callable[[], Awaitable["PagedResult"]]  # (TODO: cursor?)
 
 
 @dataclasses.dataclass

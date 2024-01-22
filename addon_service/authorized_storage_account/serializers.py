@@ -1,11 +1,10 @@
 from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import (
-    ResourceRelatedField,
     HyperlinkedRelatedField,
+    ResourceRelatedField,
 )
 from rest_framework_json_api.utils import get_resource_type_from_model
 
-from addon_service.common.serializer_fields import WritableHyperlinkedRelatedField
 from addon_service.models import (
     AuthorizedStorageAccount,
     ExternalStorageService,
@@ -88,6 +87,6 @@ class WriteAuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerial
 
     def create(self, validated_data):
         # implicitly create ExternalAccount
-        # depending on 
+        # depending on
         _resp = super().create(validated_data)
         return _resp

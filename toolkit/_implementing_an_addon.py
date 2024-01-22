@@ -1,4 +1,4 @@
-'''
+"""
 nice thoughts:
 - single-file addon implementation? aim for simplicity
 - use duck-typing to reduce imports, dependencies
@@ -6,7 +6,7 @@ nice thoughts:
 - alternately, lean into rdf as interoperable layer
     - identify capabilities by iri
     - use primitive_metadata? each addon implementation gathers data by request
-'''
+"""
 from addon_service.interfaces import StorageInterface
 
 

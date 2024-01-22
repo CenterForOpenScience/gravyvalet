@@ -1,6 +1,4 @@
-from rest_framework_json_api.relations import (
-    HyperlinkedRelatedField,
-)
+from rest_framework_json_api.relations import HyperlinkedRelatedField
 
 
 class WritableHyperlinkedRelatedField(HyperlinkedRelatedField):
