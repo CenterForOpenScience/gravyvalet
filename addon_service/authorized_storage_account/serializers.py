@@ -3,6 +3,7 @@ from rest_framework_json_api.relations import (
     HyperlinkedRelatedField,
     ResourceRelatedField,
 )
+from rest_framework_json_api.relations import SerializerMethodResourceRelatedField
 from rest_framework_json_api.utils import get_resource_type_from_model
 
 from addon_service.models import (
@@ -10,6 +11,9 @@ from addon_service.models import (
     ConfiguredStorageAddon,
     ExternalStorageService,
     InternalUser,
+    ExternalCredentials,
+    ExternalAccount
+
 )
 
 
@@ -52,4 +56,28 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
             "configured_storage_addons",
             "default_root_folder",
             "external_storage_service",
+        ]
+
+
+class AuthorizedStorageAccountCreateSerializer(serializers.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name=f"{RESOURCE_NAME}-detail")
+    external_storage_service = ResourceRelatedField(
+        queryset=ExternalStorageService.objects.all(),
+        many=False,
+        related_link_view_name=f"{RESOURCE_NAME}-related",
+    )
+    external_account = ResourceRelatedField(
+        many=False,
+        write_only=False,
+        queryset=ExternalAccount.objects.all(),
+        related_link_view_name=f"{RESOURCE_NAME}-related",
+    )
+
+    class Meta:
+        model = AuthorizedStorageAccount
+        fields = [
+            "url",
+            "default_root_folder",
+            "external_storage_service",
+            "external_account"
         ]

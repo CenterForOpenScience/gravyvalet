@@ -169,3 +169,49 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
             {_datum["id"] for _datum in _content["data"]},
             {str(_addon.pk) for _addon in _addons},
         )
+
+
+class TestAuthorizedStorageAccountPOSTAPI(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls._ess = _factories.ExternalStorageServiceFactory()
+        cls._ea = _factories.ExternalAccountFactory()
+
+    def test_post_authorized_storage_account_creates_or_retrieves_related_entities(self):
+        assert not self._ea.authorized_storage_accounts.all()  # sanity/factory check
+
+        payload = {
+            "data": {
+                "type": "authorized-storage-accounts",
+                "relationships": {
+                    "external_storage_service": {
+                        "data": {
+                            "type": "external-storage-services",
+                            "id": self._ess.id,
+                        }
+                    },
+                    "external_account": {
+                        "data": {
+                            "type": "external-accounts",
+                            "id": self._ea.id,
+                        }
+                    },
+                }
+            }
+        }
+
+        # URL for creating an AuthorizedStorageAccount
+        url = reverse("authorized-storage-accounts-list")
+
+        # Perform POST request
+        response = self.client.post(
+            url,
+            payload,
+            format='vnd.api+json'
+        )
+        self.assertEqual(response.status_code, 201)
+        assert self._ea.authorized_storage_accounts.all()
+
+        # data = response.json()
+        # assert things!
