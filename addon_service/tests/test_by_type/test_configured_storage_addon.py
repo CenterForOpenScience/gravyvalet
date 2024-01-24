@@ -145,3 +145,35 @@ class TestConfiguredStorageAddonRelatedView(TestCase):
             _content["data"]["id"],
             str(self._csa.base_account_id),
         )
+
+
+class TestConfiguredStorageAddonPOSTAPI(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls._asa = _factories.AuthorizedStorageAccountFactory()
+
+    def test_post(self):
+        assert not self._asa.configured_storage_addons.all()  # sanity/factory check
+
+        payload = {
+            "data": {
+                "type": "configured-storage-addons",
+                "attributes": {
+                    "guid": "<placeholder-guid>",
+                },
+                "relationships": {
+                    "base_account": {
+                        "data": {
+                            "type": "authorized-storage-accounts",
+                            "id": self._asa.id,
+                        }
+                    },
+                },
+            }
+        }
+
+        response = self.client.post(
+            reverse("configured-storage-addons-list"), payload, format="vnd.api+json"
+        )
+        self.assertEqual(response.status_code, 201)
+        assert self._asa.configured_storage_addons.all()

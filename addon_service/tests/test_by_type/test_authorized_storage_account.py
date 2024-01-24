@@ -172,18 +172,21 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
 
 
 class TestAuthorizedStorageAccountPOSTAPI(APITestCase):
-
     @classmethod
     def setUpTestData(cls):
         cls._ess = _factories.ExternalStorageServiceFactory()
         cls._ea = _factories.ExternalAccountFactory()
 
-    def test_post_authorized_storage_account_creates_or_retrieves_related_entities(self):
-        assert not self._ea.authorized_storage_accounts.all()  # sanity/factory check
+    def test_post(self):
+        assert not self._ess.authorized_storage_accounts.all()  # sanity/factory check
 
         payload = {
             "data": {
                 "type": "authorized-storage-accounts",
+                "attributes": {
+                    "username": "<placeholder-username>",
+                    "password": "<placeholder-password>",
+                },
                 "relationships": {
                     "external_storage_service": {
                         "data": {
@@ -191,27 +194,15 @@ class TestAuthorizedStorageAccountPOSTAPI(APITestCase):
                             "id": self._ess.id,
                         }
                     },
-                    "external_account": {
-                        "data": {
-                            "type": "external-accounts",
-                            "id": self._ea.id,
-                        }
-                    },
-                }
+                },
             }
         }
 
-        # URL for creating an AuthorizedStorageAccount
-        url = reverse("authorized-storage-accounts-list")
-
-        # Perform POST request
         response = self.client.post(
-            url,
+            reverse("authorized-storage-accounts-list")
+            + f"?placeholder-auth={self._ea.owner.id}",
             payload,
-            format='vnd.api+json'
+            format="vnd.api+json",
         )
         self.assertEqual(response.status_code, 201)
-        assert self._ea.authorized_storage_accounts.all()
-
-        # data = response.json()
-        # assert things!
+        assert self._ess.authorized_storage_accounts.all()

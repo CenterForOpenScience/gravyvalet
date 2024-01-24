@@ -2,8 +2,8 @@ from rest_framework_json_api.views import ModelViewSet
 
 from .models import AuthorizedStorageAccount
 from .serializers import (
+    AuthorizedStorageAccountPOSTSerializer,
     AuthorizedStorageAccountSerializer,
-    AuthorizedStorageAccountCreateSerializer,
 )
 
 
@@ -14,11 +14,8 @@ class AuthorizedStorageAccountViewSet(ModelViewSet):
 
     def get_serializer(self, *args, **kwargs):
         if self.request.method == "POST":
-            return AuthorizedStorageAccountCreateSerializer(
-                data=self.request.data,
-                context={'request': self.request}
+            return AuthorizedStorageAccountPOSTSerializer(
+                data=self.request.data, context={"request": self.request}
             )
         else:
             return super().get_serializer(*args, **kwargs)
-
-
