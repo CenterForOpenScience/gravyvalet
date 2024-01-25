@@ -1,3 +1,6 @@
+from primitive_metadata import gather
+from primitive_metadata import primitive_rdf as rdf
+
 from addon_service.namespaces import GRAVY
 
 from .capability import (
@@ -11,7 +14,9 @@ from .interfaces import (
 )
 
 
-# what a base StorageInterface could be like
+# what an example gravy:StorageInterface implementation could be like (class-based)
+
+
 class StorageInterface(BaseAddonInterface):
     ##
     # "item-read" capabilities:
