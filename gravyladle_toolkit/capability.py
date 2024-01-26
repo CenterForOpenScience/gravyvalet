@@ -1,10 +1,15 @@
 import inspect
+import logging
 
 from gravyvalet.namespaces import GRAVY
 
 
+_logger = logging.getLogger(__name__)
+
+
 ###
 # ONE OPTION: use decorators to declare capability identifiers on interface methods
+
 
 def immediate_capability(capability_iri, *, requires):
     # decorator for capabilities that can be computed immediately,
@@ -40,6 +45,7 @@ def proxy_act_capability(capability_iri, *, requires):
 ###
 # helpers for capability methods
 
+
 def get_supported_capabilities(interface):
     return set(_get_capability_method_map(interface).keys())
 
@@ -47,11 +53,13 @@ def get_supported_capabilities(interface):
 def get_capability_method(interface_instance, capability_iri):
     _methodname = _get_capability_method_map(interface_instance).get(capability_iri)
     if _methodname is not None:
-        return getattr(interface_instance, _methodname)
+        _method = getattr(interface_instance, _methodname)
+        # TODO: check whether it's abstract
 
 
 ###
 # module-private helpers
+
 
 def _get_capability_method_map(obj):
     try:
@@ -63,16 +71,22 @@ def _get_capability_method_map(obj):
 def _compute_capability_method_map(obj):
     _capability_method_map = {}
     for _methodname, _fn in inspect.getmembers(obj, inspect.ismethod):
+        # TODO: intent is to make it easy to implement the capabilities you are
+        # trying to support while ignoring all the rest (until you want them).
+        # on the base class, declare and decorate methods for each supported
+        # capability, then implementers may implement (or not implement) any or
+        # all of them -- this doesn't quite do all that, maybe try from __new__?
         try:
             _capability_iri = getattr(_fn, GRAVY.capability)
         except AttributeError:
             pass  # not a capability implementation
         else:
             assert _capability_iri not in _capability_method_map, (
-                f'duplicate implementations of capability <{_capability_iri}>'
-                f'(conflicting: {_fn}, {_capability_method_map[_capability_iri]})'
+                f"duplicate implementations of capability <{_capability_iri}>"
+                f"(conflicting: {_fn}, {_capability_method_map[_capability_iri]})"
             )
             _capability_method_map[_capability_iri] = _methodname
+    _logger.info("found capability methods on %r: %r", obj, _capability_method_map)
     setattr(obj, GRAVY.capability_map, _capability_method_map)
     return _capability_method_map
 

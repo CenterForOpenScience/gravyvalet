@@ -8,13 +8,22 @@ from .capability import (
     proxy_act_capability,
     proxy_read_capability,
 )
-from .interfaces import (
-    BaseAddonInterface,
-    PagedResult,
-)
+from .interfaces import PagedResult
 
 
 # what an example gravy:StorageInterface implementation could be like (class-based)
+STORAGE_INTERFACE_NORMS = gather.GatheringNorms(
+    namestory=(
+        rdf.Literal("Storage interface norms", language="en"),
+        rdf.Literal("Norms for an interface with a storage service", language="en"),
+    ),
+    focustype_iris={},
+)
+
+
+class StorageInterfaceOrganizer(gather.GatheringOrganizer):
+    norms = STORAGE_INTERFACE_NORMS
+    thesaurus = {}
 
 
 class StorageInterface(BaseAddonInterface):

@@ -86,3 +86,25 @@ class StorageInterface(BaseAddonInterface):
     )
     async def pls_restore_version(self, item_id: str, version_id: str):
         raise NotImplementedError
+
+
+if __debug__:  # examples
+
+    class _ExampleStorageImplementation(StorageInterface):
+        def item_download_url(self, item_id: str) -> str:
+            return self._waterbutler_download_url(item_id)
+
+        async def get_item_description(self, item_id: str) -> dict:
+            return item_id  # stub
+
+        def item_upload_url(self, item_id: str) -> str:
+            return self._waterbutler_upload_url(item_id)
+
+        async def pls_delete_item(self, item_id: str):
+            raise NotImplementedError
+
+        def _waterbutler_download_url(self, item_id):
+            raise NotImplementedError
+
+        def _waterbutler_upload_url(self, item_id):
+            raise NotImplementedError
