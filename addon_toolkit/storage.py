@@ -11,14 +11,14 @@ from .interfaces import (
 )
 
 
-# what a base StorageInterface could be like
+# what a base StorageInterface could be like (incomplete)
 class StorageInterface(BaseAddonInterface):
     ##
     # "item-read" capabilities:
 
     @immediate_capability(GRAVY.item_download_url, requires={GRAVY.read})
     def item_download_url(self, item_id: str) -> str:
-        raise NotImplementedError  # waterbutler url, when appropriate
+        raise NotImplementedError  # e.g. waterbutler url, when appropriate
 
     @proxy_read_capability(GRAVY.get_item_description, requires={GRAVY.read})
     async def get_item_description(self, item_id: str) -> dict:
@@ -86,25 +86,3 @@ class StorageInterface(BaseAddonInterface):
     )
     async def pls_restore_version(self, item_id: str, version_id: str):
         raise NotImplementedError
-
-
-if __debug__:  # examples
-
-    class _ExampleStorageImplementation(StorageInterface):
-        def item_download_url(self, item_id: str) -> str:
-            return self._waterbutler_download_url(item_id)
-
-        async def get_item_description(self, item_id: str) -> dict:
-            return item_id  # stub
-
-        def item_upload_url(self, item_id: str) -> str:
-            return self._waterbutler_upload_url(item_id)
-
-        async def pls_delete_item(self, item_id: str):
-            raise NotImplementedError
-
-        def _waterbutler_download_url(self, item_id):
-            raise NotImplementedError
-
-        def _waterbutler_upload_url(self, item_id):
-            raise NotImplementedError
