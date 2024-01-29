@@ -1,6 +1,6 @@
 from http import HTTPMethod
 
-from gravyvalet_interfaces import StorageInterface
+from addon_toolkit.storage import StorageInterface
 
 
 # TODO: actual implementations
