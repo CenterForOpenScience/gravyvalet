@@ -206,9 +206,7 @@ class TestAuthorizedStorageAccountPOSTAPI(APITestCase):
         }
 
         response = self.client.post(
-            reverse("authorized-storage-accounts-list"),
-            payload,
-            format="vnd.api+json"
+            reverse("authorized-storage-accounts-list"), payload, format="vnd.api+json"
         )
         self.assertEqual(response.status_code, 201)
         assert self._ess.authorized_storage_accounts.all()

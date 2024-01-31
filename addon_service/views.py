@@ -1,4 +1,5 @@
 """ Import views/viewsets here for convenience """
+
 from addon_service.authorized_storage_account.views import (
     AuthorizedStorageAccountViewSet,
 )

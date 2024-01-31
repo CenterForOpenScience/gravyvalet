@@ -153,7 +153,7 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
         cls._asa = _factories.AuthorizedStorageAccountFactory()
 
     def test_post(self):
-        assert not self._asa.configured_storage_addons.first()  # sanity/factory check
+        assert not self._asa.configured_storage_addons.exists()  # sanity/factory check
 
         payload = {
             "data": {
@@ -168,7 +168,7 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
                     "authorized_resource": {
                         "data": {
                             "type": "internal-resources",
-                            'id': 'http://domain.com/test0/',
+                            "id": "http://domain.com/test0/",
                         }
                     },
                 },

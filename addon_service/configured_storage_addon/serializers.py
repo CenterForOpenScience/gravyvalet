@@ -13,12 +13,10 @@ RESOURCE_NAME = get_resource_type_from_model(ConfiguredStorageAddon)
 
 class AuthorizedResourceField(ResourceRelatedField):
     def to_internal_value(self, data):
-        # Assuming `id` is the domain string
         internal_resource, created = InternalResource.objects.get_or_create(
-            resource_uri=data['id']
+            resource_uri=data["id"]
         )
         return internal_resource
-
 
 
 class ConfiguredStorageAddonSerializer(serializers.HyperlinkedModelSerializer):
@@ -50,5 +48,3 @@ class ConfiguredStorageAddonSerializer(serializers.HyperlinkedModelSerializer):
             "base_account",
             "authorized_resource",
         ]
-
-

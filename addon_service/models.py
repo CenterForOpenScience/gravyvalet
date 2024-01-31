@@ -1,4 +1,5 @@
 """ Import models here so they auto-detect for makemigrations """
+
 from addon_service.authorized_storage_account.models import AuthorizedStorageAccount
 from addon_service.configured_storage_addon.models import ConfiguredStorageAddon
 from addon_service.credentials_issuer.models import CredentialsIssuer

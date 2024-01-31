@@ -1,7 +1,7 @@
 from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
-    HyperlinkedRelatedField
+    HyperlinkedRelatedField,
 )
 from rest_framework_json_api.utils import get_resource_type_from_model
 
@@ -19,15 +19,13 @@ RESOURCE_NAME = get_resource_type_from_model(AuthorizedStorageAccount)
 
 class AccountOwnerField(ResourceRelatedField):
     def to_internal_value(self, data):
-        return InternalUser.objects.get_or_create(
-            user_uri=data['id']
-        )[0]
+        return InternalUser.objects.get_or_create(user_uri=data["id"])[0]
 
 
 class ExternalStorageServiceField(ResourceRelatedField):
     def to_internal_value(self, data):
         return ExternalStorageService.objects.get_or_create(
-            auth_uri=data['id'],
+            auth_uri=data["id"],
         )[0]
 
 
@@ -37,10 +35,13 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
         super().__init__(*args, **kwargs)
 
         # Check if it's a POST request and remove the field as it's not in our FE spec
-        if 'context' in kwargs and kwargs['context']['request'].method == 'POST':
-            self.fields.pop('configured_storage_addons', None)
+        if "context" in kwargs and kwargs["context"]["request"].method == "POST":
+            self.fields.pop("configured_storage_addons", None)
 
-    url = serializers.HyperlinkedIdentityField(view_name=f"{RESOURCE_NAME}-detail", required=False)
+    url = serializers.HyperlinkedIdentityField(
+        view_name=f"{RESOURCE_NAME}-detail",
+        required=False
+    )
     account_owner = AccountOwnerField(
         many=False,
         queryset=InternalUser.objects.all(),
@@ -55,10 +56,14 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
         many=True,
         queryset=ConfiguredStorageAddon.objects.all(),
         related_link_view_name=f"{RESOURCE_NAME}-related",
-        required=False
+        required=False,
     )
-    username = serializers.CharField(write_only=True)  # placeholder for ExternalCredentials integrity only not auth
-    password = serializers.CharField(write_only=True)  # placeholder for ExternalCredentials integrity only not auth
+    username = serializers.CharField(
+        write_only=True
+    )  # placeholder for ExternalCredentials integrity only not auth
+    password = serializers.CharField(
+        write_only=True
+    )  # placeholder for ExternalCredentials integrity only not auth
 
     included_serializers = {
         "account_owner": "addon_service.serializers.InternalUserSerializer",
@@ -67,17 +72,17 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
     }
 
     def create(self, validate_data):
-        account_owner = validate_data['account_owner']
-        external_storage_service = validate_data['external_storage_service']
+        account_owner = validate_data["account_owner"]
+        external_storage_service = validate_data["external_storage_service"]
         credentials, created = ExternalCredentials.objects.get_or_create(
-            oauth_key=validate_data['username'],
-            oauth_secret=validate_data['password'],
+            oauth_key=validate_data["username"],
+            oauth_secret=validate_data["password"],
         )
 
         external_account, created = ExternalAccount.objects.get_or_create(
             owner=account_owner,
             credentials=credentials,
-            credentials_issuer=external_storage_service.credentials_issuer
+            credentials_issuer=external_storage_service.credentials_issuer,
         )
 
         return AuthorizedStorageAccount.objects.create(
