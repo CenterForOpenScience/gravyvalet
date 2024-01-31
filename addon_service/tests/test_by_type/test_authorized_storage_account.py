@@ -176,6 +176,7 @@ class TestAuthorizedStorageAccountPOSTAPI(APITestCase):
     def setUpTestData(cls):
         cls._ess = _factories.ExternalStorageServiceFactory()
         cls._ea = _factories.ExternalAccountFactory()
+        cls._csa = _factories.ConfiguredStorageAddonFactory()
 
     def test_post(self):
         assert not self._ess.authorized_storage_accounts.all()  # sanity/factory check
@@ -191,16 +192,15 @@ class TestAuthorizedStorageAccountPOSTAPI(APITestCase):
                     "external_storage_service": {
                         "data": {
                             "type": "external-storage-services",
-                            "id": self._ess.id,
+                            "id": self._ess.auth_uri,
                         }
                     },
                     "account_owner": {
                         "data": {
                             "type": "internal-users",
-                            "id": self._ea.owner.id,
+                            "id": self._csa.base_account.external_account.owner.user_uri,
                         }
                     },
-
                 },
             }
         }

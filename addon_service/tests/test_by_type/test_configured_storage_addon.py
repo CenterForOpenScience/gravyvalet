@@ -158,9 +158,6 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
         payload = {
             "data": {
                 "type": "configured-storage-addons",
-                "attributes": {
-                    "guid": "<placeholder-guid>",
-                },
                 "relationships": {
                     "base_account": {
                         "data": {
@@ -171,7 +168,7 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
                     "authorized_resource": {
                         "data": {
                             "type": "internal-resources",
-                            'id': 'http://domain.com/test0',
+                            'id': 'http://domain.com/test0/',
                         }
                     },
                 },
