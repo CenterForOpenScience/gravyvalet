@@ -153,7 +153,7 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
         cls._asa = _factories.AuthorizedStorageAccountFactory()
 
     def test_post(self):
-        assert not self._asa.configured_storage_addons.all()  # sanity/factory check
+        assert not self._asa.configured_storage_addons.first()  # sanity/factory check
 
         payload = {
             "data": {
@@ -168,6 +168,12 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
                             "id": self._asa.id,
                         }
                     },
+                    "account_owner": {
+                        "data": {
+                            "type": "internal-users",
+                            "id": self._asa.external_account.owner.id,
+                        }
+                    },
                 },
             }
         }
@@ -176,4 +182,6 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
             reverse("configured-storage-addons-list"), payload, format="vnd.api+json"
         )
         self.assertEqual(response.status_code, 201)
-        assert self._asa.configured_storage_addons.all()
+        configured_storage_addon = self._asa.configured_storage_addons.first()
+        assert configured_storage_addon
+        assert configured_storage_addon.authorized_resource

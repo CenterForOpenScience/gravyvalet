@@ -62,44 +62,24 @@ class AuthorizedStorageAccountPOSTSerializer(serializers.HyperlinkedModelSeriali
         many=False,
         related_link_view_name=f"{RESOURCE_NAME}-related",
     )
+    account_owner = ResourceRelatedField(
+        many=False,
+        queryset=InternalUser.objects.all(),
+        related_link_view_name=f"{RESOURCE_NAME}-related",
+    )
     username = serializers.CharField(write_only=True, required=False)
     password = serializers.CharField(write_only=True, required=False)
-    url = serializers.CharField(write_only=True, required=False)
-    repo = serializers.CharField(write_only=True, required=False)
-    access_key = serializers.CharField(write_only=True, required=False)
-    secret_key = serializers.CharField(write_only=True, required=False)
-
-    def get_internal_user_from_request_or_callback(self):
-        """
-        Placeholder method to get internal user from request or a callback.
-        """
-        # TODO: Replace placeholder logic with real code
-        return InternalUser.objects.get(id=self.context["request"].GET["placeholder-auth"])
-
-    def validate_credentials_using_issuer_or_error(self, external_storage_service, credentials):
-        """
-        Validates the credentials using the issuer or raises an error.
-        """
-        credentials_issuer = external_storage_service.credentials_issuer
-        # TODO: Implement real issuer check logic
-        if True:
-            return ExternalCredentials.objects.create(
-                oauth_key=credentials.get('username'),
-                oauth_secret=credentials.get('password')
-            )
-        else:
-            raise Exception("placeholder for failed credential validation")
 
     def create(self, validated_data):
         """
         Create method for AuthorizedStorageAccount.
         """
         external_storage_service = validated_data["external_storage_service"]
-        internal_user = self.get_internal_user_from_request_or_callback()
+        internal_user = validated_data["account_owner"]
 
-        external_credentials = self.validate_credentials_using_issuer_or_error(
-            external_storage_service,
-            validated_data
+        external_credentials, created = ExternalCredentials.objects.get_or_create(
+            oauth_key=validated_data['username'],
+            oauth_secret=validated_data['password'],
         )
 
         external_account, created = ExternalAccount.objects.get_or_create(
@@ -120,8 +100,5 @@ class AuthorizedStorageAccountPOSTSerializer(serializers.HyperlinkedModelSeriali
             "external_storage_service",
             "username",
             "password",
-            "repo",
-            "url",
-            "access_key",
-            "secret_key",
+            "account_owner"
         ]

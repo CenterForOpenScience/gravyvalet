@@ -194,15 +194,21 @@ class TestAuthorizedStorageAccountPOSTAPI(APITestCase):
                             "id": self._ess.id,
                         }
                     },
+                    "account_owner": {
+                        "data": {
+                            "type": "internal-users",
+                            "id": self._ea.owner.id,
+                        }
+                    },
+
                 },
             }
         }
 
         response = self.client.post(
-            reverse("authorized-storage-accounts-list")
-            + f"?placeholder-auth={self._ea.owner.id}",
+            reverse("authorized-storage-accounts-list"),
             payload,
-            format="vnd.api+json",
+            format="vnd.api+json"
         )
         self.assertEqual(response.status_code, 201)
         assert self._ess.authorized_storage_accounts.all()

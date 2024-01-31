@@ -24,3 +24,7 @@ class ConfiguredStorageAddon(AddonsServiceBaseModel):
 
     class JSONAPIMeta:
         resource_name = "configured-storage-addons"
+
+    @property
+    def account_owner(self):
+        return self.base_account.external_account.owner

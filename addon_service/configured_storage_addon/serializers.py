@@ -6,6 +6,7 @@ from addon_service.models import (
     AuthorizedStorageAccount,
     ConfiguredStorageAddon,
     InternalResource,
+    InternalUser,
 )
 
 
@@ -48,23 +49,23 @@ class ConfiguredStorageAddonPOSTSerializer(serializers.HyperlinkedModelSerialize
         many=False,
         related_link_view_name=f"{RESOURCE_NAME}-related",
     )
+    account_owner = ResourceRelatedField(
+        queryset=InternalUser.objects.all(),
+        many=False,
+        related_link_view_name=f"{RESOURCE_NAME}-related",
+    )
     guid = serializers.CharField(write_only=True)
-
-    def get_authorized_resource(self, guid):
-        """
-        Make request to OSF
-        """
-        # TODO: Write real code to request InternalResource info from OSF
-        return InternalResource.objects.create(resource_uri=guid)
 
     def create(self, validated_data):
         base_account = validated_data["base_account"]
         guid = validated_data["guid"]
-        authorized_resource = self.get_authorized_resource(guid)
+        authorized_resource, created = InternalResource.objects.get_or_create(
+            resource_uri=guid
+        )
         return super().create(
             dict(base_account=base_account, authorized_resource=authorized_resource)
         )
 
     class Meta:
         model = ConfiguredStorageAddon
-        fields = ["base_account", "guid"]
+        fields = ["base_account", "account_owner", "guid"]
