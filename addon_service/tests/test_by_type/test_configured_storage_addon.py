@@ -168,10 +168,10 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
                             "id": self._asa.id,
                         }
                     },
-                    "account_owner": {
+                    "authorized_resource": {
                         "data": {
-                            "type": "internal-users",
-                            "id": self._asa.external_account.owner.id,
+                            "type": "internal-resources",
+                            'id': 'http://domain.com/test0',
                         }
                     },
                 },
