@@ -76,6 +76,7 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
     def create(self, validate_data):
         account_owner = validate_data["account_owner"]
         external_storage_service = validate_data["external_storage_service"]
+        # TODO(ENG-5189): Update this once credentials format is finalized
         credentials, created = ExternalCredentials.objects.get_or_create(
             oauth_key=validate_data["username"],
             oauth_secret=validate_data["password"],
