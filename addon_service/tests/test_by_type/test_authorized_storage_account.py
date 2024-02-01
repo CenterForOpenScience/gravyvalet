@@ -210,3 +210,24 @@ class TestAuthorizedStorageAccountPOSTAPI(APITestCase):
         )
         self.assertEqual(response.status_code, 201)
         assert self._ess.authorized_storage_accounts.all()
+
+
+class TestAuthorizedStorageAccountDELETEAPI(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls._asa = _factories.AuthorizedStorageAccountFactory()
+
+    def test_delete(self):
+        assert self._asa  # sanity/factory check
+
+        response = self.client.delete(
+            path=reverse(
+                "authorized-storage-accounts-detail",
+                kwargs={"pk": self._asa.pk},
+            ),
+            format="vnd.api+json",
+        )
+        self.assertEqual(response.status_code, 204)
+
+        with self.assertRaises(db.AuthorizedStorageAccount.DoesNotExist):
+            self._asa.refresh_from_db()
