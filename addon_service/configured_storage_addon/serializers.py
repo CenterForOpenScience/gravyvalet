@@ -13,7 +13,7 @@ RESOURCE_NAME = get_resource_type_from_model(ConfiguredStorageAddon)
 
 class AuthorizedResourceField(ResourceRelatedField):
     def to_internal_value(self, data):
-        internal_resource, created = InternalResource.objects.get_or_create(
+        internal_resource, _ = InternalResource.objects.get_or_create(
             resource_uri=data["id"]
         )
         return internal_resource

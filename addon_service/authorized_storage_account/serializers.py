@@ -19,14 +19,16 @@ RESOURCE_NAME = get_resource_type_from_model(AuthorizedStorageAccount)
 
 class AccountOwnerField(ResourceRelatedField):
     def to_internal_value(self, data):
-        return InternalUser.objects.get_or_create(user_uri=data["id"])[0]
+        internal_user, _ = InternalUser.objects.get_or_create(user_uri=data["id"])
+        return internal_user
 
 
 class ExternalStorageServiceField(ResourceRelatedField):
     def to_internal_value(self, data):
-        return ExternalStorageService.objects.get_or_create(
+        external_storage_service, _ = ExternalStorageService.objects.get_or_create(
             auth_uri=data["id"],
-        )[0]
+        )
+        return external_storage_service
 
 
 class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer):
