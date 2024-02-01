@@ -152,21 +152,14 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls._asa = _factories.AuthorizedStorageAccountFactory()
-
-    def test_post_without_resource(self):
-        """
-        Test for request made without an InternalResource in the system, so one must be created
-        """
-        assert not self._asa.configured_storage_addons.exists()  # sanity/factory check
-
-        payload = {
+        cls.default_payload = {
             "data": {
                 "type": "configured-storage-addons",
                 "relationships": {
                     "base_account": {
                         "data": {
                             "type": "authorized-storage-accounts",
-                            "id": self._asa.id,
+                            "id": cls._asa.id,
                         }
                     },
                     "authorized_resource": {
@@ -179,8 +172,17 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
             }
         }
 
+
+
+    def test_post_without_resource(self):
+        """
+        Test for request made without an InternalResource in the system, so one must be created
+        """
+        assert not self._asa.configured_storage_addons.exists()  # sanity/factory check
+
+
         response = self.client.post(
-            reverse("configured-storage-addons-list"), payload, format="vnd.api+json"
+            reverse("configured-storage-addons-list"), self.default_payload, format="vnd.api+json"
         )
         self.assertEqual(response.status_code, 201)
         configured_storage_addon = self._asa.configured_storage_addons.first()
@@ -193,29 +195,10 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
         """
         assert not self._asa.configured_storage_addons.exists()  # sanity/factory check
         resource = _factories.InternalResourceFactory()
-
-        payload = {
-            "data": {
-                "type": "configured-storage-addons",
-                "relationships": {
-                    "base_account": {
-                        "data": {
-                            "type": "authorized-storage-accounts",
-                            "id": self._asa.id,
-                        }
-                    },
-                    "authorized_resource": {
-                        "data": {
-                            "type": "internal-resources",
-                            "id": resource.resource_uri,
-                        }
-                    },
-                },
-            }
-        }
+        self.default_payload['data']['relationships']['authorized_resource']['data']['id'] = resource.resource_uri
 
         response = self.client.post(
-            reverse("configured-storage-addons-list"), payload, format="vnd.api+json"
+            reverse("configured-storage-addons-list"), self.default_payload, format="vnd.api+json"
         )
         self.assertEqual(response.status_code, 201)
         configured_storage_addon = self._asa.configured_storage_addons.first()
