@@ -8,6 +8,7 @@ from addon_service.models import (
     InternalResource,
 )
 
+
 RESOURCE_NAME = get_resource_type_from_model(ConfiguredStorageAddon)
 
 

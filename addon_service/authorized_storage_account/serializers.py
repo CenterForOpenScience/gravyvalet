@@ -1,18 +1,19 @@
 from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import (
-    ResourceRelatedField,
     HyperlinkedRelatedField,
+    ResourceRelatedField,
 )
 from rest_framework_json_api.utils import get_resource_type_from_model
 
 from addon_service.models import (
     AuthorizedStorageAccount,
     ConfiguredStorageAddon,
-    ExternalStorageService,
-    ExternalCredentials,
     ExternalAccount,
+    ExternalCredentials,
+    ExternalStorageService,
     InternalUser,
 )
+
 
 RESOURCE_NAME = get_resource_type_from_model(AuthorizedStorageAccount)
 
@@ -32,7 +33,6 @@ class ExternalStorageServiceField(ResourceRelatedField):
 
 
 class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -41,8 +41,7 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
             self.fields.pop("configured_storage_addons", None)
 
     url = serializers.HyperlinkedIdentityField(
-        view_name=f"{RESOURCE_NAME}-detail",
-        required=False
+        view_name=f"{RESOURCE_NAME}-detail", required=False
     )
     account_owner = AccountOwnerField(
         many=False,

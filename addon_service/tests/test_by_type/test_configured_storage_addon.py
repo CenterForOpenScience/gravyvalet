@@ -8,9 +8,9 @@ from rest_framework.test import APITestCase
 
 from addon_service import models as db
 from addon_service.configured_storage_addon.views import ConfiguredStorageAddonViewSet
+from addon_service.internal_resource.models import InternalResource
 from addon_service.tests import _factories
 from addon_service.tests._helpers import get_test_request
-from addon_service.internal_resource.models import InternalResource
 
 
 class TestConfiguredStorageAddonAPI(APITestCase):
@@ -172,17 +172,16 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
             }
         }
 
-
-
     def test_post_without_resource(self):
         """
         Test for request made without an InternalResource in the system, so one must be created
         """
         assert not self._asa.configured_storage_addons.exists()  # sanity/factory check
 
-
         response = self.client.post(
-            reverse("configured-storage-addons-list"), self.default_payload, format="vnd.api+json"
+            reverse("configured-storage-addons-list"),
+            self.default_payload,
+            format="vnd.api+json",
         )
         self.assertEqual(response.status_code, 201)
         configured_storage_addon = self._asa.configured_storage_addons.first()
@@ -195,13 +194,20 @@ class TestConfiguredStorageAddonPOSTAPI(APITestCase):
         """
         assert not self._asa.configured_storage_addons.exists()  # sanity/factory check
         resource = _factories.InternalResourceFactory()
-        self.default_payload['data']['relationships']['authorized_resource']['data']['id'] = resource.resource_uri
+        self.default_payload["data"]["relationships"]["authorized_resource"]["data"][
+            "id"
+        ] = resource.resource_uri
 
         response = self.client.post(
-            reverse("configured-storage-addons-list"), self.default_payload, format="vnd.api+json"
+            reverse("configured-storage-addons-list"),
+            self.default_payload,
+            format="vnd.api+json",
         )
         self.assertEqual(response.status_code, 201)
         configured_storage_addon = self._asa.configured_storage_addons.first()
         assert configured_storage_addon
-        assert configured_storage_addon.authorized_resource.resource_uri == resource.resource_uri
+        assert (
+            configured_storage_addon.authorized_resource.resource_uri
+            == resource.resource_uri
+        )
         assert InternalResource.objects.all().count() == 1
