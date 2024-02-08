@@ -49,8 +49,8 @@ def _register_viewset(viewset):
 _register_viewset(views.AuthorizedStorageAccountViewSet)
 _register_viewset(views.ConfiguredStorageAddonViewSet)
 _register_viewset(views.ExternalStorageServiceViewSet)
-_register_viewset(views.InternalResourceViewSet)
-_register_viewset(views.InternalUserViewSet)
+_register_viewset(views.ResourceReferenceViewSet)
+_register_viewset(views.UserReferenceViewSet)
 
 
 ###

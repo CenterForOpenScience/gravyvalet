@@ -12,7 +12,7 @@ class ConfiguredStorageAddon(AddonsServiceBaseModel):
         related_name="configured_storage_addons",
     )
     authorized_resource = models.ForeignKey(
-        "addon_service.InternalResource",
+        "addon_service.ResourceReference",
         on_delete=models.CASCADE,
         related_name="configured_storage_addons",
     )

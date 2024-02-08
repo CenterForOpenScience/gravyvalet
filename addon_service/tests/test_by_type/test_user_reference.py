@@ -9,28 +9,28 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from addon_service import models as db
-from addon_service.internal_user.views import InternalUserViewSet
 from addon_service.tests import _factories
 from addon_service.tests._helpers import get_test_request
+from addon_service.user_reference.views import UserReferenceViewSet
 
 
-class TestInternalUserAPI(APITestCase):
+class TestUserReferenceAPI(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._user = _factories.InternalUserFactory()
+        cls._user = _factories.UserReferenceFactory()
 
     @property
     def _detail_path(self):
-        return reverse("internal-users-detail", kwargs={"pk": self._user.pk})
+        return reverse("user-references-detail", kwargs={"pk": self._user.pk})
 
     @property
     def _list_path(self):
-        return reverse("internal-users-list")
+        return reverse("user-references-list")
 
     @property
     def _related_accounts_path(self):
         return reverse(
-            "internal-users-related",
+            "user-references-related",
             kwargs={
                 "pk": self._user.pk,
                 "related_field": "authorized_storage_accounts",
@@ -69,13 +69,13 @@ class TestInternalUserAPI(APITestCase):
 
 
 # unit-test data model
-class TestInternalUserModel(TestCase):
+class TestUserReferenceModel(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._user = _factories.InternalUserFactory()
+        cls._user = _factories.UserReferenceFactory()
 
     def test_can_load(self):
-        _user_from_db = db.InternalUser.objects.get(id=self._user.id)
+        _user_from_db = db.UserReference.objects.get(id=self._user.id)
         self.assertEqual(self._user.user_uri, _user_from_db.user_uri)
 
     def test_authorized_storage_accounts__empty(self):
@@ -101,11 +101,11 @@ class TestInternalUserModel(TestCase):
 
 
 # unit-test viewset (call the view with test requests)
-class TestInternalUserViewSet(TestCase):
+class TestUserReferenceViewSet(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._user = _factories.InternalUserFactory()
-        cls._view = InternalUserViewSet.as_view({"get": "retrieve"})
+        cls._user = _factories.UserReferenceFactory()
+        cls._view = UserReferenceViewSet.as_view({"get": "retrieve"})
 
     def test_get(self):
         _resp = self._view(
@@ -134,7 +134,7 @@ class TestInternalUserViewSet(TestCase):
 
     @unittest.expectedFailure  # TODO
     def test_wrong_user(self):
-        _another_user = _factories.InternalUserFactory()
+        _another_user = _factories.UserReferenceFactory()
         _resp = self._view(
             get_test_request(user=_another_user),
             pk=self._user.pk,
@@ -142,11 +142,11 @@ class TestInternalUserViewSet(TestCase):
         self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
 
 
-class TestInternalUserRelatedView(TestCase):
+class TestUserReferenceRelatedView(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._user = _factories.InternalUserFactory()
-        cls._related_view = InternalUserViewSet.as_view({"get": "retrieve_related"})
+        cls._user = _factories.UserReferenceFactory()
+        cls._related_view = UserReferenceViewSet.as_view({"get": "retrieve_related"})
 
     def test_get_related__empty(self):
         _resp = self._related_view(

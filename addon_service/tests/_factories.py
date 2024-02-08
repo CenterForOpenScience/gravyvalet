@@ -4,16 +4,16 @@ from factory.django import DjangoModelFactory
 from addon_service import models as db
 
 
-class InternalUserFactory(DjangoModelFactory):
+class UserReferenceFactory(DjangoModelFactory):
     class Meta:
-        model = db.InternalUser
+        model = db.UserReference
 
     user_uri = factory.Sequence(lambda n: f"http://osf.example/user{n}")
 
 
-class InternalResourceFactory(DjangoModelFactory):
+class ResourceReferenceFactory(DjangoModelFactory):
     class Meta:
-        model = db.InternalResource
+        model = db.ResourceReference
 
     resource_uri = factory.Sequence(lambda n: f"http://osf.example/thing{n}")
 
@@ -36,7 +36,7 @@ class ExternalAccountFactory(DjangoModelFactory):
     remote_account_display_name = factory.Faker("word")
 
     credentials_issuer = factory.SubFactory(CredentialsIssuerFactory)
-    owner = factory.SubFactory(InternalUserFactory)
+    owner = factory.SubFactory(UserReferenceFactory)
     credentials = factory.SubFactory(ExternalCredentialsFactory)
 
 
@@ -71,4 +71,4 @@ class ConfiguredStorageAddonFactory(DjangoModelFactory):
 
     root_folder = "/"
     base_account = factory.SubFactory(AuthorizedStorageAccountFactory)
-    authorized_resource = factory.SubFactory(InternalResourceFactory)
+    authorized_resource = factory.SubFactory(ResourceReferenceFactory)

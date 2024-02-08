@@ -9,14 +9,14 @@ from addon_service.configured_storage_addon.serializers import (
 from addon_service.external_storage_service.serializers import (
     ExternalStorageServiceSerializer,
 )
-from addon_service.internal_resource.serializers import InternalResourceSerializer
-from addon_service.internal_user.serializers import InternalUserSerializer
+from addon_service.resource_reference.serializers import ResourceReferenceSerializer
+from addon_service.user_reference.serializers import UserReferenceSerializer
 
 
 __all__ = (
     "AuthorizedStorageAccountSerializer",
     "ConfiguredStorageAddonSerializer",
     "ExternalStorageServiceSerializer",
-    "InternalResourceSerializer",
-    "InternalUserSerializer",
+    "ResourceReferenceSerializer",
+    "UserReferenceSerializer",
 )

@@ -128,7 +128,7 @@ class TestAuthorizedStorageAccountViewSet(TestCase):
 
     @unittest.expectedFailure  # TODO
     def test_wrong_user(self):
-        _another_user = _factories.InternalUserFactory()
+        _another_user = _factories.UserReferenceFactory()
         _resp = self._view(
             get_test_request(user=_another_user),
             pk=self._user.pk,
@@ -197,7 +197,7 @@ class TestAuthorizedStorageAccountPOSTAPI(APITestCase):
                     },
                     "account_owner": {
                         "data": {
-                            "type": "internal-users",
+                            "type": "user-references",
                             "id": self._csa.base_account.external_account.owner.user_uri,
                         }
                     },

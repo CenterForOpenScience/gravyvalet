@@ -14,7 +14,7 @@ class ExternalAccount(AddonsServiceBaseModel):
         related_name="external_accounts",
     )
     owner = models.ForeignKey(
-        "addon_service.InternalUser",
+        "addon_service.UserReference",
         on_delete=models.CASCADE,
         related_name="external_accounts",
     )

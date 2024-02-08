@@ -5,7 +5,7 @@ from rest_framework_json_api.utils import get_resource_type_from_model
 from addon_service.models import (
     AuthorizedStorageAccount,
     ConfiguredStorageAddon,
-    InternalResource,
+    ResourceReference,
 )
 
 
@@ -14,10 +14,10 @@ RESOURCE_NAME = get_resource_type_from_model(ConfiguredStorageAddon)
 
 class AuthorizedResourceField(ResourceRelatedField):
     def to_internal_value(self, data):
-        internal_resource, _ = InternalResource.objects.get_or_create(
+        resource_reference, _ = ResourceReference.objects.get_or_create(
             resource_uri=data["id"]
         )
-        return internal_resource
+        return resource_reference
 
 
 class ConfiguredStorageAddonSerializer(serializers.HyperlinkedModelSerializer):
@@ -29,7 +29,7 @@ class ConfiguredStorageAddonSerializer(serializers.HyperlinkedModelSerializer):
         related_link_view_name=f"{RESOURCE_NAME}-related",
     )
     authorized_resource = AuthorizedResourceField(
-        queryset=InternalResource.objects.all(),
+        queryset=ResourceReference.objects.all(),
         many=False,
         related_link_view_name=f"{RESOURCE_NAME}-related",
     )
@@ -38,7 +38,7 @@ class ConfiguredStorageAddonSerializer(serializers.HyperlinkedModelSerializer):
         "base_account": (
             "addon_service.serializers.AuthorizedStorageAccountSerializer"
         ),
-        "authorized_resource": "addon_service.serializers.InternalResourceSerializer",
+        "authorized_resource": "addon_service.serializers.ResourceReferenceSerializer",
     }
 
     class Meta:

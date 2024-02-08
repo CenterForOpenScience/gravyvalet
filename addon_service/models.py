@@ -6,8 +6,8 @@ from addon_service.credentials_issuer.models import CredentialsIssuer
 from addon_service.external_account.models import ExternalAccount
 from addon_service.external_credentials.models import ExternalCredentials
 from addon_service.external_storage_service.models import ExternalStorageService
-from addon_service.internal_resource.models import InternalResource
-from addon_service.internal_user.models import InternalUser
+from addon_service.resource_reference.models import ResourceReference
+from addon_service.user_reference.models import UserReference
 
 
 __all__ = (
@@ -20,6 +20,6 @@ __all__ = (
     "ExternalCredentials",
     "ExternalStorageService",
     # 'ExternalComputeService',
-    "InternalResource",
-    "InternalUser",
+    "ResourceReference",
+    "UserReference",
 )

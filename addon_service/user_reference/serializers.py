@@ -4,14 +4,14 @@ from rest_framework_json_api.utils import get_resource_type_from_model
 
 from addon_service.models import (
     AuthorizedStorageAccount,
-    InternalUser,
+    UserReference,
 )
 
 
-RESOURCE_NAME = get_resource_type_from_model(InternalUser)
+RESOURCE_NAME = get_resource_type_from_model(UserReference)
 
 
-class InternalUserSerializer(serializers.HyperlinkedModelSerializer):
+class UserReferenceSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name=f"{RESOURCE_NAME}-detail")
 
     authorized_storage_accounts = HyperlinkedRelatedField(
@@ -27,7 +27,7 @@ class InternalUserSerializer(serializers.HyperlinkedModelSerializer):
     }
 
     class Meta:
-        model = InternalUser
+        model = UserReference
         fields = [
             "url",
             "user_uri",

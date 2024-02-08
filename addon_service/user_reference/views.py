@@ -1,10 +1,10 @@
 from rest_framework_json_api.views import ReadOnlyModelViewSet
 
-from .models import InternalUser
-from .serializers import InternalUserSerializer
+from .models import UserReference
+from .serializers import UserReferenceSerializer
 
 
-class InternalUserViewSet(ReadOnlyModelViewSet):
-    queryset = InternalUser.objects.all()
-    serializer_class = InternalUserSerializer
+class UserReferenceViewSet(ReadOnlyModelViewSet):
+    queryset = UserReference.objects.all()
+    serializer_class = UserReferenceSerializer
     # TODO: permissions_classes

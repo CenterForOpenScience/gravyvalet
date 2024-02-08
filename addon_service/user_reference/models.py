@@ -4,7 +4,7 @@ from addon_service.authorized_storage_account.models import AuthorizedStorageAcc
 from addon_service.common.base_model import AddonsServiceBaseModel
 
 
-class InternalUser(AddonsServiceBaseModel):
+class UserReference(AddonsServiceBaseModel):
     user_uri = models.URLField(unique=True, db_index=True, null=False)
 
     @property
@@ -14,9 +14,9 @@ class InternalUser(AddonsServiceBaseModel):
         )
 
     class Meta:
-        verbose_name = "Internal User"
-        verbose_name_plural = "Internal Users"
+        verbose_name = "User Reference"
+        verbose_name_plural = "User References"
         app_label = "addon_service"
 
     class JSONAPIMeta:
-        resource_name = "internal-users"
+        resource_name = "user-references"

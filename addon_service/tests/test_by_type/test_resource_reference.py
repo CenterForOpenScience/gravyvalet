@@ -8,28 +8,28 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from addon_service import models as db
-from addon_service.internal_resource.views import InternalResourceViewSet
+from addon_service.resource_reference.views import ResourceReferenceViewSet
 from addon_service.tests import _factories
 from addon_service.tests._helpers import get_test_request
 
 
-class TestInternalResourceAPI(APITestCase):
+class TestResourceReferenceAPI(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._resource = _factories.InternalResourceFactory()
+        cls._resource = _factories.ResourceReferenceFactory()
 
     @property
     def _detail_path(self):
-        return reverse("internal-resources-detail", kwargs={"pk": self._resource.pk})
+        return reverse("resource-references-detail", kwargs={"pk": self._resource.pk})
 
     @property
     def _list_path(self):
-        return reverse("internal-resources-list")
+        return reverse("resource-references-list")
 
     @property
     def _related_configured_storage_addons_path(self):
         return reverse(
-            "internal-resources-related",
+            "resource-references-related",
             kwargs={
                 "pk": self._resource.pk,
                 "related_field": "configured_storage_addons",
@@ -56,13 +56,13 @@ class TestInternalResourceAPI(APITestCase):
 
 
 # unit-test data model
-class TestInternalResourceModel(TestCase):
+class TestResourceReferenceModel(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._resource = _factories.InternalResourceFactory()
+        cls._resource = _factories.ResourceReferenceFactory()
 
     def test_can_load(self):
-        _resource_from_db = db.InternalResource.objects.get(id=self._resource.id)
+        _resource_from_db = db.ResourceReference.objects.get(id=self._resource.id)
         self.assertEqual(self._resource.resource_uri, _resource_from_db.resource_uri)
 
     def test_configured_storage_addons__empty(self):
@@ -90,11 +90,11 @@ class TestInternalResourceModel(TestCase):
 
 
 # unit-test viewset (call the view with test requests)
-class TestInternalResourceViewSet(TestCase):
+class TestResourceReferenceViewSet(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._resource = _factories.InternalResourceFactory()
-        cls._view = InternalResourceViewSet.as_view({"get": "retrieve"})
+        cls._resource = _factories.ResourceReferenceFactory()
+        cls._view = ResourceReferenceViewSet.as_view({"get": "retrieve"})
 
     def test_get(self):
         _resp = self._view(
@@ -123,7 +123,7 @@ class TestInternalResourceViewSet(TestCase):
 
     @unittest.expectedFailure  # TODO
     def test_wrong_user(self):
-        _another_user = _factories.InternalUserFactory()
+        _another_user = _factories.UserReferenceFactory()
         _resp = self._view(
             get_test_request(user=_another_user),
             pk=self._user.pk,
@@ -131,11 +131,11 @@ class TestInternalResourceViewSet(TestCase):
         self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
 
 
-class TestInternalResourceRelatedView(TestCase):
+class TestResourceReferenceRelatedView(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._resource = _factories.InternalResourceFactory()
-        cls._related_view = InternalResourceViewSet.as_view(
+        cls._resource = _factories.ResourceReferenceFactory()
+        cls._related_view = ResourceReferenceViewSet.as_view(
             {"get": "retrieve_related"},
         )
 

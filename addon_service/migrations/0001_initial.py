@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="InternalResource",
+            name="ResourceReference",
             fields=[
                 (
                     "id",
@@ -97,12 +97,12 @@ class Migration(migrations.Migration):
                 ("resource_uri", models.URLField(db_index=True, unique=True)),
             ],
             options={
-                "verbose_name": "Internal Resource",
-                "verbose_name_plural": "Internal Resources",
+                "verbose_name": "Resource Reference",
+                "verbose_name_plural": "Resource References",
             },
         ),
         migrations.CreateModel(
-            name="InternalUser",
+            name="UserReference",
             fields=[
                 (
                     "id",
@@ -118,8 +118,8 @@ class Migration(migrations.Migration):
                 ("user_uri", models.URLField(db_index=True, unique=True)),
             ],
             options={
-                "verbose_name": "Internal User",
-                "verbose_name_plural": "Internal Users",
+                "verbose_name": "User Reference",
+                "verbose_name_plural": "User References",
             },
         ),
         migrations.CreateModel(
@@ -190,7 +190,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="external_accounts",
-                        to="addon_service.internaluser",
+                        to="addon_service.userreference",
                     ),
                 ),
             ],
@@ -227,7 +227,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="configured_storage_addons",
-                        to="addon_service.internalresource",
+                        to="addon_service.resourcereference",
                     ),
                 ),
             ],

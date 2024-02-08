@@ -21,7 +21,7 @@ class Command(LabelCommand):
             credentials_issuer=_ci,
         )
         for _i in range(3):
-            _iu, _ = db.InternalUser.objects.get_or_create(
+            _iu, _ = db.UserReference.objects.get_or_create(
                 user_uri=f"http://osf.example/u{label}{_i}",
             )
             _ec = db.ExternalCredentials.objects.create()
@@ -37,7 +37,7 @@ class Command(LabelCommand):
                 external_account=_ea,
             )
             for _j in range(5):
-                _ir, _ = db.InternalResource.objects.get_or_create(
+                _ir, _ = db.ResourceReference.objects.get_or_create(
                     resource_uri=f"http://osf.example/r{label}{_j}",
                 )
                 _csa = db.ConfiguredStorageAddon.objects.create(
