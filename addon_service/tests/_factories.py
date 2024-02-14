@@ -2,20 +2,24 @@ import factory
 from factory.django import DjangoModelFactory
 
 from addon_service import models as db
+from app.settings import (
+    AUTH_URI_ID,
+    URI_ID,
+)
 
 
 class UserReferenceFactory(DjangoModelFactory):
     class Meta:
         model = db.UserReference
 
-    user_uri = factory.Sequence(lambda n: f"http://osf.example/user{n}")
+    user_uri = factory.Sequence(lambda n: f"{URI_ID}user{n}")
 
 
 class ResourceReferenceFactory(DjangoModelFactory):
     class Meta:
         model = db.ResourceReference
 
-    resource_uri = factory.Sequence(lambda n: f"http://osf.example/thing{n}")
+    resource_uri = factory.Sequence(lambda n: f"{URI_ID}thing{n}")
 
 
 class CredentialsIssuerFactory(DjangoModelFactory):
@@ -50,7 +54,7 @@ class ExternalStorageServiceFactory(DjangoModelFactory):
 
     max_concurrent_downloads = factory.Faker("pyint")
     max_upload_mb = factory.Faker("pyint")
-    auth_uri = factory.Sequence(lambda n: f"http://auth.example/{n}")
+    auth_uri = factory.Sequence(lambda n: f"{AUTH_URI_ID}{n}")
     credentials_issuer = factory.SubFactory(CredentialsIssuerFactory)
 
 

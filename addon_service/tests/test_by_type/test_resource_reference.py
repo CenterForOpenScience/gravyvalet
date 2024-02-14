@@ -1,5 +1,4 @@
 import json
-import unittest
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
@@ -10,13 +9,27 @@ from rest_framework.test import APITestCase
 from addon_service import models as db
 from addon_service.resource_reference.views import ResourceReferenceViewSet
 from addon_service.tests import _factories
-from addon_service.tests._helpers import get_test_request
+from addon_service.tests._helpers import (
+    get_test_request,
+    with_mocked_httpx_get,
+    with_mocked_httpx_get_403,
+)
+from app import settings
 
 
 class TestResourceReferenceAPI(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._resource = _factories.ResourceReferenceFactory()
+        cls._csa = _factories.ConfiguredStorageAddonFactory()
+        cls._resource = cls._csa.authorized_resource
+        # _user magically becomes the current requester
+        cls._user = cls._csa.base_account.external_account.owner
+
+    def setUp(self):
+        super().setUp()
+        self.client.cookies[settings.USER_REFERENCE_COOKIE] = [
+            "Some form of auth is necessary or POSTS are ignored."
+        ]
 
     @property
     def _detail_path(self):
@@ -36,15 +49,16 @@ class TestResourceReferenceAPI(APITestCase):
             },
         )
 
+    @with_mocked_httpx_get
     def test_get(self):
         _resp = self.client.get(self._detail_path)
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         self.assertEqual(_resp.data["resource_uri"], self._resource.resource_uri)
 
+    @with_mocked_httpx_get
     def test_methods_not_allowed(self):
         _methods_not_allowed = {
             self._detail_path: {"patch", "put", "post"},
-            # TODO: self._list_path: {'get', 'patch', 'put', 'post'},
             self._related_configured_storage_addons_path: {"patch", "put", "post"},
         }
         for _path, _methods in _methods_not_allowed.items():
@@ -93,12 +107,16 @@ class TestResourceReferenceModel(TestCase):
 class TestResourceReferenceViewSet(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._resource = _factories.ResourceReferenceFactory()
         cls._view = ResourceReferenceViewSet.as_view({"get": "retrieve"})
+        cls._csa = _factories.ConfiguredStorageAddonFactory()
+        cls._resource = cls._csa.authorized_resource
+        # _user magically becomes the current requester
+        cls._user = cls._csa.base_account.external_account.owner
 
+    @with_mocked_httpx_get
     def test_get(self):
         _resp = self._view(
-            get_test_request(),
+            get_test_request(cookies={"osf": "This is my chosen form of auth"}),
             pk=self._resource.pk,
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
@@ -116,16 +134,17 @@ class TestResourceReferenceViewSet(TestCase):
             },
         )
 
-    @unittest.expectedFailure  # TODO
+    @with_mocked_httpx_get
     def test_unauthorized(self):
-        _anon_resp = self._view(get_test_request(), pk=self._user.pk)
+        _anon_resp = self._view(get_test_request(), pk=self._resource.pk)
         self.assertEqual(_anon_resp.status_code, HTTPStatus.UNAUTHORIZED)
 
-    @unittest.expectedFailure  # TODO
+    @with_mocked_httpx_get_403
     def test_wrong_user(self):
-        _another_user = _factories.UserReferenceFactory()
         _resp = self._view(
-            get_test_request(user=_another_user),
+            get_test_request(
+                cookies={settings.USER_REFERENCE_COOKIE: "this is wrong user auth"}
+            ),
             pk=self._user.pk,
         )
         self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
@@ -138,23 +157,31 @@ class TestResourceReferenceRelatedView(TestCase):
         cls._related_view = ResourceReferenceViewSet.as_view(
             {"get": "retrieve_related"},
         )
+        cls._csa = _factories.ConfiguredStorageAddonFactory()
+        cls._resource = cls._csa.authorized_resource
+        # _user magically becomes the current requester
+        cls._user = cls._csa.base_account.external_account.owner
 
+    @with_mocked_httpx_get
     def test_get_related__empty(self):
+        self._csa.delete()
+
         _resp = self._related_view(
-            get_test_request(),
+            get_test_request(cookies={"osf": "This is my chosen form of auth"}),
             pk=self._resource.pk,
             related_field="configured_storage_addons",
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         self.assertEqual(_resp.data, [])
 
+    @with_mocked_httpx_get
     def test_get_related__several(self):
         _addons = _factories.ConfiguredStorageAddonFactory.create_batch(
-            size=5,
+            size=4,
             authorized_resource=self._resource,
-        )
+        ) + [self._csa]
         _resp = self._related_view(
-            get_test_request(),
+            get_test_request(cookies={"osf": "This is my chosen form of auth"}),
             pk=self._resource.pk,
             related_field="configured_storage_addons",
         )

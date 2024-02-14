@@ -1,5 +1,4 @@
 import json
-import unittest
 from http import HTTPStatus
 
 from django.test import TestCase
@@ -11,13 +10,25 @@ from addon_service.authorized_storage_account.views import (
     AuthorizedStorageAccountViewSet,
 )
 from addon_service.tests import _factories
-from addon_service.tests._helpers import get_test_request
+from addon_service.tests._helpers import (
+    get_test_request,
+    with_mocked_httpx_get,
+    with_mocked_httpx_get_403,
+)
+from app import settings
 
 
 class TestAuthorizedStorageAccountAPI(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls._asa = _factories.AuthorizedStorageAccountFactory()
+        cls._user = cls._asa.external_account.owner
+
+    def setUp(self):
+        super().setUp()
+        self.client.cookies[settings.USER_REFERENCE_COOKIE] = [
+            "Some form of auth is necessary or POSTS are ignored."
+        ]
 
     @property
     def _detail_path(self):
@@ -39,6 +50,7 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
             },
         )
 
+    @with_mocked_httpx_get
     def test_get(self):
         _resp = self.client.get(self._detail_path)
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
@@ -47,10 +59,11 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
             self._asa.default_root_folder,
         )
 
+    @with_mocked_httpx_get
     def test_methods_not_allowed(self):
         _methods_not_allowed = {
             self._detail_path: {"post"},
-            # TODO: self._list_path: {'get', 'patch', 'put', 'post'},
+            self._list_path: {"patch", "put", "get"},
             self._related_path("account_owner"): {"patch", "put", "post"},
             self._related_path("external_storage_service"): {"patch", "put", "post"},
             self._related_path("configured_storage_addons"): {"patch", "put", "post"},
@@ -97,11 +110,13 @@ class TestAuthorizedStorageAccountViewSet(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls._asa = _factories.AuthorizedStorageAccountFactory()
+        cls._user = cls._asa.external_account.owner
         cls._view = AuthorizedStorageAccountViewSet.as_view({"get": "retrieve"})
 
+    @with_mocked_httpx_get
     def test_get(self):
         _resp = self._view(
-            get_test_request(),
+            get_test_request(cookies={"osf": "This is my chosen form of auth"}),
             pk=self._asa.pk,
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
@@ -121,16 +136,16 @@ class TestAuthorizedStorageAccountViewSet(TestCase):
             },
         )
 
-    @unittest.expectedFailure  # TODO
     def test_unauthorized(self):
         _anon_resp = self._view(get_test_request(), pk=self._user.pk)
         self.assertEqual(_anon_resp.status_code, HTTPStatus.UNAUTHORIZED)
 
-    @unittest.expectedFailure  # TODO
+    @with_mocked_httpx_get_403
     def test_wrong_user(self):
-        _another_user = _factories.UserReferenceFactory()
         _resp = self._view(
-            get_test_request(user=_another_user),
+            get_test_request(
+                cookies={settings.USER_REFERENCE_COOKIE: "this is wrong user auth"}
+            ),
             pk=self._user.pk,
         )
         self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
@@ -140,26 +155,29 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls._asa = _factories.AuthorizedStorageAccountFactory()
+        cls._user = cls._asa.external_account.owner
         cls._related_view = AuthorizedStorageAccountViewSet.as_view(
             {"get": "retrieve_related"},
         )
 
+    @with_mocked_httpx_get
     def test_get_related__empty(self):
         _resp = self._related_view(
-            get_test_request(),
+            get_test_request(cookies={"osf": "This is my chosen form of auth"}),
             pk=self._asa.pk,
             related_field="configured_storage_addons",
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         self.assertEqual(_resp.data, [])
 
+    @with_mocked_httpx_get
     def test_get_related__several(self):
         _addons = _factories.ConfiguredStorageAddonFactory.create_batch(
             size=5,
             base_account=self._asa,
         )
         _resp = self._related_view(
-            get_test_request(),
+            get_test_request(cookies={"osf": "This is my chosen form of auth"}),
             pk=self._asa.pk,
             related_field="configured_storage_addons",
         )
@@ -176,8 +194,15 @@ class TestAuthorizedStorageAccountPOSTAPI(APITestCase):
     def setUpTestData(cls):
         cls._ess = _factories.ExternalStorageServiceFactory()
         cls._ea = _factories.ExternalAccountFactory()
-        cls._csa = _factories.ConfiguredStorageAddonFactory()
+        cls._user = cls._ea.owner
 
+    def setUp(self):
+        super().setUp()
+        self.client.cookies[settings.USER_REFERENCE_COOKIE] = [
+            "Some form of auth is necessary or POSTS are ignored."
+        ]
+
+    @with_mocked_httpx_get
     def test_post(self):
         assert not self._ess.authorized_storage_accounts.all()  # sanity/factory check
 
@@ -197,8 +222,8 @@ class TestAuthorizedStorageAccountPOSTAPI(APITestCase):
                     },
                     "account_owner": {
                         "data": {
+                            "id": self._user.user_uri,
                             "type": "user-references",
-                            "id": self._csa.base_account.external_account.owner.user_uri,
                         }
                     },
                 },

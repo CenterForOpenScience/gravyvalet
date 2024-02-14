@@ -8,12 +8,18 @@ SECRET_KEY = env.SECRET_KEY
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.DEBUG
+
+RESOURCE_REFERENCE_LOOKUP_URL = "https://api.osf.io/v2/guids/{0}/"
+USER_REFERENCE_LOOKUP_URL = "https://api.osf.io/v2/users/me/"
+USER_REFERENCE_COOKIE = "osf"
+
+URI_ID = "http://osf.example/"
+AUTH_URI_ID = "http://osf.auth/"
 
 ALLOWED_HOSTS = env.ALLOWED_HOSTS
 
@@ -59,8 +65,6 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "app.wsgi.application"
-
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
@@ -102,6 +106,7 @@ REST_FRAMEWORK = {
         "rest_framework_json_api.django_filters.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
     ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("app.authentication.GVCombinedAuthentication",),
     "SEARCH_PARAM": "filter[search]",
     "TEST_REQUEST_RENDERER_CLASSES": (
         "rest_framework_json_api.renderers.JSONRenderer",

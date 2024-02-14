@@ -20,8 +20,7 @@ RESOURCE_NAME = get_resource_type_from_model(AuthorizedStorageAccount)
 
 class AccountOwnerField(ResourceRelatedField):
     def to_internal_value(self, data):
-        user_reference, _ = UserReference.objects.get_or_create(user_uri=data["id"])
-        return user_reference
+        return UserReference.objects.get(user_uri=data["id"])
 
 
 class ExternalStorageServiceField(ResourceRelatedField):

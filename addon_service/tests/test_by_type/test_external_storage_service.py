@@ -1,5 +1,4 @@
 import json
-import unittest
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
@@ -44,7 +43,7 @@ class TestExternalStorageServiceAPI(APITestCase):
     def test_methods_not_allowed(self):
         _methods_not_allowed = {
             self._detail_path: {"post"},
-            # TODO: self._list_path: {'get', 'patch', 'put', 'post'},
+            self._list_path: {"patch", "put", "post"},
             self._related_authorized_storage_accounts_path: {"patch", "put", "post"},
         }
         for _path, _methods in _methods_not_allowed.items():
@@ -95,6 +94,7 @@ class TestExternalStorageServiceViewSet(TestCase):
     def setUpTestData(cls):
         cls._ess = _factories.ExternalStorageServiceFactory()
         cls._view = ExternalStorageServiceViewSet.as_view({"get": "retrieve"})
+        cls._user = _factories.UserReferenceFactory()
 
     def test_get(self):
         _resp = self._view(
@@ -118,19 +118,19 @@ class TestExternalStorageServiceViewSet(TestCase):
             },
         )
 
-    @unittest.expectedFailure  # TODO
     def test_unauthorized(self):
-        _anon_resp = self._view(get_test_request(), pk=self._user.pk)
-        self.assertEqual(_anon_resp.status_code, HTTPStatus.UNAUTHORIZED)
+        """Is public resource Unauth is OK!"""
+        _anon_resp = self._view(get_test_request(), pk=self._ess.pk)
+        self.assertEqual(_anon_resp.status_code, HTTPStatus.OK)
 
-    @unittest.expectedFailure  # TODO
     def test_wrong_user(self):
+        """Is public resource, so OK!"""
         _another_user = _factories.UserReferenceFactory()
         _resp = self._view(
             get_test_request(user=_another_user),
-            pk=self._user.pk,
+            pk=self._ess.pk,
         )
-        self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
+        self.assertEqual(_resp.status_code, HTTPStatus.OK)
 
 
 class TestExternalStorageServiceRelatedView(TestCase):

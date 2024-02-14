@@ -1,5 +1,4 @@
 import json
-import unittest
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
@@ -10,14 +9,25 @@ from rest_framework.test import APITestCase
 
 from addon_service import models as db
 from addon_service.tests import _factories
-from addon_service.tests._helpers import get_test_request
+from addon_service.tests._helpers import (
+    get_test_request,
+    with_mocked_httpx_get,
+    with_mocked_httpx_get_403,
+)
 from addon_service.user_reference.views import UserReferenceViewSet
+from app import settings
 
 
 class TestUserReferenceAPI(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls._user = _factories.UserReferenceFactory()
+
+    def setUp(self):
+        super().setUp()
+        self.client.cookies[settings.USER_REFERENCE_COOKIE] = [
+            "Some form of auth is necessary to confirm the user reference."
+        ]
 
     @property
     def _detail_path(self):
@@ -37,6 +47,7 @@ class TestUserReferenceAPI(APITestCase):
             },
         )
 
+    @with_mocked_httpx_get
     def test_get(self):
         _resp = self.client.get(self._detail_path)
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
@@ -54,10 +65,10 @@ class TestUserReferenceAPI(APITestCase):
             },
         )
 
+    @with_mocked_httpx_get
     def test_methods_not_allowed(self):
         _methods_not_allowed = {
             self._detail_path: {"patch", "put", "post"},
-            # TODO: self._list_path: {'get', 'patch', 'put', 'post'},
             self._related_accounts_path: {"patch", "put", "post"},
         }
         for _path, _methods in _methods_not_allowed.items():
@@ -107,9 +118,14 @@ class TestUserReferenceViewSet(TestCase):
         cls._user = _factories.UserReferenceFactory()
         cls._view = UserReferenceViewSet.as_view({"get": "retrieve"})
 
+    @with_mocked_httpx_get
     def test_get(self):
         _resp = self._view(
-            get_test_request(user=self._user),
+            get_test_request(
+                cookies={
+                    settings.USER_REFERENCE_COOKIE: "Some form of auth is necessary."
+                },
+            ),
             pk=self._user.pk,
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
@@ -127,19 +143,18 @@ class TestUserReferenceViewSet(TestCase):
             },
         )
 
-    @unittest.expectedFailure  # TODO
-    def test_unauthorized(self):
-        _anon_resp = self._view(get_test_request(), pk=self._user.pk)
-        self.assertEqual(_anon_resp.status_code, HTTPStatus.UNAUTHORIZED)
-
-    @unittest.expectedFailure  # TODO
+    @with_mocked_httpx_get_403
     def test_wrong_user(self):
-        _another_user = _factories.UserReferenceFactory()
         _resp = self._view(
-            get_test_request(user=_another_user),
+            get_test_request(cookies={"osf": "this is the wrong cookie"}),
             pk=self._user.pk,
         )
         self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
+
+    @with_mocked_httpx_get
+    def test_unauthorized(self):
+        _anon_resp = self._view(get_test_request(), pk=self._user.pk)
+        self.assertEqual(_anon_resp.status_code, HTTPStatus.UNAUTHORIZED)
 
 
 class TestUserReferenceRelatedView(TestCase):
@@ -148,22 +163,31 @@ class TestUserReferenceRelatedView(TestCase):
         cls._user = _factories.UserReferenceFactory()
         cls._related_view = UserReferenceViewSet.as_view({"get": "retrieve_related"})
 
+    def setUp(self):
+        super().setUp()
+        self.request = get_test_request(
+            user=self._user,
+            cookies={settings.USER_REFERENCE_COOKIE: "Some form of auth is necessary."},
+        )
+
+    @with_mocked_httpx_get
     def test_get_related__empty(self):
         _resp = self._related_view(
-            get_test_request(user=self._user),
+            self.request,
             pk=self._user.pk,
             related_field="authorized_storage_accounts",
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         self.assertEqual(_resp.data, [])
 
+    @with_mocked_httpx_get
     def test_get_related__several(self):
         _accounts = _factories.AuthorizedStorageAccountFactory.create_batch(
             size=5,
             external_account__owner=self._user,
         )
         _resp = self._related_view(
-            get_test_request(user=self._user),
+            self.request,
             pk=self._user.pk,
             related_field="authorized_storage_accounts",
         )

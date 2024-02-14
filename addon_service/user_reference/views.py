@@ -1,10 +1,13 @@
-from rest_framework_json_api.views import ReadOnlyModelViewSet
+from addon_service.common.permissions import SessionUserIsUserReference
+from addon_service.common.viewsets import RetrieveOnlyViewSet
 
 from .models import UserReference
 from .serializers import UserReferenceSerializer
 
 
-class UserReferenceViewSet(ReadOnlyModelViewSet):
+class UserReferenceViewSet(RetrieveOnlyViewSet):
     queryset = UserReference.objects.all()
     serializer_class = UserReferenceSerializer
-    # TODO: permissions_classes
+    permission_classes = [
+        SessionUserIsUserReference,
+    ]
