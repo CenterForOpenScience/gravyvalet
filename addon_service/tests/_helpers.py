@@ -20,12 +20,20 @@ def get_test_request(user=None, method="get", path="", cookies=None):
 
 def with_mocked_httpx_get(response_status=200):
     """Decorator to mock httpx.Client get requests with a customizable response status."""
+
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            with patch("httpx.Client.get", new=lambda *args, **kwargs: mock_httpx_response(*args, response_status=response_status)):
+            with patch(
+                "httpx.Client.get",
+                new=lambda *args, **kwargs: mock_httpx_response(
+                    *args, response_status=response_status
+                ),
+            ):
                 return func(self, *args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -38,8 +46,10 @@ def mock_httpx_response(url, current_user, response_status, *args, **kwargs):
             guid = url.rstrip("/").split("/")[-1]
             payload = {
                 "data": {
-                    "attributes": {"current_user_permissions": ["read", "write", "admin"]},
-                    "links": {"iri": f"{settings.URI_ID}{guid}"}
+                    "attributes": {
+                        "current_user_permissions": ["read", "write", "admin"]
+                    },
+                    "links": {"iri": f"{settings.URI_ID}{guid}"},
                 }
             }
         return httpx.Response(status_code=200, json=payload)

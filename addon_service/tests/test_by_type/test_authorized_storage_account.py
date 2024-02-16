@@ -136,7 +136,7 @@ class TestAuthorizedStorageAccountViewSet(TestCase):
         )
 
     def test_unauthorized(self):
-        _anon_resp = self._view(get_test_request(), pk=self._user.pk)
+        _anon_resp = self._view(get_test_request(), pk=self._asa.pk)
         self.assertEqual(_anon_resp.status_code, HTTPStatus.UNAUTHORIZED)
 
     @with_mocked_httpx_get(response_status=403)
