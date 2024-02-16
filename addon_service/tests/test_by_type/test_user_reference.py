@@ -12,7 +12,6 @@ from addon_service.tests import _factories
 from addon_service.tests._helpers import (
     get_test_request,
     with_mocked_httpx_get,
-    with_mocked_httpx_get_403,
 )
 from addon_service.user_reference.views import UserReferenceViewSet
 from app import settings
@@ -143,7 +142,7 @@ class TestUserReferenceViewSet(TestCase):
             },
         )
 
-    @with_mocked_httpx_get_403
+    @with_mocked_httpx_get(response_status=403)
     def test_wrong_user(self):
         _resp = self._view(
             get_test_request(cookies={"osf": "this is the wrong cookie"}),

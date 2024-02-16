@@ -18,89 +18,30 @@ def get_test_request(user=None, method="get", path="", cookies=None):
     return _request
 
 
-def with_mocked_httpx_get(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        # Use 'self' to access the current user, we need to have their
-        # details to confirm auth test behavior
-        current_user = getattr(self, "_user", None)
-
-        with patch("httpx.Client") as MockClient:
-            MockClient.return_value = MockHTTPXClient(current_user=current_user)
-            return func(self, *args, **kwargs)
-
-    return wrapper
+def with_mocked_httpx_get(response_status=200):
+    """Decorator to mock httpx.Client get requests with a customizable response status."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            with patch("httpx.Client.get", new=lambda *args, **kwargs: mock_httpx_response(*args, response_status=response_status)):
+                return func(self, *args, **kwargs)
+        return wrapper
+    return decorator
 
 
-def with_mocked_httpx_get_403(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        # Use 'self' to access the current user, we need to have their
-        # details to confirm auth test behavior
-        current_user = getattr(self, "_user", None)
-
-        with patch("httpx.Client") as MockClient:
-            MockClient.return_value = MockHTTPXClient403(current_user=current_user)
-            return func(self, *args, **kwargs)
-
-    return wrapper
-
-
-class MockHTTPXClient:
-    current_user = None
-    expected_resource = None
-
-    def __init__(self, *args, **kwargs):
-        # Capture any arguments passed to the client
-        self.args = args
-        self.kwargs = kwargs
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-    def get(self, url, *args, **kwargs):
+def mock_httpx_response(url, current_user, response_status, *args, **kwargs):
+    """Generates mock httpx.Response based on the requested URL and response status."""
+    if response_status == 200:
         if url == settings.USER_REFERENCE_LOOKUP_URL:
-            payload = {
-                "data": {
-                    "links": {"iri": self.kwargs["current_user"].user_uri},
-                }
-            }
-            return httpx.Response(
-                status_code=200,
-                json=payload,
-            )
+            payload = {"data": {"links": {"iri": current_user.user_uri}}}
         else:
             guid = url.rstrip("/").split("/")[-1]
             payload = {
                 "data": {
-                    "attributes": {
-                        "current_user_permissions": ["read", "write", "admin"]
-                    },
-                    "links": {"iri": f"{settings.URI_ID}{guid}"},
+                    "attributes": {"current_user_permissions": ["read", "write", "admin"]},
+                    "links": {"iri": f"{settings.URI_ID}{guid}"}
                 }
             }
-            return httpx.Response(
-                status_code=200,
-                json=payload,
-            )
-
-
-class MockHTTPXClient403:
-    def __init__(self, *args, **kwargs):
-        # Capture any arguments passed to the client
-        self.args = args
-        self.kwargs = kwargs
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-    def get(self, url, *args, **kwargs):
-        return httpx.Response(
-            status_code=403,
-        )
+        return httpx.Response(status_code=200, json=payload)
+    else:  # Handles 403 and other statuses explicitly
+        return httpx.Response(status_code=response_status)
