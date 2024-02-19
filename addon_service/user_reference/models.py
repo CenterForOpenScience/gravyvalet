@@ -20,3 +20,7 @@ class UserReference(AddonsServiceBaseModel):
 
     class JSONAPIMeta:
         resource_name = "user-references"
+
+    @property
+    def owner_reference(self):
+        return self.user_uri

@@ -28,3 +28,7 @@ class ConfiguredStorageAddon(AddonsServiceBaseModel):
     @property
     def account_owner(self):
         return self.base_account.external_account.owner
+
+    @property
+    def owner_reference(self):
+        return self.base_account.external_account.owner.user_uri

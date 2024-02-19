@@ -30,3 +30,7 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
     @property
     def account_owner(self):
         return self.external_account.owner  # TODO: prefetch/select_related
+
+    @property
+    def owner_reference(self):
+        return self.external_account.owner.user_uri

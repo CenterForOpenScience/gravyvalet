@@ -1,6 +1,6 @@
 from addon_service.common.permissions import (
     CanCreateASA,
-    SessionUserIsAccountOwner,
+    SessionUserIsOwner,
 )
 from addon_service.common.viewsets import RetrieveWriteViewSet
 
@@ -17,7 +17,7 @@ class AuthorizedStorageAccountViewSet(RetrieveWriteViewSet):
             return super().get_permissions()
 
         if self.action in ["retrieve", "retrieve_related", "update", "destroy"]:
-            return [SessionUserIsAccountOwner()]
+            return [SessionUserIsOwner()]
         elif self.action == "create":
             return [CanCreateASA()]
         else:
