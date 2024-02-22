@@ -14,6 +14,7 @@ from rest_framework import (
 )
 
 
+TODO: Improve dockerization of OSF so that we don't need this
 def handle_redirects(response):
     """Redirect fix for localhost during local development."""
     if settings.DEBUG and response.status_code in {301, 302, 303, 307, 308}:
