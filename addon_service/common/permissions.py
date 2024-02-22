@@ -15,7 +15,8 @@ class SessionUserIsOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         session_user_uri = request.session.get("user_reference_uri")
         if session_user_uri:
-            assert session_user_uri == obj.owner_reference
+            return session_user_uri == obj.owner_reference
+        return False
 
 
 class SessionUserIsResourceReferenceOwner(permissions.BasePermission):
