@@ -148,6 +148,3 @@ STATIC_URL = "/static/"
 EXCHANGE_NAME = (
     "account_status_changes"  # Assuming this is the exchange name used for publishing
 )
-DEACTIVATED_ROUTING_KEY = "user.deactivated"
-REACTIVATED_ROUTING_KEY = "user.reactivated"
-MERGED_ROUTING_KEY = "user.merged"

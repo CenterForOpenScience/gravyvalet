@@ -62,20 +62,20 @@ def process_merged_user_message(body, message):
 
 
 def queue_routing_handler(body, message):
-    routing_key = message.delivery_info["routing_key"]
+    action = body.get('action')
 
     with handle_messaging_exceptions(message):
-        if routing_key == settings.DEACTIVATED_ROUTING_KEY:
+        if action == 'deactivate':
             process_deactivated_user_message(body, message)
-        elif routing_key == settings.REACTIVATED_ROUTING_KEY:
+        elif action == 'reactivate':
             process_reactivated_user_message(body, message)
-        elif routing_key == settings.MERGED_ROUTING_KEY:
+        elif action == 'merge':
             process_merged_user_message(body, message)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(f'Action {action} is not Implemented')
 
 
-def listen_to_queue_route(queue_routes):
-    with consumer_connection(queue_routes, [queue_routing_handler]) as consumer:
+def listen_to_queue_route(queues):
+    with consumer_connection(queues, [queue_routing_handler]) as consumer:
         while True:
             consumer.connection.drain_events()
