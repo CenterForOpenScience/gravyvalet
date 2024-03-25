@@ -7,6 +7,7 @@ from addon_service.configured_storage_addon.views import ConfiguredStorageAddonV
 from addon_service.external_storage_service.views import ExternalStorageServiceViewSet
 from addon_service.resource_reference.views import ResourceReferenceViewSet
 from addon_service.user_reference.views import UserReferenceViewSet
+from addon_service.common.views import OauthCallbackView
 
 
 __all__ = (
@@ -15,4 +16,6 @@ __all__ = (
     "ExternalStorageServiceViewSet",
     "ResourceReferenceViewSet",
     "UserReferenceViewSet",
+    "UserReferenceViewSet",
+    "OauthCallbackView",
 )

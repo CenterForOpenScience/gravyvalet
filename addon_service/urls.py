@@ -5,6 +5,7 @@ from rest_framework.routers import (
 from rest_framework_json_api.utils import get_resource_type_from_serializer
 
 from addon_service import views
+from django.conf.urls import path
 
 
 ###
@@ -57,5 +58,9 @@ _register_viewset(views.UserReferenceViewSet)
 # the only public part of this module
 
 __all__ = ("urlpatterns",)
+
+_router.urls += [
+    path(r'^callback/', views.OauthCallbackView.as_view(), name='callback'),
+]
 
 urlpatterns = _router.urls
