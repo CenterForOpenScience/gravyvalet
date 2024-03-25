@@ -1,12 +1,10 @@
-from addon_toolkit import (
-    RedirectResult,
-    storage,
-)
+from addon_toolkit import storage
 
 
 class BoxDotComStorage(storage.StorageAddon):
     """storage on box.com"""
 
-    def download(self, item_id: str) -> RedirectResult:
-        """blarg blarg blarg"""
-        return RedirectResult(f"http://blarg.example/{item_id}")
+    async def get_root_item_ids(self, page_cursor: str = "") -> storage.ManyItemResult:
+        return storage.ManyItemResult(
+            item_ids=["2"],
+        )

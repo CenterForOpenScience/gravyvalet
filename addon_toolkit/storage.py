@@ -40,7 +40,7 @@ class ManyItemResult:
     prev_page_cursor: str | None = None
     init_page_cursor: str | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if (
             (self.total_count == 0)
             and (self.next_page_cursor is None)
@@ -79,21 +79,21 @@ class StorageAddon(typing.Protocol):
     async def get_root_item_ids(self, page_cursor: str = "") -> ManyItemResult:
         ...
 
-    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_parent_item_id(self, item_id: str) -> PossibleSingleItemResult:
-        ...
+    # @immediate_operation(capability=AddonCapabilities.ACCESS)
+    # async def get_parent_item_id(self, item_id: str) -> PossibleSingleItemResult:
+    #     ...
 
-    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_item_path(self, item_id: str) -> str:
-        ...
+    # @immediate_operation(capability=AddonCapabilities.ACCESS)
+    # async def get_item_path(self, item_id: str) -> str:
+    #     ...
 
-    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_child_item_ids(
-        self,
-        item_id: str,
-        page_cursor: str = "",
-    ) -> ManyItemResult:
-        ...
+    # @immediate_operation(capability=AddonCapabilities.ACCESS)
+    # async def get_child_item_ids(
+    #     self,
+    #     item_id: str,
+    #     page_cursor: str = "",
+    # ) -> ManyItemResult:
+    #     ...
 
 
 #
