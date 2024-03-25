@@ -67,7 +67,7 @@ class TestAddonOperationInvocationCreate(APITestCase):
             _resp.data["operation_result"],
             {
                 "item_ids": ["hello"],
-                "next_cursor": None,
+                "next_page_cursor": None,
                 "total_count": 1,
             },
         )

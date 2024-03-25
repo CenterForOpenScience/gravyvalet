@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from addon_service.addon_imp.known import get_imp_by_number
 from addon_service.common.invocation import InvocationStatus
 from addon_toolkit import AddonCapabilities
-from addon_toolkit.storage import StorageAddonProtocol
+from addon_toolkit.storage import StorageAddon
 
 
 # helper for enum-based validators
@@ -31,5 +31,5 @@ def validate_storage_imp_number(value):
         _imp = get_imp_by_number(value)
     except KeyError:
         raise ValidationError(f"invalid imp number: {value}")
-    if _imp.addon_protocol.protocol_cls is not StorageAddonProtocol:
+    if _imp.addon_protocol.protocol_cls is not StorageAddon:
         raise ValidationError(f"expected storage imp (got {_imp})")

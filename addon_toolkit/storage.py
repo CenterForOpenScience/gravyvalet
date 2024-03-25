@@ -1,4 +1,4 @@
-"""what a base StorageAddonProtocol could be like (incomplete)"""
+"""what a base StorageAddon could be like (incomplete)"""
 import dataclasses
 import typing
 
@@ -12,7 +12,7 @@ from addon_toolkit import (
 )
 
 
-__all__ = ("StorageAddonProtocol",)
+__all__ = ("StorageAddon",)
 
 
 ###
@@ -20,38 +20,42 @@ __all__ = ("StorageAddonProtocol",)
 
 
 @dataclasses.dataclass
-class PagedResult:
+class StorageConfig:
+    max_upload_mb: int
+
+
+@dataclasses.dataclass
+class PossibleSingleItemResult:
+    possible_item_id: str | None
+
+
+@dataclasses.dataclass
+class ManyItemResult:
+    """representing a sample of items from a possibly large result set"""
+
     item_ids: list[str]
     total_count: int = 0
-    next_cursor: str | None = None
+    this_page_cursor: str = ""  # empty cursor when all results fit on one page
+    next_page_cursor: str | None = None
+    prev_page_cursor: str | None = None
+    init_page_cursor: str | None = None
 
     def __post_init__(self):
-        if (self.total_count == 0) and (self.next_cursor is None) and self.item_ids:
+        if (
+            (self.total_count == 0)
+            and (self.next_page_cursor is None)
+            and self.item_ids
+        ):
             self.total_count = len(self.item_ids)
 
 
+@addon_protocol()  # TODO: descriptions with language tags
 @dataclasses.dataclass
-class PageArg:
-    cursor: str = ""
+class StorageAddon(typing.Protocol):
+    config: StorageConfig
 
-
-@dataclasses.dataclass
-class ItemArg:
-    item_id: str
-
-
-@addon_protocol()
-class StorageAddonProtocol(typing.Protocol):
     @redirect_operation(capability=AddonCapabilities.ACCESS)
-    def download(self, item: ItemArg) -> RedirectResult:
-        ...
-
-    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    def blargblarg(self, item: ItemArg) -> PagedResult:
-        ...
-
-    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    def opop(self, item: ItemArg, page: PageArg) -> PagedResult:
+    def download(self, item_id: str) -> RedirectResult:
         ...
 
     #
@@ -72,18 +76,23 @@ class StorageAddonProtocol(typing.Protocol):
     # "tree-read" operations:
 
     @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_root_item_ids(self, page: PageArg) -> PagedResult:
+    async def get_root_item_ids(self, page_cursor: str = "") -> ManyItemResult:
         ...
 
-    #
-    #    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    #    async def get_parent_item_id(self, item_id: str) -> str | None: ...
-    #
-    #    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    #    async def get_item_path(self, item_id: str) -> str: ...
-    #
     @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_child_item_ids(self, item: ItemArg, page: PageArg) -> PagedResult:
+    async def get_parent_item_id(self, item_id: str) -> PossibleSingleItemResult:
+        ...
+
+    @immediate_operation(capability=AddonCapabilities.ACCESS)
+    async def get_item_path(self, item_id: str) -> str:
+        ...
+
+    @immediate_operation(capability=AddonCapabilities.ACCESS)
+    async def get_child_item_ids(
+        self,
+        item_id: str,
+        page_cursor: str = "",
+    ) -> ManyItemResult:
         ...
 
 

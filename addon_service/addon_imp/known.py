@@ -6,7 +6,7 @@ import enum
 
 from addon_imps.storage.my_blarg import MyBlargStorage
 from addon_toolkit import AddonImp
-from addon_toolkit.storage import StorageAddonProtocol
+from addon_toolkit.storage import StorageAddon
 
 
 __all__ = (
@@ -21,7 +21,7 @@ class KnownAddonImp(enum.Enum):
     """enum with a name for each addon implementation class that should be known to the api"""
 
     BLARG = AddonImp(  # BLARG is fake, should be displaced by real imps soon
-        StorageAddonProtocol,
+        StorageAddon,
         imp_cls=MyBlargStorage,
         imp_number=17,
     )

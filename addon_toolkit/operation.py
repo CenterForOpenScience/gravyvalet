@@ -67,13 +67,13 @@ class AddonOperationDeclaration:
 
     @property
     def name(self):
-        # TODO: language tag
+        # TODO: language tag (kwarg for tagged string?)
         return self.operation_fn.__name__
 
     @property
     def docstring(self) -> str:
         # TODO: language tag
-        # TODO: consider docstring param on operation decorators, allow overriding __doc__
+        # TODO: docstring/description param on operation decorators, since __doc__ is removed on -O
         return self.operation_fn.__doc__ or ""
 
     @property

@@ -3,6 +3,7 @@ import enum
 import typing
 import unittest
 from http import HTTPMethod
+from unittest.mock import Mock
 
 from addon_toolkit import (
     AddonImp,
@@ -167,3 +168,22 @@ class TestAddonProtocol(unittest.TestCase):
             ),
             set(),
         )
+
+    def test_operation_imp_by_name(self):
+        self.assertEqual(
+            self._my_imp.get_operation_imp_by_name("url_for_get"),
+            self._expected_get_imp,
+        )
+        self.assertEqual(
+            self._my_imp.get_operation_imp_by_name("url_for_put"),
+            self._expected_put_imp,
+        )
+
+    def test_operation_call(self):
+        _mock_addon_instance = Mock()
+        _imp_for_get = self._my_imp.get_operation_imp_by_name("url_for_get")
+        _imp_for_get.call_with_json_kwargs(
+            _mock_addon_instance,
+            {"checksum_iri": "..."},
+        )
+        _mock_addon_instance.assert_called_once_with(checksum_iri="...")

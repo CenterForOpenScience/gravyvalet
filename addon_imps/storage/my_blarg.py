@@ -3,16 +3,16 @@ from addon_toolkit.storage import (
     ItemArg,
     PageArg,
     PagedResult,
-    StorageAddonProtocol,
+    StorageAddon,
 )
 
 
-class MyBlargStorage(StorageAddonProtocol):
+class MyBlargStorage(StorageAddon):
     """blarg?"""
 
     def download(self, item: ItemArg) -> RedirectResult:
         """blarg blarg blarg"""
-        return RedirectResult(f"http://blarg.example/{item.item_id}")
+        return RedirectResult(relative_uri=f"/{item.item_id}")
 
     def blargblarg(self, item: ItemArg) -> PagedResult:
         return PagedResult(["hello"])
