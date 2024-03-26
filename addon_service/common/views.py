@@ -4,11 +4,25 @@ from django.shortcuts import redirect
 from addon_service.models import ExternalAccount, ExternalCredentials, AuthorizedStorageAccount, ExternalStorageService
 
 
-class OauthCallbackView(View):
-    def get(self, request):
+
+
+class OauthCallbackViewSet(viewsets.ViewSet):
+    """
+    ViewSet to handle OAuth callbacks for different add-ons.
+    """
+
+    def get(self, request, addon_name=None):
+        # This method handles POST requests to the OAuth callback URL.
+        # `addon_name` is the name of the addon passed in the URL.
+
+        if addon_name is None:
+            raise Exception()
+
         state = request.GET.get("state")
         account_owner = request.user
-        external_storage_service, data = ExternalStorageService.get_ess_and_data_from_code(request)
+        external_storage_service = ExternalStorageService.get(name=addon_name)
+
+        data = external_storage_service.get_oauth_data_from_request(request)
 
         external_credentials = ExternalCredentials.objects.create(
             oauth_key=data['key'],
