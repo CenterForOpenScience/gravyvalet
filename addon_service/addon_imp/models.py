@@ -33,6 +33,10 @@ class AddonImpModel(BaseDataclassModel):
         return self.imp.addon_protocol.protocol_cls.__doc__ or ""
 
     @property
+    def imp_cls(self) -> type:
+        return self.imp.imp_cls
+
+    @property
     def imp_docstring(self) -> str:
         return self.imp.imp_cls.__doc__ or ""
 

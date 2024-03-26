@@ -4,7 +4,7 @@ import and add new implementations here to make them available in the api
 """
 import enum
 
-from addon_imps.storage.my_blarg import MyBlargStorage
+from addon_imps.storage import box_dot_com
 from addon_toolkit import AddonImp
 from addon_toolkit.storage import StorageAddon
 
@@ -20,15 +20,15 @@ __all__ = (
 class KnownAddonImp(enum.Enum):
     """enum with a name for each addon implementation class that should be known to the api"""
 
-    BLARG = AddonImp(  # BLARG is fake, should be displaced by real imps soon
+    BOX_DOT_COM = AddonImp(
         StorageAddon,
-        imp_cls=MyBlargStorage,
-        imp_number=17,
+        imp_cls=box_dot_com.BoxDotComStorage,
+        imp_number=1,
     )
 
 
 ###
-# helpers using KnownAddonImp
+# helpers for accessing KnownAddonImp
 
 
 def get_imp_by_name(imp_name: str) -> AddonImp:

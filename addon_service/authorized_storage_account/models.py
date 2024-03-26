@@ -76,7 +76,7 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
     @property
     def authorized_operation_names(self):
         return [
-            _operation_imp.operation.name
+            _operation_imp.declaration.name
             for _operation_imp in self.iter_authorized_operations()
         ]
 

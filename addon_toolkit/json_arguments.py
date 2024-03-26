@@ -6,7 +6,7 @@ import typing
 
 
 __all__ = (
-    "bound_kwargs_from_json",
+    "kwargs_from_json",
     "dataclass_from_json",
     "json_for_arguments",
     "json_for_dataclass",
@@ -116,14 +116,16 @@ def json_for_typed_value(type_annotation: typing.Any, value: typing.Any):
     )
 
 
-def bound_kwargs_from_json(
-    signature: inspect.Signature, args_from_json: dict
-) -> inspect.BoundArguments:
+def kwargs_from_json(
+    signature: inspect.Signature,
+    args_from_json: dict,
+) -> dict:
     _kwargs = {
         _param_name: arg_value_from_json(signature.parameters[_param_name], _arg_value)
         for (_param_name, _arg_value) in args_from_json.items()
     }
-    return signature.bind_partial(**_kwargs)
+    # use inspect.Signature.bind() to validate all required kwargs present
+    return signature.bind(**_kwargs).kwargs
 
 
 def arg_value_from_json(

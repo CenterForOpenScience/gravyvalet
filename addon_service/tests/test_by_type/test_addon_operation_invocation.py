@@ -66,9 +66,14 @@ class TestAddonOperationInvocationCreate(APITestCase):
         self.assertEqual(
             _resp.data["operation_result"],
             {
-                "item_ids": ["hello"],
-                "next_page_cursor": None,
                 "total_count": 1,
+                "result_sample": [
+                    {
+                        "item_id": "hello",
+                        "item_name": "Hello Hello",
+                    }
+                ],
+                "this_sample_cursor": "",
             },
         )
         self.assertEqual(

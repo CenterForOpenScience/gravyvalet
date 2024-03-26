@@ -1,4 +1,5 @@
 """what a base StorageAddon could be like (incomplete)"""
+import collections.abc
 import dataclasses
 import typing
 
@@ -10,6 +11,7 @@ from addon_toolkit import (
     immediate_operation,
     redirect_operation,
 )
+from addon_toolkit.constrained_http import HttpRequestor
 
 
 __all__ = ("StorageAddon",)
@@ -19,40 +21,59 @@ __all__ = ("StorageAddon",)
 # use dataclasses for operation args and return values
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class StorageConfig:
     max_upload_mb: int
 
 
 @dataclasses.dataclass
-class PossibleSingleItemResult:
-    possible_item_id: str | None
+class ItemResult:
+    item_id: str
+    item_name: str
+    item_path: list[str] | None = None
 
 
 @dataclasses.dataclass
-class ManyItemResult:
-    """representing a sample of items from a possibly large result set"""
+class PathResult:
+    ancestor_ids: collections.abc.Sequence[str]  # most distant first
 
-    item_ids: list[str]
-    total_count: int = 0
-    this_page_cursor: str = ""  # empty cursor when all results fit on one page
-    next_page_cursor: str | None = None
-    prev_page_cursor: str | None = None
-    init_page_cursor: str | None = None
+
+@dataclasses.dataclass
+class PossibleSingleItemResult:
+    possible_item: ItemResult | None
+
+
+@dataclasses.dataclass
+class ItemSampleResult:
+    """a sample from a possibly-large population of result items"""
+
+    items: collections.abc.Collection[ItemResult]
+    total_count: int = 0  # when zero, __post_init__ initializes to `len(items)`
+    this_sample_cursor: str = ""  # when empty, this sample contains all results
+    next_sample_cursor: str | None = None
+    prev_sample_cursor: str | None = None
+    init_sample_cursor: str | None = None
 
     def __post_init__(self) -> None:
-        if (
-            (self.total_count == 0)
-            and (self.next_page_cursor is None)
-            and self.item_ids
-        ):
-            self.total_count = len(self.item_ids)
+        if self.total_count == 0:
+            self.total_count = len(self.items)
+        if __debug__ and self.contains_all_results:
+            assert self.total_count == len(self.items)
+            assert self.next_sample_cursor is None
+            assert self.prev_sample_cursor is None
+            assert self.init_sample_cursor is None
+
+    @property
+    def contains_all_results(self) -> bool:
+        return "" == self.this_sample_cursor
 
 
 @addon_protocol()  # TODO: descriptions with language tags
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class StorageAddon(typing.Protocol):
+    # context provided on `self` to operation implementations:
     config: StorageConfig
+    network: HttpRequestor
 
     @redirect_operation(capability=AddonCapabilities.ACCESS)
     def download(self, item_id: str) -> RedirectResult:
@@ -76,24 +97,24 @@ class StorageAddon(typing.Protocol):
     # "tree-read" operations:
 
     @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_root_item_ids(self, page_cursor: str = "") -> ManyItemResult:
+    async def get_root_items(self, page_cursor: str = "") -> ItemSampleResult:
         ...
 
-    # @immediate_operation(capability=AddonCapabilities.ACCESS)
-    # async def get_parent_item_id(self, item_id: str) -> PossibleSingleItemResult:
-    #     ...
+    @immediate_operation(capability=AddonCapabilities.ACCESS)
+    async def get_parent_item_id(self, item_id: str) -> PossibleSingleItemResult:
+        ...
 
-    # @immediate_operation(capability=AddonCapabilities.ACCESS)
-    # async def get_item_path(self, item_id: str) -> str:
-    #     ...
+    @immediate_operation(capability=AddonCapabilities.ACCESS)
+    async def get_item_path(self, item_id: str) -> str:
+        ...
 
-    # @immediate_operation(capability=AddonCapabilities.ACCESS)
-    # async def get_child_item_ids(
-    #     self,
-    #     item_id: str,
-    #     page_cursor: str = "",
-    # ) -> ManyItemResult:
-    #     ...
+    @immediate_operation(capability=AddonCapabilities.ACCESS)
+    async def get_child_items(
+        self,
+        item_id: str,
+        page_cursor: str = "",
+    ) -> ItemSampleResult:
+        ...
 
 
 #

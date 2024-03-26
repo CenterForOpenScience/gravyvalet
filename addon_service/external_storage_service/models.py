@@ -17,6 +17,7 @@ class ExternalStorageService(AddonsServiceBaseModel):
     max_upload_mb = models.IntegerField(null=False)
     auth_uri = models.URLField(null=False)
     callback_url = models.URLField(null=False, default="")
+    api_base_url = models.URLField(null=False)
 
     credentials_issuer = models.ForeignKey(
         "addon_service.CredentialsIssuer",

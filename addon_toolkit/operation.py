@@ -1,7 +1,7 @@
 import dataclasses
 import enum
 import inspect
-from http import HTTPMethod
+from http import HTTPMethod  # type: ignore
 from typing import (
     Callable,
     Iterator,

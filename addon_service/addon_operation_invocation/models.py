@@ -1,16 +1,11 @@
 import jsonschema
 from django.core.exceptions import ValidationError
-from django.db import (
-    models,
-    transaction,
-)
+from django.db import models
 
 from addon_service.common.base_model import AddonsServiceBaseModel
-from addon_service.common.dibs import dibs
 from addon_service.common.enums.validators import validate_invocation_status
 from addon_service.common.invocation import InvocationStatus
 from addon_service.models import AddonOperationModel
-from addon_toolkit.json_arguments import json_for_dataclass
 
 
 class AddonOperationInvocation(AddonsServiceBaseModel):
@@ -58,25 +53,3 @@ class AddonOperationInvocation(AddonsServiceBaseModel):
             )
         except jsonschema.exceptions.ValidationError as _error:
             raise ValidationError(_error)
-
-    def perform_invocation(self, addon_instance: object):  # TODO: async_execute?
-        with dibs(self):  # TODO: handle dibs errors
-            try:
-                # wrap in a transaction to contain database errors,
-                # so status can be saved in the outer transaction
-                with transaction.atomic():
-                    _result = self.operation.operation_imp.call_with_json_kwargs(
-                        addon_instance,
-                        self.operation_kwargs,
-                    )
-            except Exception as _e:
-                self.operation_result = None
-                self.invocation_status = InvocationStatus.PROBLEM
-                print(_e)
-                # TODO: save message/traceback
-                raise
-            else:  # no errors
-                self.operation_result = json_for_dataclass(_result)
-                self.invocation_status = InvocationStatus.SUCCESS
-            finally:
-                self.save()

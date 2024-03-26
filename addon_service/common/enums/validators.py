@@ -6,16 +6,8 @@ from addon_toolkit import AddonCapabilities
 from addon_toolkit.storage import StorageAddon
 
 
-# helper for enum-based validators
-def _validate_enum_value(enum_cls, value):
-    try:
-        enum_cls(value)
-    except ValueError:
-        raise ValidationError(f'no value "{value}" in {enum_cls}')
-
-
 ###
-# validators
+# validators for specific controlled vocabs
 
 
 def validate_addon_capability(value):
@@ -33,3 +25,14 @@ def validate_storage_imp_number(value):
         raise ValidationError(f"invalid imp number: {value}")
     if _imp.addon_protocol.protocol_cls is not StorageAddon:
         raise ValidationError(f"expected storage imp (got {_imp})")
+
+
+###
+# module-local helpers
+
+
+def _validate_enum_value(enum_cls, value):
+    try:
+        enum_cls(value)
+    except ValueError:
+        raise ValidationError(f'no value "{value}" in {enum_cls}')

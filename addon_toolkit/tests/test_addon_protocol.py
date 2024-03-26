@@ -123,19 +123,31 @@ class TestAddonProtocol(unittest.TestCase):
     def test_get_operations(self):
         _protocol_dec = addon_protocol.get_declaration(self._MyProtocol)
         self.assertEqual(
-            set(_protocol_dec.get_operations()),
+            set(_protocol_dec.get_operation_declarations()),
             {self._expected_get_op, self._expected_put_op, self._expected_query_op},
         )
         self.assertEqual(
-            set(_protocol_dec.get_operations(capabilities=[self._MyCapability.GET_IT])),
+            set(
+                _protocol_dec.get_operation_declarations(
+                    capabilities=[self._MyCapability.GET_IT]
+                )
+            ),
             {self._expected_get_op, self._expected_query_op},
         )
         self.assertEqual(
-            set(_protocol_dec.get_operations(capabilities=[self._MyCapability.PUT_IT])),
+            set(
+                _protocol_dec.get_operation_declarations(
+                    capabilities=[self._MyCapability.PUT_IT]
+                )
+            ),
             {self._expected_put_op},
         )
         self.assertEqual(
-            set(_protocol_dec.get_operations(capabilities=[self._MyCapability.UNUSED])),
+            set(
+                _protocol_dec.get_operation_declarations(
+                    capabilities=[self._MyCapability.UNUSED]
+                )
+            ),
             set(),
         )
 
