@@ -10,6 +10,7 @@ from addon_service import models as db
 from addon_service.authorized_storage_account.views import (
     AuthorizedStorageAccountViewSet,
 )
+from addon_service.common.oauth import build_auth_url
 from addon_service.tests import _factories
 from addon_service.tests._helpers import (
     MockOSF,
@@ -89,6 +90,15 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
                 id=created_account_id
             ).exists()
         )
+        created_account = db.AuthorizedStorageAccount.objects.get(id=created_account_id)
+        expected_auth_url = build_auth_url(
+            external_service.auth_uri,
+            created_account.external_account.credentials.oauth_key,
+            created_account.external_account.credentials.state_token,
+            created_account.authorized_scopes,
+            external_service.callback_url,
+        )
+        self.assertEqual(_resp.data["auth_url"], expected_auth_url)
 
     def test_methods_not_allowed(self):
         _methods_not_allowed = {
@@ -161,6 +171,7 @@ class TestAuthorizedStorageAccountViewSet(TestCase):
                 "default_root_folder",
                 "authorized_capabilities",
                 "authorized_operation_names",
+                "auth_url",
             },
         )
         self.assertEqual(

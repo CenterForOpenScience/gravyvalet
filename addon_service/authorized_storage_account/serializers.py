@@ -1,3 +1,5 @@
+from secrets import token_urlsafe
+
 from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import (
     HyperlinkedRelatedField,
@@ -42,6 +44,7 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
         child=serializers.CharField(),
         read_only=True,
     )
+    auth_url = serializers.CharField(read_only=True)
     account_owner = ReadOnlyResourceRelatedField(
         many=False,
         queryset=UserReference.objects.all(),
@@ -88,6 +91,11 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
             oauth_key=validated_data["username"],
             oauth_secret=validated_data["password"],
         )
+
+        # Set state token on related ExternalCredential model
+        credentials.state_token = token_urlsafe(16)
+        credentials.save()
+
         external_account, _ = ExternalAccount.objects.get_or_create(
             owner=account_owner,
             credentials=credentials,
@@ -112,4 +120,5 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
             "authorized_capabilities",
             "authorized_operations",
             "authorized_operation_names",
+            "auth_url",
         ]
