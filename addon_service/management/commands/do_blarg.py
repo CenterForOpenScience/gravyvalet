@@ -31,14 +31,16 @@ class Command(BaseCommand):
         print(f"{_invocation.invocation_status=}, {_invocation.operation_result=}")
 
     def _setup_addon(self, user: db.UserReference) -> db.ConfiguredStorageAddon:
-        _box_ci = db.CredentialsIssuer.objects.get_or_create(name="box.com")
-        _box_service = db.ExternalStorageService.objects.get_or_create(
+        _box_ci, _ = db.CredentialsIssuer.objects.get_or_create(name="box.com")
+        _box_service, _ = db.ExternalStorageService.objects.get_or_create(
             int_addon_imp=get_imp_by_name("BOX_DOT_COM").imp_number,
-            max_concurrent_downloads=2,
-            max_upload_mb=2,
-            api_base_url="http://box.example/foo/",  # TODO
-            auth_uri="http://box.example/fakeauth/",
-            credentials_issuer=_box_ci,
+            defaults=dict(
+                max_concurrent_downloads=2,
+                max_upload_mb=2,
+                api_base_url="http://box.example/foo/",  # TODO
+                auth_uri="http://box.example/fakeauth/",
+                credentials_issuer=_box_ci,
+            ),
         )
         _ec = db.ExternalCredentials.objects.create()
         _ea = db.ExternalAccount.objects.create(
