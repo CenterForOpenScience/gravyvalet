@@ -14,7 +14,7 @@ from addon_service.models import (
 )
 from addon_toolkit.operation import AddonOperationType
 
-from .perform import full_perform__blocking
+from .perform import perform_invocation__blocking
 
 
 RESOURCE_TYPE = get_resource_type_from_model(AddonOperationInvocation)
@@ -77,7 +77,7 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
         )
         match _operation.operation_type:
             case AddonOperationType.REDIRECT | AddonOperationType.IMMEDIATE:
-                full_perform__blocking(_invocation)
+                perform_invocation__blocking(_invocation)
             case AddonOperationType.EVENTUAL:
                 raise NotImplementedError("TODO: enqueue task")
             case _:

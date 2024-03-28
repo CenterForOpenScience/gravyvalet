@@ -2,7 +2,7 @@ import dataclasses
 import enum
 import typing
 import unittest
-from http import HTTPMethod
+from http import HTTPMethod  # type: ignore
 from unittest.mock import Mock
 
 from addon_toolkit import (
@@ -113,11 +113,11 @@ class TestAddonProtocol(unittest.TestCase):
         # a specific implementation of some of those shared operations
         cls._expected_get_imp = AddonOperationImp(
             addon_imp=cls._my_imp,
-            operation=cls._expected_get_op,
+            declaration=cls._expected_get_op,
         )
         cls._expected_put_imp = AddonOperationImp(
             addon_imp=cls._my_imp,
-            operation=cls._expected_put_op,
+            declaration=cls._expected_put_op,
         )
 
     def test_get_operations(self):

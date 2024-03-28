@@ -66,6 +66,7 @@ class ExternalStorageServiceFactory(DjangoModelFactory):
     max_upload_mb = factory.Faker("pyint")
     auth_uri = factory.Sequence(lambda n: f"{settings.AUTH_URI_ID}{n}")
     callback_url = "https://osf.io/auth/callback"
+    api_base_url = factory.Sequence(lambda n: f"http://api.example/{n}")
     credentials_issuer = factory.SubFactory(CredentialsIssuerFactory)
     int_addon_imp = get_imp_by_name("BLARG").imp_number
 

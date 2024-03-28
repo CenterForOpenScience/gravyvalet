@@ -18,14 +18,17 @@ KeyValuePairs = Iterable[tuple[str, str]] | Mapping[str, str]
 
 
 class Multidict(Headers):
-    """multidict of string keys and string values
+    """multidict with string keys and string values
 
-    using `wsgiref.headers.Headers`, a string multidict conveniently in the standard library
+    using `wsgiref.headers.Headers`, a string multidict conveniently in the standard library:
+    https://docs.python.org/3/library/wsgiref.html#wsgiref.headers.Headers
     """
 
-    def __init__(self, key_value_pairs: KeyValuePairs):
-        # allow initializing with any iterable or mapping type, tho parent expects `list`
+    def __init__(self, key_value_pairs: KeyValuePairs | None):
+        # allow initializing with any iterable or mapping type (`Headers` expects `list`)
         match key_value_pairs:
+            case None:
+                _headerslist = []
             case list():  # already a list, is fine
                 _headerslist = key_value_pairs
             case Mapping():
@@ -34,24 +37,15 @@ class Multidict(Headers):
                 _headerslist = list(key_value_pairs)
         super().__init__(_headerslist)
 
+    def as_headers(self) -> bytes:
+        """format as http headers
 
-class HttpHeaders(Multidict):
-    """multidict for http headers
+        same as calling `bytes()` on a `wsgiref.headers.Headers` object -- see
+        https://docs.python.org/3/library/wsgiref.html#wsgiref.headers.Headers
+        """
+        return super().__bytes__()
 
-    same as `wsgiref.headers.Headers` with a more friendly constructor
-    """
-
-    ...
-
-
-class IriQuery(Multidict):
-    """multidict for iri query parameters
-
-    same as `wsgiref.headers.Headers` with a more friendly constructor
-    and serialization to iri query string when passed to `str()`
-    """
-
-    def __str__(self):
+    def as_query_string(self) -> str:
         """format as query string, url-quoting parameter names and values"""
         return "&".join(
             "=".join((quote(_param_name), quote(_param_value)))
@@ -59,14 +53,14 @@ class IriQuery(Multidict):
         )
 
 
-@dataclasses.dataclass  # this protocol is also a dataclass, to guarantee a constructor
-class HttpRequestInfo(typing.Protocol):
+@dataclasses.dataclass
+class HttpRequestInfo:
     http_method: HTTPMethod
     uri_path: str
-    query: IriQuery | None = None
-    headers: HttpHeaders | None = None
+    query: Multidict
+    headers: Multidict
 
-    # TODO: content
+    # TODO: content (when needed)
 
 
 class HttpResponseInfo(typing.Protocol):
@@ -75,11 +69,13 @@ class HttpResponseInfo(typing.Protocol):
         ...
 
     @property
-    def headers(self) -> HttpHeaders:
+    def headers(self) -> Multidict:
         ...
 
     async def json_content(self) -> typing.Any:
         ...
+
+    # TODO: streaming (when needed)
 
 
 class _MethodRequestMethod(typing.Protocol):
@@ -91,17 +87,13 @@ class _MethodRequestMethod(typing.Protocol):
     def __call__(
         self,
         uri_path: str,
-        query: IriQuery | Iterable[tuple[str, str]] | Mapping[str, str],
-        headers: HttpHeaders | Iterable[tuple[str, str]] | Mapping[str, str],
+        query: Multidict | KeyValuePairs | None = None,
+        headers: Multidict | KeyValuePairs | None = None,
     ) -> contextlib.AbstractAsyncContextManager[HttpResponseInfo]:
         ...
 
 
 class HttpRequestor(typing.Protocol):
-    @property
-    def request_info_cls(self) -> type[HttpRequestInfo]:
-        ...
-
     @property
     def response_info_cls(self) -> type[HttpResponseInfo]:
         ...
@@ -116,19 +108,16 @@ class HttpRequestor(typing.Protocol):
     @contextlib.asynccontextmanager
     async def request(
         self,
-        # same call signature as HttpRequestInfo constructor:
         http_method: HTTPMethod,
         uri_path: str,
-        query: IriQuery | dict[str, str] | None = None,
-        headers: HttpHeaders | dict[str, str] | None = None,
+        query: Multidict | KeyValuePairs | None = None,
+        headers: Multidict | KeyValuePairs | None = None,
     ):
-        _request_info = self.request_info_cls(
+        _request_info = HttpRequestInfo(
             http_method=http_method,
             uri_path=uri_path,
-            query=(IriQuery(query.items()) if isinstance(query, dict) else query),
-            headers=(
-                HttpHeaders(headers.items()) if isinstance(headers, dict) else headers
-            ),
+            query=(query if isinstance(query, Multidict) else Multidict(query)),
+            headers=(headers if isinstance(headers, Multidict) else Multidict(headers)),
         )
         async with self.send(_request_info) as _response:
             yield _response

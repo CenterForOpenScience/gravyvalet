@@ -176,6 +176,7 @@ class Migration(migrations.Migration):
                 ("max_upload_mb", models.IntegerField()),
                 ("auth_uri", models.URLField()),
                 ("callback_url", models.URLField(default="")),
+                ("api_base_url", models.URLField()),
                 (
                     "credentials_issuer",
                     models.ForeignKey(

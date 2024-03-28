@@ -9,6 +9,10 @@ from addon_toolkit import AddonImp
 from addon_toolkit.storage import StorageAddon
 
 
+if __debug__:
+    from addon_imps.storage import my_blarg
+
+
 __all__ = (
     "get_imp_by_name",
     "get_imp_name",
@@ -25,6 +29,13 @@ class KnownAddonImp(enum.Enum):
         imp_cls=box_dot_com.BoxDotComStorageImp,
         imp_number=1,
     )
+
+    if __debug__:
+        BLARG = AddonImp(
+            addon_protocol_cls=StorageAddon,
+            imp_cls=my_blarg.MyBlargStorage,
+            imp_number=-7,
+        )
 
 
 ###
