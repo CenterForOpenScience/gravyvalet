@@ -1,3 +1,4 @@
+import dataclasses
 import typing
 
 from addon_toolkit import storage
@@ -6,6 +7,7 @@ from addon_toolkit import storage
 ROOT_FOLDER_ID: str = "0"
 
 
+@dataclasses.dataclass(frozen=True)
 class BoxDotComStorageImp(storage.StorageAddon):
     """storage on box.com
 
