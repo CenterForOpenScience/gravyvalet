@@ -1,3 +1,5 @@
+from asgiref.sync import async_to_sync
+
 from addon_service.common.aiohttp_requestor import AiohttpRequestor
 from addon_service.common.aiohttp_session import get_aiohttp_client_session
 from addon_service.models import ConfiguredStorageAddon
@@ -19,7 +21,7 @@ def get_storage_addon_instance(
             max_upload_mb=_external_storage_service.max_upload_mb,
         ),
         network=AiohttpRequestor(
-            client_session=get_aiohttp_client_session(),
+            client_session=async_to_sync(get_aiohttp_client_session)(),
             prefix_url=_external_storage_service.api_base_url,
             credentials=...,
         ),

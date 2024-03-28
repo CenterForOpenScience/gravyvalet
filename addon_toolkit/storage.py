@@ -12,6 +12,7 @@ from addon_toolkit import (
     redirect_operation,
 )
 from addon_toolkit.constrained_http import HttpRequestor
+from addon_toolkit.cursor import Cursor
 
 
 __all__ = ("StorageAddon",)
@@ -48,24 +49,20 @@ class ItemSampleResult:
     """a sample from a possibly-large population of result items"""
 
     items: collections.abc.Collection[ItemResult]
-    total_count: int = 0  # when zero, __post_init__ initializes to `len(items)`
-    this_sample_cursor: str = ""  # when empty, this sample contains all results
-    next_sample_cursor: str | None = None
+    this_sample_cursor: str = ""
+    next_sample_cursor: str | None = None  # when None, this is the last page of results
     prev_sample_cursor: str | None = None
-    init_sample_cursor: str | None = None
+    first_sample_cursor: str = ""
 
-    def __post_init__(self) -> None:
-        if self.total_count == 0:
-            self.total_count = len(self.items)
-        if __debug__ and self.contains_all_results:
-            assert self.total_count == len(self.items)
-            assert self.next_sample_cursor is None
-            assert self.prev_sample_cursor is None
-            assert self.init_sample_cursor is None
+    # optional init var:
+    cursor: dataclasses.InitVar[Cursor | None] = None
 
-    @property
-    def contains_all_results(self) -> bool:
-        return "" == self.this_sample_cursor
+    def __post_init__(self, cursor: Cursor | None):
+        if cursor is not None:
+            self.this_sample_cursor = cursor.this_cursor_str
+            self.next_sample_cursor = cursor.next_cursor_str
+            self.prev_sample_cursor = cursor.prev_cursor_str
+            self.first_sample_cursor = cursor.first_cursor_str
 
 
 @addon_protocol()  # TODO: descriptions with language tags

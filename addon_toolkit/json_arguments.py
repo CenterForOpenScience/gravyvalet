@@ -85,8 +85,6 @@ def json_for_typed_value(type_annotation: typing.Any, value: typing.Any):
     [2, 3, 7]
     """
     if value is None:
-        # check type_annotation allows None
-        assert isinstance(None, type_annotation), f"got {value=} with {type_annotation}"
         return None
     if dataclasses.is_dataclass(type_annotation):
         if not isinstance(value, type_annotation):
@@ -124,7 +122,7 @@ def kwargs_from_json(
         for (_param_name, _arg_value) in args_from_json.items()
     }
     # use inspect.Signature.bind() to validate all required kwargs present
-    return signature.bind(**_kwargs).kwargs
+    return signature.bind(..., **_kwargs).kwargs
 
 
 def arg_value_from_json(

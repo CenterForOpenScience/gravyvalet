@@ -36,11 +36,8 @@ def perform_invocation__blocking(
             )
             invocation.invocation_status = InvocationStatus.SUCCESS
         except BaseException as _e:
-            invocation.operation_result = None
-            invocation.invocation_status = InvocationStatus.PROBLEM
-            print(_e)
-            # TODO: save message/traceback
-            raise
+            invocation.set_exception(_e)
+            raise  # TODO: or swallow?
         finally:
             invocation.save()
             return invocation

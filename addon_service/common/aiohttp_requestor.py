@@ -96,7 +96,7 @@ class _PrivateNetworkInfo(PrivateInfo):
 
     def get_headers(self) -> Multidict:
         # TODO: from self.credentials
-        return Multidict({"Authorization": "Bearer OeG5JQe0tc4clNMXqXsi70RnImBiklby"})
+        return Multidict({"Authorization": "Bearer --"})
 
     def get_full_url(self, relative_url: str) -> str:
         """resolve a url relative to a given prefix

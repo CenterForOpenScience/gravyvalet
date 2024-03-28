@@ -1,3 +1,5 @@
+import traceback
+
 import jsonschema
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -20,10 +22,14 @@ class AddonOperationInvocation(AddonsServiceBaseModel):
     thru_addon = models.ForeignKey("ConfiguredStorageAddon", on_delete=models.CASCADE)
     by_user = models.ForeignKey("UserReference", on_delete=models.CASCADE)
     operation_result = models.JSONField(null=True, default=None, blank=True)
+    exception_type = models.TextField(blank=True, default="")
+    exception_message = models.TextField(blank=True, default="")
+    exception_context = models.TextField(blank=True, default="")
 
     class Meta:
         indexes = [
             models.Index(fields=["operation_identifier"]),
+            models.Index(fields=["exception_type"]),
         ]
 
     class JSONAPIMeta:
@@ -51,5 +57,17 @@ class AddonOperationInvocation(AddonsServiceBaseModel):
                 instance=self.operation_kwargs,
                 schema=self.operation.params_jsonschema,
             )
-        except jsonschema.exceptions.ValidationError as _error:
-            raise ValidationError(_error)
+        except jsonschema.exceptions.ValidationError as _exception:
+            raise ValidationError(_exception)
+
+    def set_exception(self, exception: BaseException) -> None:
+        self.invocation_status = InvocationStatus.EXCEPTION
+        self.exception_type = type(exception).__qualname__
+        self.exception_message = repr(exception)
+        _tb = traceback.TracebackException.from_exception(exception)
+        self.exception_context = "\n".join(_tb.format(chain=True))
+
+    def clear_exception(self) -> None:
+        self.exception_type = ""
+        self.exception_message = ""
+        self.exception_context = ""

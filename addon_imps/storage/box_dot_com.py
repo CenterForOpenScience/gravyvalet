@@ -2,6 +2,7 @@ import dataclasses
 import typing
 
 from addon_toolkit import storage
+from addon_toolkit.cursor import OffsetCursor
 
 
 ROOT_FOLDER_ID: str = "0"
@@ -17,36 +18,21 @@ class BoxDotComStorageImp(storage.StorageAddon):
     async def get_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
         async with self.network.GET(
             _box_root_folder_items_url(),
-            query=self._list_params(page_cursor),
+            query=self._params_from_cursor(page_cursor),
         ) as _response:
-            _json_content = await _response.json_content()
+            _parsed = _BoxDotComParsedJson(await _response.json_content())
             return storage.ItemSampleResult(
-                items=list(self._parse_box_items(_json_content))
-                # TODO: cursors
+                items=list(_parsed.item_results()),
+                cursor=_parsed.cursor(),
             )
 
-    def _list_params(self, cursor: str = "") -> dict[str, str]:
-        # https://developer.box.com/guides/api-calls/pagination/marker-based/
-        _query_params = {"usemarker": "true"}
-        if cursor:
-            _query_params["marker"] = cursor
-        return _query_params
-
-    def _parse_box_items(
-        self, items_json: typing.Any
-    ) -> typing.Iterator[storage.ItemResult]:
-        # https://developer.box.com/reference/resources/items/
-        for _item in items_json["entries"]:
-            yield self._parse_box_item(_item)
-
-    def _parse_box_item(
-        self,
-        item_json: dict[str, typing.Any],
-    ) -> storage.ItemResult:
-        return storage.ItemResult(
-            item_json["id"],
-            item_json["name"],
-        )
+    def _params_from_cursor(self, cursor: str = "") -> dict[str, str]:
+        # https://developer.box.com/guides/api-calls/pagination/offset-based/
+        try:
+            _offset, _limit = cursor.split("|")
+            return {"offset": _offset, "limit": _limit}
+        except ValueError:
+            return {}
 
 
 ###
@@ -63,3 +49,29 @@ def _box_folder_url(folder_id: str) -> str:
 
 def _box_folder_items_url(folder_id: str) -> str:
     return f"{_box_folder_url(folder_id)}/items"
+
+
+@dataclasses.dataclass
+class _BoxDotComParsedJson:
+    response_json: dict[str, typing.Any]
+
+    def item_results(self) -> typing.Iterator[storage.ItemResult]:
+        # https://developer.box.com/reference/resources/items/
+        for _item in self.response_json["entries"]:
+            yield self._parse_item(_item)
+
+    def cursor(self) -> OffsetCursor:
+        return OffsetCursor(
+            offset=self.response_json["offset"],
+            limit=self.response_json["limit"],
+            total_count=self.response_json["total_count"],
+        )
+
+    def _parse_item(
+        self,
+        item_json: dict[str, typing.Any],
+    ) -> storage.ItemResult:
+        return storage.ItemResult(
+            item_id=item_json["id"],
+            item_name=item_json["name"],
+        )

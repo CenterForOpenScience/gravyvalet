@@ -1,11 +1,12 @@
+import asyncio
+import pprint
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from addon_service import models as db
 from addon_service.addon_imp.known import get_imp_by_name
-from addon_service.addon_operation_invocation.perform import (
-    perform_invocation__blocking,
-)
+from addon_service.addon_operation_invocation.perform import perform_invocation__async
 from addon_service.common.invocation import InvocationStatus
 from addon_toolkit import AddonCapabilities
 
@@ -23,22 +24,30 @@ class Command(BaseCommand):
         _invocation = db.AddonOperationInvocation.objects.create(
             invocation_status=InvocationStatus.STARTING,
             operation_identifier="BOX_DOT_COM:get_root_items",
-            operation_kwargs={"item": {"item_id": "foo"}, "page": {}},
+            operation_kwargs={},
             thru_addon=_addon,
             by_user=_user,
         )
-        perform_invocation__blocking(_invocation)
-        print(f"{_invocation.invocation_status=}, {_invocation.operation_result=}")
+        asyncio.run(perform_invocation__async(_invocation))
+        for _attr in (
+            "invocation_status",
+            "operation_result",
+            "exception_message",
+            "exception_type",
+            "exception_context",
+        ):
+            print(f"{_attr}: {pprint.pformat(getattr(_invocation, _attr))}")
 
     def _setup_addon(self, user: db.UserReference) -> db.ConfiguredStorageAddon:
         _box_ci, _ = db.CredentialsIssuer.objects.get_or_create(name="box.com")
-        _box_service, _ = db.ExternalStorageService.objects.get_or_create(
+        _box_service, _ = db.ExternalStorageService.objects.update_or_create(
             int_addon_imp=get_imp_by_name("BOX_DOT_COM").imp_number,
             defaults=dict(
                 max_concurrent_downloads=2,
                 max_upload_mb=2,
-                api_base_url="http://box.example/foo/",  # TODO
+                api_base_url="https://api.box.com/2.0/",
                 auth_uri="http://box.example/fakeauth/",
+                callback_url="http://foo.example/blah/",
                 credentials_issuer=_box_ci,
             ),
         )
