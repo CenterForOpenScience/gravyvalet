@@ -1,6 +1,6 @@
 import aiohttp
 
-from addon_service.common import aiohttp_requestor
+from addon_service.common.aiohttp_requestor import AiohttpRequestor
 from addon_service.models import ConfiguredStorageAddon
 from addon_toolkit.storage import (
     StorageAddon,
@@ -9,7 +9,6 @@ from addon_toolkit.storage import (
 
 
 def get_storage_addon_instance(
-    aiohttp_session: aiohttp.ClientSession,
     configured_storage_addon: ConfiguredStorageAddon,
 ) -> StorageAddon:
     _external_storage_service = (
@@ -20,8 +19,7 @@ def get_storage_addon_instance(
         config=StorageConfig(
             max_upload_mb=_external_storage_service.max_upload_mb,
         ),
-        network=aiohttp_requestor.get_requestor(
-            aiohttp_session,
+        network=AiohttpRequestor(
             _external_storage_service.api_base_url,
         ),
     )

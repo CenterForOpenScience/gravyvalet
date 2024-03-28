@@ -6,7 +6,7 @@ from addon_toolkit import storage
 ROOT_FOLDER_ID: str = "0"
 
 
-class BoxDotComStorage(storage.StorageAddon):
+class BoxDotComStorageImp(storage.StorageAddon):
     """storage on box.com
 
     see https://developer.box.com/reference/
@@ -17,7 +17,7 @@ class BoxDotComStorage(storage.StorageAddon):
             _box_root_folder_items_url(),
             self._list_params(page_cursor),
         )
-        _json_content = await _response.json()
+        _json_content = await _response.json_content()
         return storage.ItemSampleResult(
             items=list(self._parse_box_items(_json_content))
             # TODO: cursors

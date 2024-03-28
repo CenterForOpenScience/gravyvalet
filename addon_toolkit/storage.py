@@ -105,7 +105,7 @@ class StorageAddon(typing.Protocol):
         ...
 
     @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_item_path(self, item_id: str) -> str:
+    async def get_item_path(self, item_id: str) -> PathResult:
         ...
 
     @immediate_operation(capability=AddonCapabilities.ACCESS)

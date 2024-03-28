@@ -1,4 +1,3 @@
-import aiohttp
 from asgiref.sync import (
     async_to_sync,
     sync_to_async,
@@ -21,17 +20,17 @@ __all__ = (
 
 def perform_invocation__blocking(
     invocation: AddonOperationInvocation,
-    addon_instance: object,
 ) -> AddonOperationInvocation:
     # non-async for django transactions
     with dibs(invocation):  # TODO: handle dibs errors
         try:
+            _addon_instance = get_storage_addon_instance(invocation.thru_addon)
             _operation_imp = invocation.operation.operation_imp
             # wrap in a transaction to contain database errors,
             # so status can be saved in the outer transaction
             with transaction.atomic():
                 _result = _operation_imp.call_with_json_kwargs(
-                    addon_instance,
+                    _addon_instance,
                     invocation.operation_kwargs,
                 )
         except BaseException as _e:
@@ -55,13 +54,7 @@ perform_invocation__async = sync_to_async(perform_invocation__blocking)
 
 
 async def full_perform__async(invocation: AddonOperationInvocation):
-    # TODO: reuse sessions?
-    async with aiohttp.ClientSession() as _session:
-        _addon_instance = get_storage_addon_instance(
-            _session,
-            invocation.thru_addon,
-        )  # TODO: consistent imp_cls instantiation (with params, probably)
-        perform_invocation__blocking(invocation, _addon_instance)
+    perform_invocation__blocking(invocation)
 
 
 full_perform__blocking = async_to_sync(full_perform__async)
