@@ -1,6 +1,5 @@
-from asgiref.sync import async_to_sync
-import dataclasses
 import contextlib
+import dataclasses
 import typing
 from http import (  # type: ignore
     HTTPMethod,
@@ -13,10 +12,12 @@ from urllib.parse import (
 
 import aiohttp
 
-from addon_toolkit.http_requestor import (
+from addon_toolkit.constrained_http import (
+    HttpHeaders,
     HttpRequestInfo,
     HttpRequestor,
     HttpResponseInfo,
+    IriQuery,
 )
 
 
@@ -24,14 +25,21 @@ from addon_toolkit.http_requestor import (
 class AiohttpRequestInfo(HttpRequestInfo):
     http_method: HTTPMethod
     uri_path: str
-    query: dict | None = None
-    headers: dict | None = None
+    query: IriQuery | None = None
+    headers: HttpHeaders | None = None
 
 
 @dataclasses.dataclass
 class AiohttpResponseInfo(HttpResponseInfo):
     http_status: HTTPStatus
-    headers: dict | None = None
+    headers: HttpHeaders
+
+    @classmethod
+    def from_aiohttp_response(cls, response: aiohttp.ClientResponse):
+        return cls(
+            HTTPStatus(response.status),
+            HttpHeaders(list(response.headers.items())),
+        )
 
     async def json_content(self) -> typing.Any:
         ...  # TODO
@@ -49,26 +57,32 @@ def get_client_session() -> aiohttp.ClientSession:
     return __SINGLETON_CLIENT_SESSION
 
 
-def close_client_session() -> None:
+async def close_client_session() -> None:
+    # TODO: figure out if/where to call this (or decide it's unnecessary)
     global __SINGLETON_CLIENT_SESSION
     if __SINGLETON_CLIENT_SESSION is not None:
-        _blocking_close = async_to_sync(__SINGLETON_CLIENT_SESSION.close)
-        _blocking_close()
+        await __SINGLETON_CLIENT_SESSION.close()
 
 
+@dataclasses.dataclass(frozen=True)
 class AiohttpRequestor(HttpRequestor):
+    # dataclass fields:
+    __prefix_url: str
+
+    # abstract properties from HttpRequestor:
     request_info_cls = AiohttpRequestInfo
     response_info_cls = AiohttpResponseInfo
 
     @contextlib.asynccontextmanager
-    async def send_request(self, request_info: HttpRequestInfo) -> HttpResponseInfo:
+    async def send(self, request: HttpRequestInfo):
+        # send request via singleton aiohttp client session
         async with get_client_session().request(
-            request_info.http_method,
-            get_full_url(prefix_url, request_info.relative_url),
+            request.http_method,
+            get_full_url(self.__prefix_url, request.uri_path),
             # TODO: content
             # TODO: auth
         ) as _response:
-            yield AiohttpResponseInfo(_response.status)
+            yield AiohttpResponseInfo.from_aiohttp_response(_response)
 
 
 def get_full_url(prefix_url: str, relative_url: str) -> str:

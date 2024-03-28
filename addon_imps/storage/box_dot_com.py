@@ -13,15 +13,15 @@ class BoxDotComStorageImp(storage.StorageAddon):
     """
 
     async def get_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
-        _response = await self.network.GET(
+        async with self.network.GET(
             _box_root_folder_items_url(),
-            self._list_params(page_cursor),
-        )
-        _json_content = await _response.json_content()
-        return storage.ItemSampleResult(
-            items=list(self._parse_box_items(_json_content))
-            # TODO: cursors
-        )
+            query=self._list_params(page_cursor),
+        ) as _response:
+            _json_content = await _response.json_content()
+            return storage.ItemSampleResult(
+                items=list(self._parse_box_items(_json_content))
+                # TODO: cursors
+            )
 
     def _list_params(self, cursor: str = "") -> dict[str, str]:
         # https://developer.box.com/guides/api-calls/pagination/marker-based/

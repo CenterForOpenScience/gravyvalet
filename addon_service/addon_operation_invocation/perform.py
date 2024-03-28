@@ -1,7 +1,4 @@
-from asgiref.sync import (
-    async_to_sync,
-    sync_to_async,
-)
+from asgiref.sync import sync_to_async
 from django.db import transaction
 
 from addon_service.addon_imp.instantiation import get_storage_addon_instance
@@ -12,8 +9,8 @@ from addon_toolkit.json_arguments import json_for_typed_value
 
 
 __all__ = (
+    "perform_invocation__async",
     "perform_invocation__blocking",
-    # TODO: async def perform_invocation__async
     # TODO: @celery.task(def perform_invocation__celery)
 )
 
@@ -33,28 +30,22 @@ def perform_invocation__blocking(
                     _addon_instance,
                     invocation.operation_kwargs,
                 )
+            invocation.operation_result = json_for_typed_value(
+                _operation_imp.declaration.return_dataclass,
+                _result,
+            )
+            invocation.invocation_status = InvocationStatus.SUCCESS
         except BaseException as _e:
             invocation.operation_result = None
             invocation.invocation_status = InvocationStatus.PROBLEM
             print(_e)
             # TODO: save message/traceback
             raise
-        else:  # no errors
-            invocation.operation_result = json_for_typed_value(
-                _operation_imp.declaration.return_dataclass,
-                _result,
-            )
-            invocation.invocation_status = InvocationStatus.SUCCESS
         finally:
             invocation.save()
             return invocation
 
 
 perform_invocation__async = sync_to_async(perform_invocation__blocking)
-
-
-async def full_perform__async(invocation: AddonOperationInvocation):
-    perform_invocation__blocking(invocation)
-
-
-full_perform__blocking = async_to_sync(full_perform__async)
+# ^ someday, this may be reversed to `async def perform_invocation__async(...)`
+# and `perform_invocation__blocking = async_to_sync(perform_invocation__async)`

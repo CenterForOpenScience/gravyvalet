@@ -21,8 +21,8 @@ class KnownAddonImp(enum.Enum):
     """enum with a name for each addon implementation class that should be known to the api"""
 
     BOX_DOT_COM = AddonImp(
-        StorageAddon,
-        imp_cls=box_dot_com.BoxDotComStorage,
+        addon_protocol_cls=StorageAddon,
+        imp_cls=box_dot_com.BoxDotComStorageImp,
         imp_number=1,
     )
 

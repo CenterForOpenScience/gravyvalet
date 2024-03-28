@@ -26,7 +26,6 @@ def jsonschema_for_signature_params(signature: inspect.Signature) -> dict:
      'properties': {'a': {'type': 'string'}, 'b': {'type': 'number'}},
      'required': ['a']}
     """
-    # TODO: required/optional fields
     return {
         "type": "object",
         "properties": {
@@ -43,7 +42,7 @@ def jsonschema_for_signature_params(signature: inspect.Signature) -> dict:
 
 
 def jsonschema_for_dataclass(dataclass: type) -> dict:
-    """build jsonschema corresponding to fields in a dataclass"""
+    """build jsonschema corresponding to the constructor signature of a dataclass"""
     assert dataclasses.is_dataclass(dataclass) and isinstance(dataclass, type)
     return jsonschema_for_signature_params(inspect.signature(dataclass))
 
