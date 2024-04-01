@@ -1,4 +1,6 @@
-"""what a base StorageAddonProtocol could be like (incomplete)"""
+"""a static (and still in progress) definition of what composes a storage addon"""
+
+import collections.abc
 import dataclasses
 import typing
 
@@ -10,48 +12,83 @@ from addon_toolkit import (
     immediate_operation,
     redirect_operation,
 )
+from addon_toolkit.constrained_http import HttpRequestor
+from addon_toolkit.cursor import Cursor
 
 
-__all__ = ("StorageAddonProtocol",)
+__all__ = (
+    "ItemResult",
+    "ItemSampleResult",
+    "PathResult",
+    "PossibleSingleItemResult",
+    "StorageAddonImp",
+    "StorageAddonProtocol",
+    "StorageConfig",
+)
 
 
 ###
-# use dataclasses for operation args and return values
+# dataclasses used for operation args and return values
+
+
+@dataclasses.dataclass(frozen=True)
+class StorageConfig:
+    max_upload_mb: int
 
 
 @dataclasses.dataclass
-class PagedResult:
-    item_ids: list[str]
-    total_count: int = 0
-    next_cursor: str | None = None
-
-    def __post_init__(self):
-        if (self.total_count == 0) and (self.next_cursor is None) and self.item_ids:
-            self.total_count = len(self.item_ids)
-
-
-@dataclasses.dataclass
-class PageArg:
-    cursor: str = ""
-
-
-@dataclasses.dataclass
-class ItemArg:
+class ItemResult:
     item_id: str
+    item_name: str
+    item_path: list[str] | None = None
 
 
-@addon_protocol()
+@dataclasses.dataclass
+class PathResult:
+    ancestor_ids: collections.abc.Sequence[str]  # most distant first
+
+
+@dataclasses.dataclass
+class PossibleSingleItemResult:
+    possible_item: ItemResult | None
+
+
+@dataclasses.dataclass
+class ItemSampleResult:
+    """a sample from a possibly-large population of result items"""
+
+    items: collections.abc.Collection[ItemResult]
+    total_count: int | None = None
+    this_sample_cursor: str = ""
+    next_sample_cursor: str | None = None  # when None, this is the last page of results
+    prev_sample_cursor: str | None = None
+    first_sample_cursor: str = ""
+
+    # optional init var:
+    cursor: dataclasses.InitVar[Cursor | None] = None
+
+    def __post_init__(self, cursor: Cursor | None):
+        if cursor is not None:
+            self.this_sample_cursor = cursor.this_cursor_str
+            self.next_sample_cursor = cursor.next_cursor_str
+            self.prev_sample_cursor = cursor.prev_cursor_str
+            self.first_sample_cursor = cursor.first_cursor_str
+
+
+###
+# use python's typing.Protocol to define a shared interface for storage addons
+
+
+@addon_protocol()  # TODO: descriptions with language tags
 class StorageAddonProtocol(typing.Protocol):
+    def __init__(self, config: StorageConfig, network: HttpRequestor):
+        ...
+
+    ###
+    # declared operations:
+
     @redirect_operation(capability=AddonCapabilities.ACCESS)
-    def download(self, item: ItemArg) -> RedirectResult:
-        ...
-
-    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    def blargblarg(self, item: ItemArg) -> PagedResult:
-        ...
-
-    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    def opop(self, item: ItemArg, page: PageArg) -> PagedResult:
+    def download(self, item_id: str) -> RedirectResult:
         ...
 
     #
@@ -72,18 +109,23 @@ class StorageAddonProtocol(typing.Protocol):
     # "tree-read" operations:
 
     @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_root_item_ids(self, page: PageArg) -> PagedResult:
+    async def get_root_items(self, page_cursor: str = "") -> ItemSampleResult:
         ...
 
-    #
-    #    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    #    async def get_parent_item_id(self, item_id: str) -> str | None: ...
-    #
-    #    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    #    async def get_item_path(self, item_id: str) -> str: ...
-    #
     @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_child_item_ids(self, item: ItemArg, page: PageArg) -> PagedResult:
+    async def get_parent_item_id(self, item_id: str) -> PossibleSingleItemResult:
+        ...
+
+    @immediate_operation(capability=AddonCapabilities.ACCESS)
+    async def get_item_path(self, item_id: str) -> PathResult:
+        ...
+
+    @immediate_operation(capability=AddonCapabilities.ACCESS)
+    async def get_child_items(
+        self,
+        item_id: str,
+        page_cursor: str = "",
+    ) -> ItemSampleResult:
         ...
 
 
@@ -111,3 +153,15 @@ class StorageAddonProtocol(typing.Protocol):
 #
 #    @immediate_operation(capability=AddonCapabilities.UPDATE)
 #    async def pls_restore_version(self, item_id: str, version_id: str): ...
+
+
+@dataclasses.dataclass(frozen=True)
+class StorageAddonImp(StorageAddonProtocol):
+    """a still-abstract implementation of StorageAddonProtocol
+
+    storage-addon implementations should probably inherit this
+    and start implementing operation methods
+    """
+
+    config: StorageConfig
+    network: HttpRequestor

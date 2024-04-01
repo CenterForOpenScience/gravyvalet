@@ -6,10 +6,7 @@ import typing
 
 
 __all__ = (
-    "bound_kwargs_from_json",
-    "dataclass_from_json",
-    "json_for_arguments",
-    "json_for_dataclass",
+    "kwargs_from_json",
     "json_for_typed_value",
     "jsonschema_for_annotation",
     "jsonschema_for_dataclass",
@@ -26,7 +23,6 @@ def jsonschema_for_signature_params(signature: inspect.Signature) -> dict:
      'properties': {'a': {'type': 'string'}, 'b': {'type': 'number'}},
      'required': ['a']}
     """
-    # TODO: required/optional fields
     return {
         "type": "object",
         "properties": {
@@ -43,7 +39,7 @@ def jsonschema_for_signature_params(signature: inspect.Signature) -> dict:
 
 
 def jsonschema_for_dataclass(dataclass: type) -> dict:
-    """build jsonschema corresponding to fields in a dataclass"""
+    """build jsonschema corresponding to the constructor signature of a dataclass"""
     assert dataclasses.is_dataclass(dataclass) and isinstance(dataclass, type)
     return jsonschema_for_signature_params(inspect.signature(dataclass))
 
@@ -63,17 +59,6 @@ def jsonschema_for_annotation(annotation: type) -> dict:
     raise NotImplementedError(f"what do with param annotation '{annotation}'?")
 
 
-def json_for_arguments(bound_kwargs: inspect.BoundArguments) -> dict:
-    """return json-serializable representation of the dataclass instance"""
-    return {
-        _param_name: json_for_typed_value(
-            bound_kwargs.signature.parameters[_param_name].annotation,
-            _arg_value,
-        )
-        for (_param_name, _arg_value) in bound_kwargs.arguments.items()
-    }
-
-
 # TODO generic type: def json_for_typed_value[_ValueType: object](type_annotation: type[_ValueType], value: _ValueType):
 def json_for_typed_value(type_annotation: typing.Any, value: typing.Any):
     """return json-serializable representation of field value
@@ -85,25 +70,27 @@ def json_for_typed_value(type_annotation: typing.Any, value: typing.Any):
     >>> json_for_typed_value(list[int], [2,3,'7'])
     [2, 3, 7]
     """
+    _is_optional, _type = _maybe_optional_type(type_annotation)
     if value is None:
-        # check type_annotation allows None
-        assert isinstance(None, type_annotation), f"got {value=} with {type_annotation}"
+        if not _is_optional:
+            raise ValueError(f"got `None` for non-optional type {type_annotation}")
         return None
-    if dataclasses.is_dataclass(type_annotation):
-        if not isinstance(value, type_annotation):
-            raise ValueError(f"expected instance of {type_annotation}, got {value}")
+    if dataclasses.is_dataclass(_type):
+        if not isinstance(value, _type):
+            raise ValueError(f"expected instance of {_type}, got {value}")
         return json_for_dataclass(value)
-    if issubclass(type_annotation, enum.Enum):
-        if value not in type_annotation:
-            raise ValueError(f"expected member of enum {type_annotation}, got {value}")
+    if issubclass(_type, enum.Enum):
+        if value not in _type:
+            raise ValueError(f"expected member of enum {_type}, got {value}")
         return value.value
-    if type_annotation in (str, int, float):  # check str before Iterable
-        return type_annotation(value)
-    # support parameterized generics like `list[int]`
-    if isinstance(type_annotation, types.GenericAlias):
-        if issubclass(type_annotation.__origin__, typing.Iterable):
+    if _type in (str, int, float):  # check str before Iterable
+        return _type(value)
+    if isinstance(_type, types.GenericAlias):
+        # parameterized generic like `list[int]`
+        if issubclass(_type.__origin__, typing.Iterable):
+            # iterables the only supported generic (...yet)
             try:
-                (_item_annotation,) = type_annotation.__args__
+                (_item_annotation,) = _type.__args__
             except ValueError:
                 pass
             else:
@@ -111,19 +98,28 @@ def json_for_typed_value(type_annotation: typing.Any, value: typing.Any):
                     json_for_typed_value(_item_annotation, _item_value)
                     for _item_value in value
                 ]
-    raise NotImplementedError(
-        f"what do with argument type {type_annotation}? ({value=})"
-    )
+    raise NotImplementedError(f"what do with argument type {_type}? ({value=})")
 
 
-def bound_kwargs_from_json(
-    signature: inspect.Signature, args_from_json: dict
-) -> inspect.BoundArguments:
-    _kwargs = {
-        _param_name: arg_value_from_json(signature.parameters[_param_name], _arg_value)
-        for (_param_name, _arg_value) in args_from_json.items()
-    }
-    return signature.bind_partial(**_kwargs)
+def kwargs_from_json(
+    signature: inspect.Signature,
+    args_from_json: dict,
+) -> dict:
+    try:
+        _kwargs = {
+            _param_name: arg_value_from_json(
+                signature.parameters[_param_name], _arg_value
+            )
+            for (_param_name, _arg_value) in args_from_json.items()
+        }
+        # use inspect.Signature.bind() (with dummy `self` value) to validate all required kwargs present
+        _bound_kwargs = signature.bind(self=..., **_kwargs)
+    except (TypeError, KeyError):
+        raise ValueError(
+            f"invalid json args for signature\n{signature=}\nargs={args_from_json}"
+        )
+    _bound_kwargs.arguments.pop("self")
+    return _bound_kwargs.arguments
 
 
 def arg_value_from_json(
@@ -146,11 +142,14 @@ def arg_value_from_json(
 
 def json_for_dataclass(dataclass_instance) -> dict:
     """return json-serializable representation of the dataclass instance"""
-    return {
-        _field.name: json_for_typed_value(
-            _field.type, getattr(dataclass_instance, _field.name)
-        )
+    _field_value_pairs = (
+        (_field, getattr(dataclass_instance, _field.name))
         for _field in dataclasses.fields(dataclass_instance)
+    )
+    return {
+        _field.name: json_for_typed_value(_field.type, _value)
+        for _field, _value in _field_value_pairs
+        if (_value is not None) or (_field.default is not None)
     }
 
 
@@ -178,3 +177,31 @@ def field_value_from_json(field: dataclasses.Field, dataclass_json: dict):
         assert isinstance(_json_value, field.type)
         return _json_value
     raise NotImplementedError(f"what do with {_json_value=} (value for {field})")
+
+
+def _maybe_optional_type(type_annotation: typing.Any) -> tuple[bool, typing.Any]:
+    """given a type annotation, detect whether it allows `None` and extract the non-optional type
+
+    >>> _maybe_optional_type(int)
+    (False, <class 'int'>)
+    >>> _maybe_optional_type(int | None)
+    (True, <class 'int'>)
+    >>> _maybe_optional_type(None)
+    (True, None)
+    """
+    if isinstance(type_annotation, types.UnionType):
+        _allows_none = type(None) in type_annotation.__args__
+        _nonnone_types = [
+            _alt_type
+            for _alt_type in type_annotation.__args__
+            if _alt_type is not type(None)
+        ]
+        _base_type = (
+            _nonnone_types[0]
+            if len(_nonnone_types) == 1
+            else types.UnionType(*_nonnone_types)
+        )
+    else:
+        _allows_none = type_annotation is None
+        _base_type = type_annotation
+    return (_allows_none, _base_type)

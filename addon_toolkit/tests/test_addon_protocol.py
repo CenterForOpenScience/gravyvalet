@@ -3,6 +3,7 @@ import enum
 import typing
 import unittest
 from http import HTTPMethod
+from unittest.mock import Mock
 
 from addon_toolkit import (
     AddonImp,
@@ -35,7 +36,7 @@ class TestAddonProtocol(unittest.TestCase):
     _expected_put_imp: AddonOperationImp
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         ###
         # declare the capabilities and protocol for a category of addons
 
@@ -49,19 +50,21 @@ class TestAddonProtocol(unittest.TestCase):
             """this _MyProtocol docstring should find its way to browsable docs somewhere"""
 
             @redirect_operation(capability=cls._MyCapability.GET_IT)
-            def url_for_get(self, checksum_iri) -> RedirectResult:
+            def url_for_get(self, checksum_iri: str) -> RedirectResult:
                 """this url_for_get docstring should find its way to docs"""
                 ...
 
             @immediate_operation(capability=cls._MyCapability.GET_IT)
             async def query_relations(
-                self, checksum_iri, query=None
+                self,
+                checksum_iri: str,
+                query: str | None = None,
             ) -> _MyCustomOperationResult:
                 """this query_relations docstring should find its way to docs"""
                 ...
 
             @redirect_operation(capability=cls._MyCapability.PUT_IT)
-            def url_for_put(self, checksum_iri) -> RedirectResult:
+            def url_for_put(self, checksum_iri: str) -> RedirectResult:
                 """this url_for_put docstring should find its way to docs"""
                 ...
 
@@ -69,18 +72,18 @@ class TestAddonProtocol(unittest.TestCase):
         # implement (some of) the protocol's declared operations
 
         class _MyImplementation(_MyProtocol):
-            def url_for_get(self, checksum_iri) -> RedirectResult:
+            def url_for_get(self, checksum_iri: str) -> RedirectResult:
                 """this url_for_get docstring could contain implementation-specific caveats"""
                 return RedirectResult(
-                    HTTPMethod.GET,
                     f"https://myarchive.example///{checksum_iri}",
+                    HTTPMethod.GET,
                 )
 
-            def url_for_put(self, checksum_iri) -> RedirectResult:
+            def url_for_put(self, checksum_iri: str) -> RedirectResult:
                 """this url_for_put docstring could contain implementation-specific caveats"""
                 return RedirectResult(
-                    HTTPMethod.PUT,
                     f"https://myarchive.example///{checksum_iri}",
+                    HTTPMethod.PUT,
                 )
 
         # shared static types
@@ -112,33 +115,45 @@ class TestAddonProtocol(unittest.TestCase):
         # a specific implementation of some of those shared operations
         cls._expected_get_imp = AddonOperationImp(
             addon_imp=cls._my_imp,
-            operation=cls._expected_get_op,
+            declaration=cls._expected_get_op,
         )
         cls._expected_put_imp = AddonOperationImp(
             addon_imp=cls._my_imp,
-            operation=cls._expected_put_op,
+            declaration=cls._expected_put_op,
         )
 
-    def test_get_operations(self):
+    def test_get_operations(self) -> None:
         _protocol_dec = addon_protocol.get_declaration(self._MyProtocol)
         self.assertEqual(
-            set(_protocol_dec.get_operations()),
+            set(_protocol_dec.get_operation_declarations()),
             {self._expected_get_op, self._expected_put_op, self._expected_query_op},
         )
         self.assertEqual(
-            set(_protocol_dec.get_operations(capabilities=[self._MyCapability.GET_IT])),
+            set(
+                _protocol_dec.get_operation_declarations(
+                    capabilities=[self._MyCapability.GET_IT]
+                )
+            ),
             {self._expected_get_op, self._expected_query_op},
         )
         self.assertEqual(
-            set(_protocol_dec.get_operations(capabilities=[self._MyCapability.PUT_IT])),
+            set(
+                _protocol_dec.get_operation_declarations(
+                    capabilities=[self._MyCapability.PUT_IT]
+                )
+            ),
             {self._expected_put_op},
         )
         self.assertEqual(
-            set(_protocol_dec.get_operations(capabilities=[self._MyCapability.UNUSED])),
+            set(
+                _protocol_dec.get_operation_declarations(
+                    capabilities=[self._MyCapability.UNUSED]
+                )
+            ),
             set(),
         )
 
-    def test_get_operation_imps(self):
+    def test_get_operation_imps(self) -> None:
         self.assertEqual(
             set(self._my_imp.get_operation_imps()),
             {self._expected_get_imp, self._expected_put_imp},
@@ -167,3 +182,26 @@ class TestAddonProtocol(unittest.TestCase):
             ),
             set(),
         )
+
+    def test_operation_imp_by_name(self) -> None:
+        self.assertEqual(
+            self._my_imp.get_operation_imp_by_name("url_for_get"),
+            self._expected_get_imp,
+        )
+        self.assertEqual(
+            self._my_imp.get_operation_imp_by_name("url_for_put"),
+            self._expected_put_imp,
+        )
+
+    def test_operation_call(self) -> None:
+        _mock_addon_instance = Mock()
+        _mock_addon_instance.url_for_get.return_value = RedirectResult(
+            "https://myarchive.example///...",
+            HTTPMethod.GET,
+        )
+        _imp_for_get = self._my_imp.get_operation_imp_by_name("url_for_get")
+        _imp_for_get.call_with_json_kwargs(
+            _mock_addon_instance,
+            {"checksum_iri": "..."},
+        )
+        _mock_addon_instance.url_for_get.assert_called_once_with(checksum_iri="...")

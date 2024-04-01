@@ -37,7 +37,7 @@ class AddonOperationDeclaration:
     operation_type: AddonOperationType
     capability: enum.Enum
     operation_fn: Callable  # the decorated function
-    return_dataclass: type = dataclasses.field(
+    return_type: type = dataclasses.field(
         default=type(None),  # if not provided, inferred by __post_init__
         compare=False,
     )
@@ -48,32 +48,32 @@ class AddonOperationDeclaration:
 
     def __post_init__(self):
         _return_type = self.call_signature.return_annotation
-        if self.return_dataclass is type(None):
-            # no return_dataclass declared; infer from type annotation
+        if self.return_type is type(None):
+            # no return_type declared; infer from type annotation
             assert dataclasses.is_dataclass(
                 _return_type
             ), f"operation methods must return a dataclass (got {_return_type} on {self.operation_fn})"
             # use __setattr__ to bypass dataclass frozenness (only here in __post_init__)
-            super().__setattr__("return_dataclass", _return_type)
+            super().__setattr__("return_type", _return_type)
         else:
-            # return_dataclass declared; enforce it
+            # return_type declared; enforce it
             assert dataclasses.is_dataclass(
-                self.return_dataclass
-            ), f"return_dataclass must be a dataclass (got {self.return_dataclass})"
-            if not issubclass(_return_type, self.return_dataclass):
+                self.return_type
+            ), f"return_type must be a dataclass (got {self.return_type})"
+            if not issubclass(_return_type, self.return_type):
                 raise ValueError(
-                    f"expected return type {self.return_dataclass} on operation function {self.operation_fn} (got {_return_type})"
+                    f"expected return type {self.return_type} on operation function {self.operation_fn} (got {_return_type})"
                 )
 
     @property
     def name(self):
-        # TODO: language tag
+        # TODO: language tag (kwarg for tagged string?)
         return self.operation_fn.__name__
 
     @property
     def docstring(self) -> str:
         # TODO: language tag
-        # TODO: consider docstring param on operation decorators, allow overriding __doc__
+        # TODO: docstring/description param on operation decorators, since __doc__ is removed on -O
         return self.operation_fn.__doc__ or ""
 
     @property
@@ -105,7 +105,7 @@ class RedirectResult:
 # decorator for operations that may be performed by a client request (e.g. redirect to waterbutler)
 redirect_operation = addon_operation.with_kwargs(
     operation_type=AddonOperationType.REDIRECT,
-    return_dataclass=RedirectResult,
+    return_type=RedirectResult,
     # TODO: consider adding `save_invocation: bool = True`, set False here
 )
 

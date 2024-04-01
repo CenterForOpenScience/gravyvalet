@@ -28,7 +28,7 @@ class AddonProtocolDeclaration:
 
     protocol_cls: type
 
-    def get_operations(
+    def get_operation_declarations(
         self, *, capabilities: Iterable[enum.Enum] = ()
     ) -> Iterator[AddonOperationDeclaration]:
         _capability_set = set(capabilities)
@@ -40,7 +40,9 @@ class AddonProtocolDeclaration:
             if (not _capability_set) or (_op.capability in _capability_set):
                 yield _op
 
-    def get_operation_by_name(self, op_name: str) -> AddonOperationDeclaration:
+    def get_operation_declaration_by_name(
+        self, op_name: str
+    ) -> AddonOperationDeclaration:
         return addon_operation.get_declaration(
             getattr(self.protocol_cls, op_name),
         )
