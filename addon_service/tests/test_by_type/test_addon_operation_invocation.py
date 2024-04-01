@@ -44,11 +44,9 @@ class TestAddonOperationInvocationCreate(APITestCase):
                 "type": "addon-operation-invocations",
                 "attributes": {
                     "operation_kwargs": {},
+                    "operation_name": self._operation.name,
                 },
                 "relationships": {
-                    "operation": {
-                        "data": jsonapi_ref(self._operation),
-                    },
                     "thru_addon": {
                         "data": jsonapi_ref(self._configured_addon),
                     },
