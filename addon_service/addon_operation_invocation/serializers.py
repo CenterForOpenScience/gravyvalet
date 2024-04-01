@@ -14,6 +14,8 @@ from addon_service.models import (
 )
 from addon_toolkit.operation import AddonOperationType
 
+from .perform import perform_invocation__blocking
+
 
 RESOURCE_TYPE = get_resource_type_from_model(AddonOperationInvocation)
 
@@ -31,6 +33,7 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
             "thru_addon",
             "created",
             "modified",
+            "operation_name",
         ]
 
     url = serializers.HyperlinkedIdentityField(
@@ -41,6 +44,7 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
     operation_result = serializers.JSONField(read_only=True)
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
+    operation_name = serializers.CharField(required=True)
 
     thru_addon = ResourceRelatedField(
         many=False,
@@ -57,6 +61,7 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
     operation = DataclassRelatedDataField(
         dataclass_model=AddonOperationModel,
         related_link_view_name=view_names.related_view(RESOURCE_TYPE),
+        read_only=True,
     )
 
     included_serializers = {
@@ -66,7 +71,10 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
     }
 
     def create(self, validated_data):
-        _operation = validated_data["operation"]
+        _thru_addon = validated_data["thru_addon"]
+        _operation_name = validated_data["operation_name"]
+        _addon_imp_model = _thru_addon.base_account.external_storage_service.addon_imp
+        _operation = _addon_imp_model.get_operation_imp(_operation_name)
         _invocation = AddonOperationInvocation.objects.create(
             operation_identifier=_operation.natural_key_str,
             operation_kwargs=validated_data["operation_kwargs"],
@@ -75,10 +83,7 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
         )
         match _operation.operation_type:
             case AddonOperationType.REDIRECT | AddonOperationType.IMMEDIATE:
-                _addon_instance = (
-                    _operation.imp_cls()
-                )  # TODO: consistent imp_cls instantiation (with params, probably)
-                _invocation.perform_invocation(_addon_instance)  # block until done
+                perform_invocation__blocking(_invocation)
             case AddonOperationType.EVENTUAL:
                 raise NotImplementedError("TODO: enqueue task")
             case _:

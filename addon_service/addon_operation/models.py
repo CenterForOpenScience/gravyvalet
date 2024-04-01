@@ -28,15 +28,15 @@ class AddonOperationModel(BaseDataclassModel):
 
     @property
     def name(self) -> str:
-        return self.operation_imp.operation.name
+        return self.operation_imp.declaration.name
 
     @property
     def operation_type(self) -> AddonOperationType:
-        return self.operation_imp.operation.operation_type
+        return self.operation_imp.declaration.operation_type
 
     @property
     def docstring(self) -> str:
-        return self.operation_imp.operation.docstring
+        return self.operation_imp.declaration.docstring
 
     @property
     def implementation_docstring(self) -> str:
@@ -44,11 +44,7 @@ class AddonOperationModel(BaseDataclassModel):
 
     @property
     def capability(self) -> enum.Enum:
-        return self.operation_imp.operation.capability
-
-    @property
-    def imp_cls(self) -> type:
-        return self.operation_imp.addon_imp.imp_cls
+        return self.operation_imp.declaration.capability
 
     @property
     def implemented_by(self):
@@ -61,7 +57,7 @@ class AddonOperationModel(BaseDataclassModel):
     @property
     def params_jsonschema(self) -> dict:
         return jsonschema_for_signature_params(
-            self.operation_imp.operation.call_signature
+            self.operation_imp.declaration.call_signature
         )
 
     class JSONAPIMeta:

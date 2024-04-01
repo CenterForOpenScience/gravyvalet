@@ -33,6 +33,10 @@ class AddonImpModel(BaseDataclassModel):
         return self.imp.addon_protocol.protocol_cls.__doc__ or ""
 
     @property
+    def imp_cls(self) -> type:
+        return self.imp.imp_cls
+
+    @property
     def imp_docstring(self) -> str:
         return self.imp.imp_cls.__doc__ or ""
 
@@ -41,6 +45,9 @@ class AddonImpModel(BaseDataclassModel):
         return [
             AddonOperationModel(_op_imp) for _op_imp in self.imp.get_operation_imps()
         ]
+
+    def get_operation_imp(self, operation_name: str):
+        return AddonOperationModel(self.imp.get_operation_imp_by_name(operation_name))
 
     class JSONAPIMeta:
         resource_name = "addon-imps"

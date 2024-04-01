@@ -1,8 +1,8 @@
 import enum
 
 
-class InvocationStatus(enum.IntEnum):
+class InvocationStatus(enum.Enum):
     STARTING = 1
     GOING = 2
     SUCCESS = 3
-    PROBLEM = 128
+    EXCEPTION = 128

@@ -54,6 +54,7 @@ class ExternalStorageServiceFactory(DjangoModelFactory):
     max_concurrent_downloads = factory.Faker("pyint")
     max_upload_mb = factory.Faker("pyint")
     auth_callback_url = "https://osf.io/auth/callback"
+    api_base_url = factory.Sequence(lambda n: f"http://api.example/{n}")
     int_addon_imp = get_imp_by_name("BLARG").imp_number
     oauth2_client_config = factory.SubFactory(OAuth2ClientConfigFactory)
     supported_scopes = ["service.url/grant_all"]

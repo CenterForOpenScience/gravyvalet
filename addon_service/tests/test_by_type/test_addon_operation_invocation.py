@@ -25,7 +25,7 @@ class TestAddonOperationInvocationCreate(APITestCase):
         cls._configured_addon = _factories.ConfiguredStorageAddonFactory()
         cls._user = cls._configured_addon.base_account.account_owner
         cls._operation = models.AddonOperationModel.get_by_natural_key_str(
-            "BLARG:blargblarg"
+            "BLARG:get_root_items"
         )
 
     def setUp(self):
@@ -43,7 +43,7 @@ class TestAddonOperationInvocationCreate(APITestCase):
             "data": {
                 "type": "addon-operation-invocations",
                 "attributes": {
-                    "operation_kwargs": {"item": {"item_id": "foo"}},
+                    "operation_kwargs": {},
                 },
                 "relationships": {
                     "operation": {
@@ -66,9 +66,15 @@ class TestAddonOperationInvocationCreate(APITestCase):
         self.assertEqual(
             _resp.data["operation_result"],
             {
-                "item_ids": ["hello"],
-                "next_cursor": None,
+                "items": [
+                    {
+                        "item_id": "hello",
+                        "item_name": "Hello!?",
+                    }
+                ],
                 "total_count": 1,
+                "this_sample_cursor": "",
+                "first_sample_cursor": "",
             },
         )
         self.assertEqual(

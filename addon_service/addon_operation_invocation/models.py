@@ -1,16 +1,13 @@
+import traceback
+
 import jsonschema
 from django.core.exceptions import ValidationError
-from django.db import (
-    models,
-    transaction,
-)
+from django.db import models
 
 from addon_service.common.base_model import AddonsServiceBaseModel
-from addon_service.common.dibs import dibs
 from addon_service.common.enums.validators import validate_invocation_status
 from addon_service.common.invocation import InvocationStatus
 from addon_service.models import AddonOperationModel
-from addon_toolkit.json_arguments import json_for_dataclass
 
 
 class AddonOperationInvocation(AddonsServiceBaseModel):
@@ -25,10 +22,14 @@ class AddonOperationInvocation(AddonsServiceBaseModel):
     thru_addon = models.ForeignKey("ConfiguredStorageAddon", on_delete=models.CASCADE)
     by_user = models.ForeignKey("UserReference", on_delete=models.CASCADE)
     operation_result = models.JSONField(null=True, default=None, blank=True)
+    exception_type = models.TextField(blank=True, default="")
+    exception_message = models.TextField(blank=True, default="")
+    exception_context = models.TextField(blank=True, default="")
 
     class Meta:
         indexes = [
             models.Index(fields=["operation_identifier"]),
+            models.Index(fields=["exception_type"]),
         ]
 
     class JSONAPIMeta:
@@ -47,6 +48,10 @@ class AddonOperationInvocation(AddonsServiceBaseModel):
         return AddonOperationModel.get_by_natural_key_str(self.operation_identifier)
 
     @property
+    def operation_name(self) -> str:
+        return self.operation.name
+
+    @property
     def owner_uri(self) -> str:
         return self.by_user.user_uri
 
@@ -57,27 +62,17 @@ class AddonOperationInvocation(AddonsServiceBaseModel):
                 instance=self.operation_kwargs,
                 schema=self.operation.params_jsonschema,
             )
-        except jsonschema.exceptions.ValidationError as _error:
-            raise ValidationError(_error)
+        except jsonschema.exceptions.ValidationError as _exception:
+            raise ValidationError(_exception)
 
-    def perform_invocation(self, addon_instance: object):  # TODO: async_execute?
-        with dibs(self):  # TODO: handle dibs errors
-            try:
-                # wrap in a transaction to contain database errors,
-                # so status can be saved in the outer transaction
-                with transaction.atomic():
-                    _result = self.operation.operation_imp.call_with_json_kwargs(
-                        addon_instance,
-                        self.operation_kwargs,
-                    )
-            except Exception as _e:
-                self.operation_result = None
-                self.invocation_status = InvocationStatus.PROBLEM
-                print(_e)
-                # TODO: save message/traceback
-                raise
-            else:  # no errors
-                self.operation_result = json_for_dataclass(_result)
-                self.invocation_status = InvocationStatus.SUCCESS
-            finally:
-                self.save()
+    def set_exception(self, exception: BaseException) -> None:
+        self.invocation_status = InvocationStatus.EXCEPTION
+        self.exception_type = type(exception).__qualname__
+        self.exception_message = repr(exception)
+        _tb = traceback.TracebackException.from_exception(exception)
+        self.exception_context = "\n".join(_tb.format(chain=True))
+
+    def clear_exception(self) -> None:
+        self.exception_type = ""
+        self.exception_message = ""
+        self.exception_context = ""

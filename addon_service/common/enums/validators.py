@@ -19,7 +19,7 @@ def _validate_enum_value(enum_cls, value, excluded_members=None):
 
 
 ###
-# validators
+# validators for specific controlled vocabs
 
 
 def validate_addon_capability(value):

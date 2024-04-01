@@ -89,14 +89,14 @@ class ConfiguredStorageAddon(AddonsServiceBaseModel):
     @property
     def connected_operation_names(self):
         return [
-            _operation_imp.operation.name
+            _operation_imp.declaration.name
             for _operation_imp in self.iter_connected_operations()
         ]
 
     def iter_connected_operations(self) -> Iterator[AddonOperationImp]:
         _connected_caps = self.connected_capabilities
         for _operation_imp in self.base_account.iter_authorized_operations():
-            if _operation_imp.operation.capability in _connected_caps:
+            if _operation_imp.declaration.capability in _connected_caps:
                 yield _operation_imp
 
     def clean_fields(self, *args, **kwargs):

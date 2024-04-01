@@ -7,4 +7,4 @@ from .serializers import AddonOperationSerializer
 
 class AddonOperationViewSet(DataclassViewset):
     serializer_class = AddonOperationSerializer
-    permission_classes = [AllowAny()]
+    permission_classes = [AllowAny]

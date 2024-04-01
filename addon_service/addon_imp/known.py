@@ -4,9 +4,12 @@ import and add new implementations here to make them available in the api
 """
 import enum
 
-from addon_imps.storage.my_blarg import MyBlargStorage
 from addon_toolkit import AddonImp
 from addon_toolkit.storage import StorageAddonProtocol
+
+
+if __debug__:
+    from addon_imps.storage import my_blarg
 
 
 __all__ = (
@@ -20,15 +23,16 @@ __all__ = (
 class KnownAddonImp(enum.Enum):
     """enum with a name for each addon implementation class that should be known to the api"""
 
-    BLARG = AddonImp(  # BLARG is fake, should be displaced by real imps soon
-        StorageAddonProtocol,
-        imp_cls=MyBlargStorage,
-        imp_number=17,
-    )
+    if __debug__:
+        BLARG = AddonImp(
+            addon_protocol_cls=StorageAddonProtocol,
+            imp_cls=my_blarg.MyBlargStorage,
+            imp_number=-7,
+        )
 
 
 ###
-# helpers using KnownAddonImp
+# helpers for accessing KnownAddonImp
 
 
 def get_imp_by_name(imp_name: str) -> AddonImp:
