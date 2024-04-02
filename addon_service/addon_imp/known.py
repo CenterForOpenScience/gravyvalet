@@ -5,6 +5,7 @@ import and add new implementations here to make them available in the api
 
 import enum
 
+from addon_imps.storage import box_dot_com
 from addon_toolkit import AddonImp
 from addon_toolkit.storage import StorageAddonProtocol
 
@@ -23,6 +24,12 @@ __all__ = (
 @enum.unique
 class KnownAddonImp(enum.Enum):
     """enum with a name for each addon implementation class that should be known to the api"""
+
+    BOX_DOT_COM = AddonImp(
+        addon_protocol_cls=StorageAddonProtocol,
+        imp_cls=box_dot_com.BoxDotComStorageImp,
+        imp_number=1,
+    )
 
     if __debug__:
         BLARG = AddonImp(

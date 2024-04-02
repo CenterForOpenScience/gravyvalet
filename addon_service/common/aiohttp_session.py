@@ -8,7 +8,7 @@ __all__ = ("get_aiohttp_client_session", "close_client_session")
 __SINGLETON_CLIENT_SESSION: aiohttp.ClientSession | None = None
 
 
-async def get_aiohttp_client_session() -> aiohttp.ClientSession:
+def get_aiohttp_client_session() -> aiohttp.ClientSession:
     global __SINGLETON_CLIENT_SESSION
     if __SINGLETON_CLIENT_SESSION is None:
         __SINGLETON_CLIENT_SESSION = aiohttp.ClientSession(
@@ -25,5 +25,4 @@ async def close_client_session() -> None:
         __SINGLETON_CLIENT_SESSION = None
 
 
-get_aiohttp_client_session_sync = async_to_sync(get_aiohttp_client_session)
 close_client_session_sync = async_to_sync(close_client_session)

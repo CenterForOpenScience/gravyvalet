@@ -51,7 +51,7 @@ def jsonschema_for_annotation(annotation: type) -> dict:
     if dataclasses.is_dataclass(annotation):
         return jsonschema_for_dataclass(annotation)
     if issubclass(annotation, enum.Enum):
-        return {"enum": [_item.value for _item in annotation]}
+        return {"enum": [_item.name for _item in annotation]}
     if annotation is str:
         return {"type": "string"}
     if annotation in (int, float):
@@ -84,7 +84,7 @@ def json_for_typed_value(type_annotation: typing.Any, value: typing.Any):
     if issubclass(_type, enum.Enum):
         if value not in _type:
             raise ValueError(f"expected member of enum {_type}, got {value}")
-        return value.value
+        return value.name
     if _type in (str, int, float):  # check str before Iterable
         return _type(value)
     if isinstance(_type, types.GenericAlias):

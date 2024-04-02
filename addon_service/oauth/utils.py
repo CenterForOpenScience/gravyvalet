@@ -1,23 +1,52 @@
-from datetime import timedelta
+import dataclasses
 from http import HTTPStatus
 from secrets import token_urlsafe
+from typing import Iterable
 from urllib.parse import (
     urlencode,
-    urlparse,
-    urlunparse,
+    urlsplit,
+    urlunsplit,
 )
 
-from asgiref.sync import async_to_sync
-from django.db import transaction
-from django.utils import timezone
+from addon_service.common.aiohttp_session import get_aiohttp_client_session
 
-from addon_service.common.aiohttp_session import get_aiohttp_client_session_sync
-from addon_toolkit.credentials import AccessTokenCredentials
+
+_SCOPE_DELIMITER = " "  # https://www.rfc-editor.org/rfc/rfc6749.html#section-3.3
+
+
+@dataclasses.dataclass
+class FreshTokenResult:
+    access_token: str
+    refresh_token: str | None
+    expires_in: int | None
+    scopes: list[str] | None
+
+    @classmethod
+    def from_token_response_json(cls, token_response_json: dict) -> "FreshTokenResult":
+        """build a FreshTokenResult from a successful access token response
+
+        see https://www.rfc-editor.org/rfc/rfc6749.html#section-5.1
+        """
+        return cls(
+            access_token=token_response_json["access_token"],
+            refresh_token=token_response_json.get("refresh_token"),
+            expires_in=token_response_json.get("expires_in"),
+            scopes=_parse_scope_param_value(token_response_json.get("scope")),
+        )
 
 
 def build_auth_url(
-    *, auth_uri, client_id, state_token, authorized_scopes, redirect_uri
-):
+    *,
+    auth_uri: str,
+    client_id: str,
+    state_token: str,
+    authorized_scopes: Iterable[str] | None,
+    redirect_uri: str,
+) -> str:
+    """build a URL that will initiate authorization when visited by a user
+
+    see https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1.1
+    """
     query_params = {
         "response_type": "code",
         "client_id": client_id,
@@ -25,59 +54,80 @@ def build_auth_url(
         "redirect_uri": redirect_uri,
     }
     if authorized_scopes:
-        query_params["scope"] = ",".join(authorized_scopes)
-
-    return urlunparse(urlparse(auth_uri)._replace(query=urlencode(query_params)))
-
-
-def generate_state_token(token_length=16):
-    return token_urlsafe(token_length)
+        query_params["scope"] = " ".join(authorized_scopes)
+    return _url_with_query(auth_uri, query_params)
 
 
-def request_access_token(token_metadata, authorization_code=None):
-    client = get_aiohttp_client_session_sync()
-    token_endpoint_url = _build_token_exchange_url(
-        token_metadata=token_metadata, authorization_code=authorization_code
-    )
-    token_response = async_to_sync(client.post)(token_endpoint_url)
-    if not HTTPStatus(token_response.status_code).is_success:
-        raise RuntimeError  # TODO: something smarter here
-    return token_response.json()
+def generate_state_nonce(nonce_length: int = 16):
+    return token_urlsafe(nonce_length)
 
 
-def _build_token_exchange_url(token_metadata, authorization_code=None):
-    oauth2_client_config = token_metadata.client_details
-    params = {
-        "grant_type": "authorization_code" if authorization_code else "refresh_token",
-        "client_id": oauth2_client_config.client_id,
-        "client_secret": oauth2_client_config.client_secret,
-    }
-    if authorization_code:
-        params["code"] = authorization_code
-        params["redirect_uri"] = oauth2_client_config.auth_callback_url
-    else:
-        params["refresh_token"] = token_metadata.refresh_token
+async def get_initial_access_token(
+    *,
+    token_endpoint_url: str,
+    authorization_code: str,
+    auth_callback_url: str,
+    client_id: str,
+) -> FreshTokenResult:
+    """get a fresh access token using a one-time authorization code
 
-    return urlunparse(
-        urlparse(oauth2_client_config.token_endpoint_url)._replace(
-            query=urlencode(params)
-        )
+    see https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1.3
+    """
+    return await _token_request(
+        token_endpoint_url,
+        {
+            "grant_type": "authorization_code",
+            "code": authorization_code,
+            "redirect_uri": auth_callback_url,
+            "client_id": client_id,
+        },
     )
 
 
-@transaction.atomic
-def update_token_metadata_from_endpoint_response(token_metadata, response_json):
-    token_metadata.state_token = None  # update(
-    token_metadata.refresh_token = response_json.get("refresh_token")
-    token_metadata.access_token_expiration = timezone.now() + timedelta(
-        seconds=int(response_json["expires_in"])
-    )
-    if "scopes" in response_json:
-        token_metadata.update(authorized_scopes=response_json["scopes"])
+async def get_refreshed_access_token(
+    token_endpoint_url: str,
+    refresh_token: str,
+    auth_callback_url: str,
+    client_id: str,
+    scopes: Iterable[str] = (),
+) -> FreshTokenResult:
+    """get a fresh access token using a refresh token
 
-    token_metadata.save()
-    for account in token_metadata.linked_accounts:
-        account.credentials = AccessTokenCredentials(
-            access_token=response_json["access_token"]
-        )
-        account.save()
+    see https://www.rfc-editor.org/rfc/rfc6749.html#section-6
+    """
+    return await _token_request(
+        token_endpoint_url,
+        {
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+            "scope": _get_scope_param_value(scopes),
+            "client_id": client_id,
+        },
+    )
+
+
+###
+# module-private helpers
+
+
+async def _token_request(
+    token_endpoint_url: str, query_params: dict[str, str]
+) -> FreshTokenResult:
+    _url = _url_with_query(token_endpoint_url, query_params)
+    _client = get_aiohttp_client_session()
+    async with _client.post(_url) as _token_response:
+        if not HTTPStatus(_token_response.status).is_success:
+            raise RuntimeError  # TODO: https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2
+        return FreshTokenResult.from_token_response_json(await _token_response.json())
+
+
+def _url_with_query(url: str, query_params: dict) -> str:
+    return urlunsplit(urlsplit(url)._replace(query=urlencode(query_params)))
+
+
+def _parse_scope_param_value(scope_value: str | None) -> list[str]:
+    return scope_value.split(_SCOPE_DELIMITER) if scope_value else []
+
+
+def _get_scope_param_value(scopes: Iterable[str] | None) -> str:
+    return _SCOPE_DELIMITER.join(scopes) if scopes else ""

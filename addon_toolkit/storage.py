@@ -2,6 +2,7 @@
 
 import collections.abc
 import dataclasses
+import enum
 import typing
 
 # note: addon_toolkit.storage is down-import-stream from addon_toolkit
@@ -36,10 +37,16 @@ class StorageConfig:
     max_upload_mb: int
 
 
+class ItemType(enum.Enum):
+    FILE = enum.auto()
+    FOLDER = enum.auto()
+
+
 @dataclasses.dataclass
 class ItemResult:
     item_id: str
     item_name: str
+    item_type: ItemType
     item_path: list[str] | None = None
 
 
@@ -67,7 +74,7 @@ class ItemSampleResult:
     # optional init var:
     cursor: dataclasses.InitVar[Cursor | None] = None
 
-    def __post_init__(self, cursor: Cursor | None):
+    def __post_init__(self, cursor: Cursor | None) -> None:
         if cursor is not None:
             self.this_sample_cursor = cursor.this_cursor_str
             self.next_sample_cursor = cursor.next_cursor_str
@@ -107,6 +114,9 @@ class StorageAddonProtocol(typing.Protocol):
     # "tree-read" operations:
 
     @immediate_operation(capability=AddonCapabilities.ACCESS)
+    async def get_root_folders(self, page_cursor: str = "") -> ItemSampleResult: ...
+
+    @immediate_operation(capability=AddonCapabilities.ACCESS)
     async def get_root_items(self, page_cursor: str = "") -> ItemSampleResult: ...
 
     @immediate_operation(capability=AddonCapabilities.ACCESS)
@@ -120,6 +130,7 @@ class StorageAddonProtocol(typing.Protocol):
         self,
         item_id: str,
         page_cursor: str = "",
+        item_type: ItemType | None = None,
     ) -> ItemSampleResult: ...
 
 

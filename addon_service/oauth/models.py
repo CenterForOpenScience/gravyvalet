@@ -1,9 +1,17 @@
+from datetime import timedelta
+
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import (
+    models,
+    transaction,
+)
+from django.utils import timezone
 
 from addon_service.common.base_model import AddonsServiceBaseModel
+from addon_toolkit.credentials import AccessTokenCredentials
 
+from .utils import FreshTokenResult
 from .validators import ensure_shared_client
 
 
@@ -28,16 +36,26 @@ class OAuth2ClientConfig(AddonsServiceBaseModel):
         app_label = "addon_service"
 
 
+class OAuth2TokenMetadataManager(models.Manager):
+    def get_by_state_token(self, state_token: str):
+        try:
+            _pk, _, _state_nonce = state_token.partition(".")
+        except ValueError:
+            raise ValueError('invalid state_token, expected "{pk}.{nonce}"')
+        # may raise OAuth2TokenMetadata.DoesNotExist or OAuth2TokenMetadata.MultipleObjectsReturned
+        return self.filter(pk=_pk, state_nonce=_state_nonce).get()
+
+
 class OAuth2TokenMetadata(AddonsServiceBaseModel):
     """
     Model for storing attribute that are related to an OAuth2 Access Token
     but are not actually used for authenticating with the external service.
     """
 
-    # The token used to identify the initiatl auth request with the external service
-    state_token = models.CharField(null=True, blank=True, db_index=True)
-    # The unique ID of the user on the external sservice
-    user_id = models.CharField(null=True, blank=True)
+    objects = OAuth2TokenMetadataManager()  # custom manager
+
+    # A one-time-use value to identify the initial auth request with the external service
+    state_nonce = models.CharField(null=True, blank=True)
     # The token used to exchange access tokens
     refresh_token = models.CharField(null=True, blank=True, db_index=True)
     # The expiration time of the access token stored in Credentials
@@ -46,8 +64,12 @@ class OAuth2TokenMetadata(AddonsServiceBaseModel):
     authorized_scopes = ArrayField(models.CharField(), null=False)
 
     @property
+    def state_token(self) -> str | None:
+        return f"{self.pk}.{self.state_nonce}" if self.state_nonce else None
+
+    @property
     def linked_accounts(self):
-        return tuple(self.authorized_storage_accounts.all())
+        return self.authorized_storage_accounts.all()
 
     @property
     def client_details(self):
@@ -59,19 +81,37 @@ class OAuth2TokenMetadata(AddonsServiceBaseModel):
             return
 
         ensure_shared_client(self)
-        if self.state_token and self.refresh_token:
+        if self.state_nonce and self.refresh_token:
             raise ValidationError(
-                "Error on OAuth2 Flow: state token and refresh token both present."
+                "Error on OAuth2 Flow: state nonce and refresh token both present."
             )
-        if not (self.state_token or self.refresh_token):
+        if not (self.state_nonce or self.refresh_token):
             raise ValidationError(
-                "Error in OAuth2 Flow: Neither state token nor refresh token present."
+                "Error in OAuth2 Flow: Neither state nonce nor refresh token present."
             )
+
+    @transaction.atomic
+    def update_with_fresh_token(self, fresh_token_result: FreshTokenResult):
+        # update this record's fields
+        self.state_nonce = None  # one-time-use, now used
+        self.refresh_token = fresh_token_result.refresh_token
+        if fresh_token_result.expires_in is None:
+            self.access_token_expiration = None
+        else:
+            self.access_token_expiration = timezone.now() + timedelta(
+                seconds=fresh_token_result.expires_in
+            )
+        self.authorized_scopes = fresh_token_result.scopes
+        self.save()
+        # update related records' fields
+        _credentials = AccessTokenCredentials(
+            access_token=fresh_token_result.access_token
+        )
+        for _account in tuple(self.linked_accounts):
+            _account.credentials = _credentials
+            _account.save()
 
     class Meta:
         verbose_name = "OAuth2 Token Metadata"
         verbose_name_plural = "OAuth2 Token Metadata"
         app_label = "addon_service"
-        constraints = [
-            models.UniqueConstraint(fields=["state_token"], name="unique state token")
-        ]

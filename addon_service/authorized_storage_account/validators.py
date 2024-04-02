@@ -26,10 +26,10 @@ def validate_oauth_state(account):
         or not account.oauth2_token_metadata
     ):
         return
-    if bool(account.credentials) == bool(account.oauth2_token_metadata.state_token):
+    if bool(account.credentials) == bool(account.oauth2_token_metadata.state_nonce):
         raise ValidationError(
             {
-                "credentials": "OAuth2 accounts must assign exactly one of state_token and access_token"
+                "credentials": "OAuth2 accounts must assign exactly one of state_nonce and access_token"
             }
         )
     if account.credentials and not account.oauth2_token_metadata.refresh_token:

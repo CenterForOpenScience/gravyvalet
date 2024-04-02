@@ -1,4 +1,3 @@
-from secrets import token_urlsafe
 from typing import Iterator
 
 from django.core.exceptions import ValidationError
@@ -15,7 +14,10 @@ from addon_service.credentials import (
     ExternalCredentials,
 )
 from addon_service.oauth.models import OAuth2TokenMetadata
-from addon_service.oauth.utils import build_auth_url
+from addon_service.oauth.utils import (
+    build_auth_url,
+    generate_state_nonce,
+)
 from addon_toolkit import (
     AddonCapabilities,
     AddonImp,
@@ -132,7 +134,7 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
         ]
 
     @property
-    def auth_url(self) -> str:
+    def auth_url(self) -> str | None:
         """Generates the url required to initiate OAuth2 credentials exchange.
 
         Returns None if the ExternalStorageService does not support OAuth2
@@ -164,22 +166,13 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
     def initiate_oauth2_flow(self, authorized_scopes=None):
         if self.credentials_format is not CredentialsFormats.OAUTH2:
             raise ValueError("Cannot initaite OAuth flow for non-OAuth credentials")
-        # It's theoretically possible to generate the same token multiple times.
-        # Since the token is UNIQUE in the database, this will result in a ValidationError
-        # Keep on trying if that happens (or maybe find a smrter solution)
-        while True:
-            try:
-                self.oauth2_token_metadata = OAuth2TokenMetadata.objects.create(
-                    authorized_scopes=authorized_scopes
-                    or self.external_service.supported_scopes,
-                    state_token=token_urlsafe(16),
-                )
-            except ValidationError as e:
-                if "state_token" in e.error_dict:
-                    continue
-            else:
-                self.save()
-                return
+        self.oauth2_token_metadata = OAuth2TokenMetadata.objects.create(
+            authorized_scopes=(
+                authorized_scopes or self.external_service.supported_scopes
+            ),
+            state_nonce=generate_state_nonce(),
+        )
+        self.save()
 
     def iter_authorized_operations(self) -> Iterator[AddonOperationImp]:
         _addon_imp: AddonImp = self.external_storage_service.addon_imp.imp

@@ -34,6 +34,7 @@ class TestAddonOperationInvocationCreate(APITestCase):
                     {
                         "item_id": "hello",
                         "item_name": "Hello!?",
+                        "item_type": "FOLDER",
                     }
                 ],
                 "total_count": 1,
