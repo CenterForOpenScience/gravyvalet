@@ -4,8 +4,9 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from addon_service.common.base_model import AddonsServiceBaseModel
-from addon_service.common.credentials import CredentialsFormats
 from addon_service.oauth import OAuth2TokenMetadata
+
+from . import CredentialsFormats
 
 
 _CREDENTIALS_VALUE_FIELDS = [
@@ -20,7 +21,7 @@ _CREDENTIALS_VALUE_FIELDS = [
 
 class ExternalCredentials(AddonsServiceBaseModel):
     # TODO: Settle on encryption solution
-    credentials_blob = models.JSONField(null=False, default=dict)
+    credentials_blob = models.JSONField(null=False, blank=True, default=dict)
 
     # Attributes inherited from back-references:
     # authorized_storage_account (AuthorizedStorageAccount._credentials, One2One)
@@ -33,12 +34,10 @@ class ExternalCredentials(AddonsServiceBaseModel):
 
     @property
     def authorized_accounts(self):
-        account_backreferences = (self.authorized_storage_account,)
-        return tuple(
-            authorized_account
-            for authorized_account in account_backreferences
-            if authorized_account is not None
-        )
+        try:
+            return (self.authorized_storage_account,)
+        except ExternalCredentials.authorized_storage_account.RelatedObjectDoesNotExist:
+            return None
 
     @staticmethod
     def from_api_blob(api_credentials_blob):
@@ -87,7 +86,7 @@ class ExternalCredentials(AddonsServiceBaseModel):
         match self.format:
             case None:
                 return None
-            case CredentialsFormats.OAuth2:
+            case CredentialsFormats.OAUTH2:
                 return self.format.dataclass(
                     **self.credentials_blob,
                     **self.oauth2_token_metadata.as_dataclass_kwargs(),
@@ -99,7 +98,7 @@ class ExternalCredentials(AddonsServiceBaseModel):
         super().full_clean(*args, **kwargs)
         self._validate_credentials()
 
-    def validate_credentials(self):
+    def _validate_credentials(self):
         if not self.authorized_accounts:
             return  # Credentials may not be associated with an account to start
 

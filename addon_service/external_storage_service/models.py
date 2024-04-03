@@ -25,10 +25,10 @@ class ExternalStorageService(AddonsServiceBaseModel):
     default_scopes = ArrayField(models.CharField(), null=True, blank=True)
     max_concurrent_downloads = models.IntegerField(null=False)
     max_upload_mb = models.IntegerField(null=False)
-    callback_url = models.URLField(null=False, default="")
+    auth_callback_url = models.URLField(null=False, default="")
 
-    oauth_client_config = models.ForeignKey(
-        "addon_service.OAuthClientConfig",
+    oauth2_client_config = models.ForeignKey(
+        "addon_service.OAuth2ClientConfig",
         on_delete=models.CASCADE,
         related_name="external_storage_services",
     )
@@ -49,7 +49,7 @@ class ExternalStorageService(AddonsServiceBaseModel):
     def auth_uri(self):
         if self.credentials_format is not CredentialsFormats.OAUTH2:
             return None
-        return self.oauth_client_config.auth_uri
+        return self.oauth2_client_config.auth_uri
 
     @property
     def credentials_format(self):
@@ -58,7 +58,7 @@ class ExternalStorageService(AddonsServiceBaseModel):
     def full_clean(self, *args, **kwargs):
         super().full_clean(*args, **kwargs)
         if (
-            self.credentials_format is CredentialsFormats.OAuth2
-            and not self.oauth_client_config
+            self.credentials_format is CredentialsFormats.OAUTH2
+            and not self.oauth2_client_config
         ):
             raise ValidationError("OAuth Services must link their Client Config")

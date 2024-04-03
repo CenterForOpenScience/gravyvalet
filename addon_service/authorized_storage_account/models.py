@@ -43,6 +43,8 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
         on_delete=models.CASCADE,
         primary_key=False,
         null=True,
+        blank=True,
+        related_name="authorized_storage_account",
     )
 
     class Meta:
@@ -59,7 +61,7 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
 
     @cached_property
     def credentials_format(self):
-        return self.service.credentials_format
+        return self.external_service.credentials_format
 
     @property
     def credentials(self):
@@ -97,12 +99,12 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
     def authorized_operation_names(self):
         return [
             _operation_imp.operation.name
-            for _operation_imp in self.external_self.iter_authorized_operations()
+            for _operation_imp in self.iter_authorized_operations()
         ]
 
     @property
     def auth_url(self) -> str:
-        if self.credentials_format is not CredentialsFormats.OAuth2:
+        if self.credentials_format is not CredentialsFormats.OAUTH2:
             return None
 
         state_token = self.credentials.state_token
@@ -123,8 +125,10 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
             self._credentials._update(api_credentials_blob)
             return
 
-        if self.credentials_format is CredentialsFormats.OAuth2:
-            _credentials = ExternalCredentials.initiate_oauth2_flow(authorized_scopes)
+        if self.credentials_format is CredentialsFormats.OAUTH2:
+            _credentials = ExternalCredentials.initiate_oauth2_flow(
+                authorized_scopes or self.external_service.default_scopes
+            )
         else:
             _credentials = ExternalCredentials.from_api_blob(api_credentials_blob)
         self._credentials = _credentials

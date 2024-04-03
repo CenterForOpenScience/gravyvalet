@@ -26,9 +26,8 @@ class OAuth2ClientConfigFactory(DjangoModelFactory):
     class Meta:
         model = db.OAuth2ClientConfig
 
-    int_credentials_format = CredentialsFormats.OAUTH2.value
     auth_uri = factory.Sequence(lambda n: f"{settings.AUTH_URI_ID}{n}")
-    oauth_client_id = factory.Faker("word")
+    client_id = factory.Faker("word")
 
 
 class AddonOperationInvocationFactory(DjangoModelFactory):
@@ -54,10 +53,11 @@ class ExternalStorageServiceFactory(DjangoModelFactory):
     service_name = factory.Faker("word")
     max_concurrent_downloads = factory.Faker("pyint")
     max_upload_mb = factory.Faker("pyint")
-    callback_url = "https://osf.io/auth/callback"
+    auth_callback_url = "https://osf.io/auth/callback"
     int_credentials_format = CredentialsFormats.OAUTH2.value
     int_addon_imp = get_imp_by_name("BLARG").imp_number
     oauth2_client_config = factory.SubFactory(OAuth2ClientConfigFactory)
+    default_scopes = ["service.url/grant_all"]
 
 
 class AuthorizedStorageAccountFactory(DjangoModelFactory):
@@ -66,14 +66,12 @@ class AuthorizedStorageAccountFactory(DjangoModelFactory):
 
     default_root_folder = "/"
     authorized_capabilities = factory.List([AddonCapabilities.ACCESS])
-    external_storage_service = factory.SubFactory(ExternalStorageServiceFactory)
-    account_owner = factory.SubFactory(UserReferenceFactory)
 
     @classmethod
     def _create(
         cls,
-        target_class,
-        external_service=None,
+        model_class,
+        external_storage_service=None,
         account_owner=None,
         credentials_dict=None,
         authorized_scopes=None,
@@ -81,7 +79,8 @@ class AuthorizedStorageAccountFactory(DjangoModelFactory):
         **kwargs,
     ):
         account = super()._create(
-            external_storage_service=external_service
+            model_class=model_class,
+            external_storage_service=external_storage_service
             or ExternalStorageServiceFactory(),
             account_owner=account_owner or UserReferenceFactory(),
             *args,

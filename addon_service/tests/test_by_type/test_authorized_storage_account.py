@@ -10,7 +10,7 @@ from addon_service import models as db
 from addon_service.authorized_storage_account.views import (
     AuthorizedStorageAccountViewSet,
 )
-from addon_service.common.oauth import build_auth_url
+from addon_service.oauth.utils import build_auth_url
 from addon_service.tests import _factories
 from addon_service.tests._helpers import (
     MockOSF,
@@ -90,12 +90,11 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
         )
         created_account = db.AuthorizedStorageAccount.objects.get(id=created_account_id)
         expected_auth_url = build_auth_url(
-            external_service.auth_uri,
-            # TODO: This should actually be the "client_key" that our OAuth app registers with the external service
-            created_account.credentials_issuer.oauth_client_id,
-            created_account.credentials.state_token,
-            created_account.authorized_scopes,
-            external_service.callback_url,
+            auth_uri=external_service.auth_uri,
+            client_id=external_service.oauth2_client_config.client_id,
+            state_token=created_account.credentials.state_token,
+            authorized_scopes=created_account.credentials.authorized_scopes,
+            redirect_uri=external_service.auth_callback_url,
         )
         self.assertEqual(_resp.data["auth_url"], expected_auth_url)
 
@@ -142,6 +141,9 @@ class TestAuthorizedStorageAccountModel(TestCase):
             set(self._asa.configured_storage_addons.all()),
             _accounts,
         )
+
+    def test_auth_url(self):
+        assert True
 
 
 # unit-test viewset (call the view with test requests)

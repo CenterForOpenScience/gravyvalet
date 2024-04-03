@@ -8,7 +8,7 @@ class CredentialsBase:
         return True
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class OAuth2Credentials(CredentialsBase):
     access_token: Optional[str] = None
     state_token: Optional[str] = None
@@ -30,18 +30,18 @@ class OAuth2Credentials(CredentialsBase):
             )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class PersonalAccessTokenCredentials(CredentialsBase):
     access_token: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class AccessKeySecretKeyCredentials(CredentialsBase):
     access_key: str
     secret_key: str
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class UsernamePasswordCredentials(CredentialsBase):
     username: str
     password: str

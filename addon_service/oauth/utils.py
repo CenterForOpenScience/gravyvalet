@@ -13,7 +13,7 @@ def build_auth_url(
         "response_type": "code",
         "client_id": client_id,
         "state": state_token,
-        "scope": authorized_scopes.join(",") if authorized_scopes else None,
+        "scope": ",".join(authorized_scopes) if authorized_scopes else None,
         "redirect_uri": redirect_uri,
     }
     return urlunparse(urlparse(auth_uri)._replace(query=urlencode(query_params)))
