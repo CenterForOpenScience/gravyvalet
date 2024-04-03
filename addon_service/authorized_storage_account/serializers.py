@@ -1,5 +1,3 @@
-from secrets import token_urlsafe
-
 from rest_framework.serializers import JSONField
 from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import (
@@ -10,7 +8,6 @@ from rest_framework_json_api.utils import get_resource_type_from_model
 
 from addon_service.addon_operation.models import AddonOperationModel
 from addon_service.common import view_names
-from addon_service.common.credentials import CredentialsFormats
 from addon_service.common.enums.serializers import EnumNameMultipleChoiceField
 from addon_service.common.serializer_fields import (
     DataclassRelatedLinkField,
@@ -19,7 +16,6 @@ from addon_service.common.serializer_fields import (
 from addon_service.models import (
     AuthorizedStorageAccount,
     ConfiguredStorageAddon,
-    ExternalCredentials,
     ExternalStorageService,
     UserReference,
 )
@@ -77,26 +73,21 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
 
     def create(self, validated_data):
         session_user_uri = self.context["request"].session.get("user_reference_uri")
-        authorized_capabilities = validated_data["authorized_capabilities"]
         account_owner, _ = UserReference.objects.get_or_create(
             user_uri=session_user_uri
         )
-        external_storage_service = validated_data["external_storage_service"]
+        service = validated_data["external_storage_service"]
         # TODO(ENG-5189): Flesh this out better
-        if external_storage_service.credentials_format is CredentialsFormats.OAUTH2:
-            credentials_create_kwargs = {"state_token": token_urlsafe(16)}
-        else:
-            credentials_create_kwargs = validated_data["credentials"]
-        credentials = ExternalCredentials.objects.create(
-            credentials_issuer=external_storage_service.credentials_issuer,
-            **credentials_create_kwargs
-        )
-        return AuthorizedStorageAccount.objects.create(
-            external_storage_service=external_storage_service,
+        authorized_account = AuthorizedStorageAccount(
+            external_storage_service=service,
             account_owner=account_owner,
-            authorized_capabilities=authorized_capabilities,
-            credentials=credentials,
+            authorized_capabilities=validated_data.get("authorized_capabilities"),
         )
+        authorized_account.set_credentials(
+            validated_data.get("credentials"),
+            validated_data.get("authorized_scopes"),
+        )
+        return authorized_account
 
     class Meta:
         model = AuthorizedStorageAccount
