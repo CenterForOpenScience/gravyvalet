@@ -1,10 +1,12 @@
-from django.views import View
 from django.utils import timezone
 from django.shortcuts import redirect
 from addon_service.models import ExternalAccount, ExternalCredentials, AuthorizedStorageAccount, ExternalStorageService
+from rest_framework.viewsets import (
+    ViewSet,
+)
 
 
-class OauthCallbackView(View):
+class OauthCallbackViewSet(ViewSet):
     """
     ViewSet to handle OAuth callbacks for different add-ons.
     """
