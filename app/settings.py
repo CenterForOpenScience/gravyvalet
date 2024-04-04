@@ -19,6 +19,8 @@ RESOURCE_REFERENCE_LOOKUP_URL = "https://api.osf.io/v2/guids/{0}/"
 USER_REFERENCE_LOOKUP_URL = "https://api.osf.io/v2/users/me/"
 USER_REFERENCE_COOKIE = "osf"
 
+OSF_BROKER_URL = "amqp://guest:guest@192.168.168.167:5672//"
+
 URI_ID = "http://osf.example/"
 AUTH_URI_ID = "http://osf.auth/"
 
@@ -120,7 +122,7 @@ REST_FRAMEWORK = {
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
-AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS = []  # type: ignore
 
 
 # Internationalization
@@ -141,3 +143,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = "/static/"
+
+# Queue names and routing keys for Rabbit/Celery Messaging
+EXCHANGE_NAME = (
+    "account_status_changes"  # Assuming this is the exchange name used for publishing
+)

@@ -2,22 +2,25 @@ from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import HyperlinkedRelatedField
 from rest_framework_json_api.utils import get_resource_type_from_model
 
+from addon_service.common import view_names
 from addon_service.models import (
     AuthorizedStorageAccount,
     UserReference,
 )
 
 
-RESOURCE_NAME = get_resource_type_from_model(UserReference)
+RESOURCE_TYPE = get_resource_type_from_model(UserReference)
 
 
 class UserReferenceSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name=f"{RESOURCE_NAME}-detail")
+    url = serializers.HyperlinkedIdentityField(
+        view_name=view_names.detail_view(RESOURCE_TYPE)
+    )
 
     authorized_storage_accounts = HyperlinkedRelatedField(
         many=True,
         queryset=AuthorizedStorageAccount.objects.all(),
-        related_link_view_name=f"{RESOURCE_NAME}-related",
+        related_link_view_name=view_names.related_view(RESOURCE_TYPE),
     )
 
     included_serializers = {

@@ -1,5 +1,7 @@
 from addon_service.common.permissions import (
+    IsAuthenticated,
     SessionUserCanViewReferencedResource,
+    SessionUserIsOwner,
     SessionUserIsReferencedResourceAdmin,
 )
 from addon_service.common.viewsets import RetrieveWriteViewSet
@@ -9,16 +11,20 @@ from .serializers import ConfiguredStorageAddonSerializer
 
 
 class ConfiguredStorageAddonViewSet(RetrieveWriteViewSet):
-    queryset = ConfiguredStorageAddon.objects.all()
+    queryset = ConfiguredStorageAddon.objects.active()
     serializer_class = ConfiguredStorageAddonSerializer
 
     def get_permissions(self):
-        if not self.action:
-            return super().get_permissions()
-
-        if self.action in ["retrieve", "retrieve_related", "update", "destroy"]:
-            return [SessionUserCanViewReferencedResource()]
-        elif self.action == "create":
-            return [SessionUserIsReferencedResourceAdmin()]
-        else:
-            raise NotImplementedError("view action permission not implemented")
+        match self.action:
+            case "retrieve" | "retrieve_related":
+                return [IsAuthenticated(), SessionUserCanViewReferencedResource()]
+            case "partial_update" | "update" | "destroy":
+                return [IsAuthenticated(), SessionUserIsOwner()]
+            case "create":
+                return [IsAuthenticated(), SessionUserIsReferencedResourceAdmin()]
+            case None:
+                return super().get_permissions()
+            case _:
+                raise NotImplementedError(
+                    f"no permission implemented for action '{self.action}'"
+                )

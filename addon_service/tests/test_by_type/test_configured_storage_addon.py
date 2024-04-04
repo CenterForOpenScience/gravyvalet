@@ -1,8 +1,10 @@
 import base64
 from http import HTTPStatus
 
+from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from addon_service.models import (
@@ -11,7 +13,6 @@ from addon_service.models import (
 )
 from addon_service.tests import _factories as test_factories
 from addon_service.tests._helpers import MockOSF
-from app import settings
 
 
 class BaseAPITest(APITestCase):
@@ -39,7 +40,7 @@ class BaseAPITest(APITestCase):
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._configured_storage_addon.resource_uri, "admin"
         )
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     def detail_url(self):
         return reverse(
@@ -84,13 +85,39 @@ class ConfiguredStorageAddonAPITests(BaseAPITest):
 class ConfiguredStorageAddonModelTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._configured_storage_addon = test_factories.ConfiguredStorageAddonFactory()
+        # Create active and deactivated users via your factory setup or directly
+        cls.active_user = test_factories.UserReferenceFactory(
+            deactivated=None
+        )  # Assuming you have a factory for UserReference
+        cls.disabled_user = test_factories.UserReferenceFactory(
+            deactivated=timezone.now()
+        )
+
+        # Assuming the ExternalAccountFactory can link to UserReference and you have a method to create a ConfiguredStorageAddon with a base account
+        cls.active_configured_storage_addon = (
+            test_factories.ConfiguredStorageAddonFactory(
+                base_account__external_account__owner=cls.active_user
+            )
+        )
+        cls.disabled_configured_storage_addon = (
+            test_factories.ConfiguredStorageAddonFactory(
+                base_account__external_account__owner=cls.disabled_user
+            )
+        )
 
     def test_model_loading(self):
         loaded_addon = ConfiguredStorageAddon.objects.get(
-            id=self._configured_storage_addon.id
+            id=self.active_configured_storage_addon.id
         )
-        self.assertEqual(self._configured_storage_addon.pk, loaded_addon.pk)
+        self.assertEqual(self.active_configured_storage_addon.pk, loaded_addon.pk)
+
+    def test_active_user_manager_excludes_disabled_users(self):
+        # Fetch all configured storage addons using the manager
+        addons = ConfiguredStorageAddon.objects.active()
+
+        # Ensure that only addons associated with active users are returned
+        self.assertIn(self.active_configured_storage_addon, addons)
+        self.assertNotIn(self.disabled_configured_storage_addon, addons)
 
 
 class ConfiguredStorageAddonViewSetTests(BaseAPITest):
@@ -105,23 +132,30 @@ class ConfiguredStorageAddonViewSetTests(BaseAPITest):
 
 
 class ConfiguredStorageAddonPOSTTests(BaseAPITest):
-    default_payload = {
-        "data": {
-            "type": "configured-storage-addons",
-            "relationships": {
-                "base_account": {
-                    "data": {"type": "authorized-storage-accounts", "id": ""}
+    def get_payload(self, resource_uri: str) -> dict:
+        return {
+            "data": {
+                "type": "configured-storage-addons",
+                "attributes": {
+                    "connected_capabilities": ["ACCESS"],
+                    # TODO: "authorized_resource_uri": resource_uri,
                 },
-                "authorized_resource": {"data": {"type": "resource-references"}},
-            },
+                "relationships": {
+                    "base_account": {
+                        "data": {
+                            "type": "authorized-storage-accounts",
+                            "id": self._configured_storage_addon.base_account.pk,
+                        },
+                    },
+                    "authorized_resource": {
+                        "data": {
+                            "type": "resource-references",
+                            "resource_uri": resource_uri,
+                        }
+                    },
+                },
+            }
         }
-    }
-
-    def setUp(self):
-        super().setUp()
-        self.default_payload["data"]["relationships"]["base_account"]["data"][
-            "id"
-        ] = self._configured_storage_addon.base_account_id
 
     def test_post_with_new_resource(self):
         new_resource_uri = "http://example.com/new_resource/"
@@ -131,12 +165,13 @@ class ConfiguredStorageAddonPOSTTests(BaseAPITest):
         self.assertFalse(
             ResourceReference.objects.filter(resource_uri=new_resource_uri).exists()
         )
-        self.default_payload["data"]["relationships"]["authorized_resource"]["data"][
-            "resource_uri"
-        ] = new_resource_uri
 
         response = self.client.post(
-            self.list_url(), self.default_payload, format="vnd.api+json"
+            self.list_url(),
+            self.get_payload(
+                new_resource_uri,
+            ),
+            format="vnd.api+json",
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertTrue(

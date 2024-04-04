@@ -114,7 +114,7 @@ class TestExternalStorageServiceViewSet(TestCase):
         self.assertEqual(
             set(_content["data"]["relationships"].keys()),
             {
-                "authorized_storage_accounts",
+                "addon_imp",
             },
         )
 
@@ -141,28 +141,11 @@ class TestExternalStorageServiceRelatedView(TestCase):
             {"get": "retrieve_related"},
         )
 
-    def test_get_related__empty(self):
+    def test_get_related(self):
         _resp = self._related_view(
             get_test_request(),
             pk=self._ess.pk,
-            related_field="authorized_storage_accounts",
+            related_field="addon_imp",
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
-        self.assertEqual(_resp.data, [])
-
-    def test_get_related__several(self):
-        _accounts = _factories.AuthorizedStorageAccountFactory.create_batch(
-            size=5,
-            external_storage_service=self._ess,
-        )
-        _resp = self._related_view(
-            get_test_request(),
-            pk=self._ess.pk,
-            related_field="authorized_storage_accounts",
-        )
-        self.assertEqual(_resp.status_code, HTTPStatus.OK)
-        _content = json.loads(_resp.rendered_content)
-        self.assertEqual(
-            {_datum["id"] for _datum in _content["data"]},
-            {str(_account.pk) for _account in _accounts},
-        )
+        self.assertEqual(_resp.data["name"], self._ess.addon_imp.name)

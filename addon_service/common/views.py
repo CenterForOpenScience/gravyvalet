@@ -4,9 +4,7 @@ from django.shortcuts import redirect
 from addon_service.models import ExternalAccount, ExternalCredentials, AuthorizedStorageAccount, ExternalStorageService
 
 
-
-
-class OauthCallbackViewSet(viewsets.ViewSet):
+class OauthCallbackView(View):
     """
     ViewSet to handle OAuth callbacks for different add-ons.
     """

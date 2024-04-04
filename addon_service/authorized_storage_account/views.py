@@ -13,9 +13,14 @@ class AuthorizedStorageAccountViewSet(RetrieveWriteViewSet):
     serializer_class = AuthorizedStorageAccountSerializer
 
     def get_permissions(self):
-        if not self.action:
-            return super().get_permissions()
-
-        if self.action in ["retrieve", "retrieve_related", "update", "destroy"]:
-            return [SessionUserIsOwner()]
-        return [IsAuthenticated()]
+        match self.action:
+            case "retrieve" | "retrieve_related" | "partial_update" | "update" | "destroy":
+                return [IsAuthenticated(), SessionUserIsOwner()]
+            case "create":
+                return [IsAuthenticated()]
+            case None:
+                return super().get_permissions()
+            case _:
+                raise NotImplementedError(
+                    f"no permission implemented for action '{self.action}'"
+                )

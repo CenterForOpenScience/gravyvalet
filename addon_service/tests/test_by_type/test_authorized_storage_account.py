@@ -1,6 +1,7 @@
 import json
 from http import HTTPStatus
 
+from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
@@ -9,12 +10,12 @@ from addon_service import models as db
 from addon_service.authorized_storage_account.views import (
     AuthorizedStorageAccountViewSet,
 )
+from addon_service.common.oauth import build_auth_url
 from addon_service.tests import _factories
 from addon_service.tests._helpers import (
     MockOSF,
     get_test_request,
 )
-from app import settings
 
 
 class TestAuthorizedStorageAccountAPI(APITestCase):
@@ -27,7 +28,7 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
         super().setUp()
         self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
         self._mock_osf = MockOSF()
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     @property
     def _detail_path(self):
@@ -49,7 +50,7 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
             },
         )
 
-    def test_get(self):
+    def test_get_detail(self):
         _resp = self.client.get(self._detail_path)
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         self.assertEqual(
@@ -64,6 +65,7 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
             "data": {
                 "type": "authorized-storage-accounts",
                 "attributes": {
+                    "authorized_capabilities": ["ACCESS"],
                     "username": "<placeholder-username>",
                     "password": "<placeholder-password>",
                 },
@@ -88,6 +90,15 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
                 id=created_account_id
             ).exists()
         )
+        created_account = db.AuthorizedStorageAccount.objects.get(id=created_account_id)
+        expected_auth_url = build_auth_url(
+            external_service.auth_uri,
+            created_account.external_account.credentials.oauth_key,
+            created_account.external_account.credentials.state_token,
+            created_account.authorized_scopes,
+            external_service.callback_url,
+        )
+        self.assertEqual(_resp.data["auth_url"], expected_auth_url)
 
     def test_methods_not_allowed(self):
         _methods_not_allowed = {
@@ -145,7 +156,7 @@ class TestAuthorizedStorageAccountViewSet(TestCase):
     def setUp(self):
         super().setUp()
         self._mock_osf = MockOSF()
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     def test_get(self):
         _resp = self._view(
@@ -158,7 +169,14 @@ class TestAuthorizedStorageAccountViewSet(TestCase):
             set(_content["data"]["attributes"].keys()),
             {
                 "default_root_folder",
+                "authorized_capabilities",
+                "authorized_operation_names",
+                "auth_url",
             },
+        )
+        self.assertEqual(
+            _content["data"]["attributes"]["authorized_capabilities"],
+            ["ACCESS"],
         )
         self.assertEqual(
             set(_content["data"]["relationships"].keys()),
@@ -166,6 +184,7 @@ class TestAuthorizedStorageAccountViewSet(TestCase):
                 "account_owner",
                 "external_storage_service",
                 "configured_storage_addons",
+                "authorized_operations",
             },
         )
 
@@ -193,7 +212,7 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
     def setUp(self):
         super().setUp()
         self._mock_osf = MockOSF()
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     def test_get_related__empty(self):
         _resp = self._related_view(

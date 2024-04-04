@@ -51,7 +51,6 @@ def authenticate_resource(request, uri, required_permission):
                     raise exceptions.PermissionDenied(
                         "User lacks required permission for this resource."
                     )
-                request.session["resource_reference_permissions"] = permissions
                 return iri
         except SkipAuthMethod:
             continue

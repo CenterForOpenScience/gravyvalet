@@ -1,6 +1,7 @@
 import json
 from http import HTTPStatus
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
@@ -13,7 +14,6 @@ from addon_service.tests._helpers import (
     MockOSF,
     get_test_request,
 )
-from app import settings
 
 
 class TestResourceReferenceAPI(APITestCase):
@@ -33,7 +33,7 @@ class TestResourceReferenceAPI(APITestCase):
             resource_uri=self._resource.resource_uri,
             role="admin",
         )
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     @property
     def _detail_path(self):
@@ -120,7 +120,7 @@ class TestResourceReferenceViewSet(TestCase):
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._resource.resource_uri, "admin"
         )
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     def test_get(self):
         _resp = self._view(
@@ -198,7 +198,7 @@ class TestResourceReferenceRelatedView(TestCase):
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._resource.resource_uri, "admin"
         )
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     def test_get_related__empty(self):
         self._csa.delete()

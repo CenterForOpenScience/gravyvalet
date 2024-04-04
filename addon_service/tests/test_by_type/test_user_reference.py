@@ -1,6 +1,7 @@
 import json
 from http import HTTPStatus
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.test import TestCase
@@ -14,7 +15,6 @@ from addon_service.tests._helpers import (
     get_test_request,
 )
 from addon_service.user_reference.views import UserReferenceViewSet
-from app import settings
 
 
 class TestUserReferenceAPI(APITestCase):
@@ -26,7 +26,7 @@ class TestUserReferenceAPI(APITestCase):
         super().setUp()
         self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
         self._mock_osf = MockOSF()
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     @property
     def _detail_path(self):
@@ -107,6 +107,31 @@ class TestUserReferenceModel(TestCase):
         with self.assertRaises(ValidationError):
             self._user.clean_fields(exclude=["modified"])
 
+    def test_deactivate(self):
+        self.assertIsNone(self._user.deactivated)
+        self._user.deactivate()
+        self.assertIsNotNone(self._user.deactivated)
+
+    def test_delete(self):
+        with self.assertRaises(NotImplementedError):
+            self._user.delete()
+
+    def test_reactivate(self):
+        self._user.deactivate()
+        self.assertIsNotNone(self._user.deactivated)
+        self._user.reactivate()
+        self.assertIsNone(self._user.deactivated)
+
+    def test_merge(self):
+        merge_with = _factories.UserReferenceFactory()
+        _accounts_before_merge = self._user.configured_storage_addons.count()
+        self._user.merge(merge_with)
+        _accounts_after_merge = self._user.configured_storage_addons.count()
+        self.assertEqual(
+            _accounts_after_merge,
+            _accounts_before_merge + merge_with.configured_storage_addons.count(),
+        )
+
 
 # unit-test viewset (call the view with test requests)
 class TestUserReferenceViewSet(TestCase):
@@ -118,7 +143,7 @@ class TestUserReferenceViewSet(TestCase):
     def setUp(self):
         super().setUp()
         self._mock_osf = MockOSF()
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     def test_get(self):
         _resp = self._view(
@@ -165,7 +190,7 @@ class TestUserReferenceRelatedView(APITestCase):
     def setUp(self):
         super().setUp()
         self._mock_osf = MockOSF()
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
         self.request = get_test_request(
             user=self._user,
             cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri},

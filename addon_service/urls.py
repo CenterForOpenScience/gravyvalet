@@ -5,7 +5,7 @@ from rest_framework.routers import (
 from rest_framework_json_api.utils import get_resource_type_from_serializer
 
 from addon_service import views
-from django.conf.urls import path
+from django.urls import path
 
 
 ###
@@ -28,7 +28,7 @@ class _AddonServiceRouter(SimpleRouter):
             url=r"^callback/(?P<addon_name>[^/.]+){trailing_slash}",
             mapping={"get": "retrieve"},
             name="oauth-callback",
-            detail=True,
+            detail=T,
             initkwargs={},
         ),
         # note: omitting relationship "self" links because we don't expect to need them
@@ -59,7 +59,6 @@ _register_viewset(views.ConfiguredStorageAddonViewSet)
 _register_viewset(views.ExternalStorageServiceViewSet)
 _register_viewset(views.ResourceReferenceViewSet)
 _register_viewset(views.UserReferenceViewSet)
-_register_viewset(views.OauthCallbackView)
 
 
 ###
@@ -67,5 +66,8 @@ _register_viewset(views.OauthCallbackView)
 
 __all__ = ("urlpatterns",)
 
+_router.urls += [
+    path(r'^callback/', views.OauthCallbackView.as_view(), name='callback'),
+]
 
 urlpatterns = _router.urls

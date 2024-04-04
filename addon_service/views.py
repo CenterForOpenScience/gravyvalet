@@ -1,5 +1,10 @@
 """ Import views/viewsets here for convenience """
 
+from addon_service.addon_imp.views import AddonImpViewSet
+from addon_service.addon_operation.views import AddonOperationViewSet
+from addon_service.addon_operation_invocation.views import (
+    AddonOperationInvocationViewSet,
+)
 from addon_service.authorized_storage_account.views import (
     AuthorizedStorageAccountViewSet,
 )
@@ -15,6 +20,9 @@ __all__ = (
     "ConfiguredStorageAddonViewSet",
     "ExternalStorageServiceViewSet",
     "ResourceReferenceViewSet",
+    "AddonImpViewSet",
+    "AddonOperationInvocationViewSet",
+    "AddonOperationViewSet",
     "UserReferenceViewSet",
     "UserReferenceViewSet",
     "OauthCallbackView",

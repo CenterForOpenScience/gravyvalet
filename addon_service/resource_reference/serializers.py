@@ -2,21 +2,24 @@ from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import HyperlinkedRelatedField
 from rest_framework_json_api.utils import get_resource_type_from_model
 
+from addon_service.common import view_names
 from addon_service.models import (
     ConfiguredStorageAddon,
     ResourceReference,
 )
 
 
-RESOURCE_NAME = get_resource_type_from_model(ResourceReference)
+RESOURCE_TYPE = get_resource_type_from_model(ResourceReference)
 
 
 class ResourceReferenceSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name=f"{RESOURCE_NAME}-detail")
+    url = serializers.HyperlinkedIdentityField(
+        view_name=view_names.detail_view(RESOURCE_TYPE)
+    )
     configured_storage_addons = HyperlinkedRelatedField(
         many=True,
-        queryset=ConfiguredStorageAddon.objects.all(),
-        related_link_view_name=f"{RESOURCE_NAME}-related",
+        queryset=ConfiguredStorageAddon.objects.active(),
+        related_link_view_name=view_names.related_view(RESOURCE_TYPE),
     )
     included_serializers = {
         "configured_storage_addons": (
