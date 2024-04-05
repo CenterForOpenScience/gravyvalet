@@ -1,28 +1,27 @@
 from django.utils import timezone
-from django.shortcuts import redirect
-from addon_service.models import ExternalAccount, ExternalCredentials, AuthorizedStorageAccount, ExternalStorageService
-from rest_framework.viewsets import (
-    ViewSet,
+from rest_framework.views import View
+from addon_service.models import (
+    ExternalAccount,
+    ExternalStorageService,
+    ExternalCredentials,
+    AuthorizedStorageAccount
 )
+from django.shortcuts import redirect
 
 
-class OauthCallbackViewSet(ViewSet):
+class OauthCallbackView(View):
     """
-    ViewSet to handle OAuth callbacks for different add-ons.
+    Handles oauth callbacks for the GV
     """
+    authentication_classes = ()  # TODO: many options but safest just to whitelist providers I think
+    permission_classes = ()
 
-    def get(self, request, addon_name=None):
-        # This method handles POST requests to the OAuth callback URL.
-        # `addon_name` is the name of the addon passed in the URL.
-
-        if addon_name is None:
-            raise Exception()
-
-        state = request.GET.get("state")
+    def get(self, request):
+        state = request.GET.get("state")  # TODO: we can send much with this, but with one url, we must send the Ess id
         account_owner = request.user
-        external_storage_service = ExternalStorageService.get(name=addon_name)
+        external_storage_service = ExternalStorageService.objects.get(id=state)
 
-        data = external_storage_service.get_oauth_data_from_request(request)
+        data = external_storage_service.get_oauth_data_from_callback(request)
 
         external_credentials = ExternalCredentials.objects.create(
             oauth_key=data['key'],
@@ -43,4 +42,4 @@ class OauthCallbackViewSet(ViewSet):
             external_account=external_account,
         )
 
-        return redirect(state)
+        return redirect(state)  # TODO: This is one of the few UX facing things we will control from GV, make this configurable

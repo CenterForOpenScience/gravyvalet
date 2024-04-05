@@ -24,13 +24,6 @@ class _AddonServiceRouter(SimpleRouter):
             detail=False,
             initkwargs={"suffix": "Related"},
         ),
-       Route(
-            url=r"^callback/(?P<addon_name>[^/.]+){trailing_slash}",
-            mapping={"get": "retrieve"},
-            name="oauth-callback",
-            detail=False,
-            initkwargs={},
-        ),
         # note: omitting relationship "self" links because we don't expect to need them
         # (our frontend is fine PATCHing a top-level resource to update a relationship)
         # and rest_framework_json_api's RelationshipView exposes all relationships from
@@ -60,16 +53,13 @@ _register_viewset(views.ExternalStorageServiceViewSet)
 _register_viewset(views.ResourceReferenceViewSet)
 _register_viewset(views.UserReferenceViewSet)
 
-_router.register(
-    prefix='oauth-callback',
-    viewset=views.OauthCallbackViewSet,
-    basename='oauth-callback',
-)
-
 
 ###
 # the only public part of this module
 
 __all__ = ("urlpatterns",)
 
+
 urlpatterns = _router.urls
+
+urlpatterns += [path(r'callback/', views.OauthCallbackView.as_view(), name='callback')]
