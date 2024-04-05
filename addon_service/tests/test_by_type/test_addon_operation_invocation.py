@@ -23,7 +23,7 @@ class TestAddonOperationInvocationCreate(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls._configured_addon = _factories.ConfiguredStorageAddonFactory()
-        cls._user = cls._configured_addon.base_account.external_account.owner
+        cls._user = cls._configured_addon.base_account.account_owner
         cls._operation = models.AddonOperationModel.get_by_natural_key_str(
             "BLARG:blargblarg"
         )

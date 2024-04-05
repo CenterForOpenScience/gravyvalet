@@ -1,7 +1,6 @@
 from django.utils import timezone
 from rest_framework.views import View
 from addon_service.models import (
-    ExternalAccount,
     ExternalStorageService,
     ExternalCredentials,
     AuthorizedStorageAccount
@@ -17,7 +16,7 @@ class OauthCallbackView(View):
     permission_classes = ()
 
     def get(self, request):
-        state = request.GET.get("state")  # TODO: we can send much with this, but with one url, we must send the Ess id
+        state = request.GET.get("state")  # TODO: we can send much with this, but with one url, we must send the Ess id or credental format
         account_owner = request.user
         external_storage_service = ExternalStorageService.objects.get(id=state)
 

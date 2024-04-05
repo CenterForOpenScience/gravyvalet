@@ -1,12 +1,20 @@
+from functools import cached_property
 from typing import Iterator
 
 from django.contrib.postgres.fields import ArrayField
-from django.db import models
+from django.db import (
+    models,
+    transaction,
+)
 
 from addon_service.addon_operation.models import AddonOperationModel
 from addon_service.common.base_model import AddonsServiceBaseModel
 from addon_service.common.enums.validators import validate_addon_capability
-from addon_service.common.oauth import build_auth_url
+from addon_service.credentials import (
+    CredentialsFormats,
+    ExternalCredentials,
+)
+from addon_service.oauth.utils import build_auth_url
 from addon_toolkit import (
     AddonCapabilities,
     AddonImp,
@@ -18,10 +26,6 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
     int_authorized_capabilities = ArrayField(
         models.IntegerField(validators=[validate_addon_capability])
     )
-
-    # OAUTH Only
-    authorized_scopes = ArrayField(models.CharField(), null=True, blank=True)
-
     default_root_folder = models.CharField(blank=True)
 
     external_storage_service = models.ForeignKey(
@@ -29,10 +33,18 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
         on_delete=models.CASCADE,
         related_name="authorized_storage_accounts",
     )
-    external_account = models.ForeignKey(
-        "addon_service.ExternalAccount",
+    account_owner = models.ForeignKey(
+        "addon_service.UserReference",
         on_delete=models.CASCADE,
         related_name="authorized_storage_accounts",
+    )
+    _credentials = models.OneToOneField(
+        "addon_service.ExternalCredentials",
+        on_delete=models.CASCADE,
+        primary_key=False,
+        null=True,
+        blank=True,
+        related_name="authorized_storage_account",
     )
 
     class Meta:
@@ -42,6 +54,20 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
 
     class JSONAPIMeta:
         resource_name = "authorized-storage-accounts"
+
+    @cached_property
+    def external_service(self):
+        return self.external_storage_service
+
+    @cached_property
+    def credentials_format(self):
+        return self.external_service.credentials_format
+
+    @property
+    def credentials(self):
+        if self._credentials:
+            return self._credentials.as_data()
+        return None
 
     @property
     def authorized_capabilities(self) -> list[AddonCapabilities]:
@@ -57,10 +83,6 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
         self.int_authorized_capabilities = [
             AddonCapabilities(_cap).value for _cap in new_capabilities
         ]
-
-    @property
-    def account_owner(self):
-        return self.external_account.owner  # TODO: prefetch/select_related
 
     @property
     def owner_uri(self) -> str:
@@ -82,16 +104,36 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
 
     @property
     def auth_url(self) -> str:
-        state_token = self.external_account.credentials.state_token
+        if self.credentials_format is not CredentialsFormats.OAUTH2:
+            return None
+
+        state_token = self.credentials.state_token
         if not state_token:
             return None
-        auth_uri = self.external_storage_service.auth_uri
-        authorized_scopes = self.authorized_scopes
-        redirect_uri = self.external_storage_service.callback_url
-        oauth_key = self.external_account.credentials.oauth_key
         return build_auth_url(
-            auth_uri, oauth_key, state_token, authorized_scopes, redirect_uri
+            auth_uri=self.external_service.oauth2_client_config.auth_uri,
+            client_id=self.external_service.oauth2_client_config.client_id,
+            state_token=state_token,
+            authorized_scopes=self.credentials.authorized_scopes,
+            redirect_uri=self.external_service.auth_callback_url,
         )
+
+    @transaction.atomic
+    def set_credentials(self, api_credentials_blob=dict, authorized_scopes=None):
+        known_credentials = self.credentials
+        if known_credentials:
+            self._credentials._update(api_credentials_blob)
+            return
+
+        if self.credentials_format is CredentialsFormats.OAUTH2:
+            _credentials = ExternalCredentials.initiate_oauth2_flow(
+                authorized_scopes or self.external_service.default_scopes
+            )
+        else:
+            _credentials = ExternalCredentials.from_api_blob(api_credentials_blob)
+        self._credentials = _credentials
+        self.save()
+        _credentials.save()  # validate
 
     def iter_authorized_operations(self) -> Iterator[AddonOperationImp]:
         _addon_imp: AddonImp = self.external_storage_service.addon_imp.imp

@@ -31,7 +31,7 @@ class BaseAPITest(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls._configured_storage_addon = test_factories.ConfiguredStorageAddonFactory()
-        cls._user = cls._configured_storage_addon.base_account.external_account.owner
+        cls._user = cls._configured_storage_addon.base_account.account_owner
 
     def setUp(self):
         super().setUp()
@@ -93,15 +93,14 @@ class ConfiguredStorageAddonModelTests(TestCase):
             deactivated=timezone.now()
         )
 
-        # Assuming the ExternalAccountFactory can link to UserReference and you have a method to create a ConfiguredStorageAddon with a base account
         cls.active_configured_storage_addon = (
             test_factories.ConfiguredStorageAddonFactory(
-                base_account__external_account__owner=cls.active_user
+                base_account__account_owner=cls.active_user
             )
         )
         cls.disabled_configured_storage_addon = (
             test_factories.ConfiguredStorageAddonFactory(
-                base_account__external_account__owner=cls.disabled_user
+                base_account__account_owner=cls.disabled_user
             )
         )
 

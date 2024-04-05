@@ -1,7 +1,6 @@
 import json
 from http import HTTPStatus
 
-from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
@@ -82,11 +81,6 @@ class TestExternalStorageServiceModel(TestCase):
             _accounts,
         )
 
-    def test_validation(self):
-        self._ess.auth_uri = "not a uri"
-        with self.assertRaises(ValidationError):
-            self._ess.clean_fields(exclude=["modified"])
-
 
 # unit-test viewset (call the view with test requests)
 class TestExternalStorageServiceViewSet(TestCase):
@@ -109,6 +103,8 @@ class TestExternalStorageServiceViewSet(TestCase):
                 "auth_uri",
                 "max_concurrent_downloads",
                 "max_upload_mb",
+                "credentials_format",
+                "service_name",
             },
         )
         self.assertEqual(

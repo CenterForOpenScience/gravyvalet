@@ -20,7 +20,7 @@ class ConnectedStorageAddonManager(models.Manager):
 
     def active(self):
         return self.get_queryset().filter(
-            base_account__external_account__owner__deactivated__isnull=True
+            base_account__account_owner__deactivated__isnull=True
         )
 
 
@@ -69,11 +69,11 @@ class ConfiguredStorageAddon(AddonsServiceBaseModel):
 
     @property
     def account_owner(self):
-        return self.base_account.external_account.owner
+        return self.base_account.account_owner
 
     @property
     def owner_uri(self) -> str:
-        return self.base_account.external_account.owner.user_uri
+        return self.base_account.owner_uri
 
     @property
     def resource_uri(self):

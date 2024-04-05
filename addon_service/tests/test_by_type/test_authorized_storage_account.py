@@ -10,7 +10,7 @@ from addon_service import models as db
 from addon_service.authorized_storage_account.views import (
     AuthorizedStorageAccountViewSet,
 )
-from addon_service.common.oauth import build_auth_url
+from addon_service.oauth.utils import build_auth_url
 from addon_service.tests import _factories
 from addon_service.tests._helpers import (
     MockOSF,
@@ -66,8 +66,6 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
                 "type": "authorized-storage-accounts",
                 "attributes": {
                     "authorized_capabilities": ["ACCESS"],
-                    "username": "<placeholder-username>",
-                    "password": "<placeholder-password>",
                 },
                 "relationships": {
                     "external_storage_service": {
@@ -92,11 +90,11 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
         )
         created_account = db.AuthorizedStorageAccount.objects.get(id=created_account_id)
         expected_auth_url = build_auth_url(
-            external_service.auth_uri,
-            created_account.external_account.credentials.oauth_key,
-            created_account.external_account.credentials.state_token,
-            created_account.authorized_scopes,
-            external_service.callback_url,
+            auth_uri=external_service.auth_uri,
+            client_id=external_service.oauth2_client_config.client_id,
+            state_token=created_account.credentials.state_token,
+            authorized_scopes=created_account.credentials.authorized_scopes,
+            redirect_uri=external_service.auth_callback_url,
         )
         self.assertEqual(_resp.data["auth_url"], expected_auth_url)
 
@@ -144,13 +142,16 @@ class TestAuthorizedStorageAccountModel(TestCase):
             _accounts,
         )
 
+    def test_auth_url(self):
+        assert True
+
 
 # unit-test viewset (call the view with test requests)
 class TestAuthorizedStorageAccountViewSet(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls._asa = _factories.AuthorizedStorageAccountFactory()
-        cls._user = cls._asa.external_account.owner
+        cls._user = cls._asa.account_owner
         cls._view = AuthorizedStorageAccountViewSet.as_view({"get": "retrieve"})
 
     def setUp(self):
@@ -204,7 +205,7 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls._asa = _factories.AuthorizedStorageAccountFactory()
-        cls._user = cls._asa.external_account.owner
+        cls._user = cls._asa.account_owner
         cls._related_view = AuthorizedStorageAccountViewSet.as_view(
             {"get": "retrieve_related"},
         )

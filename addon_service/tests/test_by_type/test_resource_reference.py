@@ -22,7 +22,7 @@ class TestResourceReferenceAPI(APITestCase):
         cls._csa = _factories.ConfiguredStorageAddonFactory()
         cls._resource = cls._csa.authorized_resource
         # _user magically becomes the current requester
-        cls._user = cls._csa.base_account.external_account.owner
+        cls._user = cls._csa.base_account.account_owner
 
     def setUp(self):
         super().setUp()
@@ -113,7 +113,7 @@ class TestResourceReferenceViewSet(TestCase):
         cls._csa = _factories.ConfiguredStorageAddonFactory()
         cls._resource = cls._csa.authorized_resource
         # _user magically becomes the current requester
-        cls._user = cls._csa.base_account.external_account.owner
+        cls._user = cls._csa.base_account.account_owner
 
     def setUp(self):
         self._mock_osf = MockOSF()
@@ -191,7 +191,7 @@ class TestResourceReferenceRelatedView(TestCase):
         cls._csa = _factories.ConfiguredStorageAddonFactory()
         cls._resource = cls._csa.authorized_resource
         # _user magically becomes the current requester
-        cls._user = cls._csa.base_account.external_account.owner
+        cls._user = cls._csa.base_account.account_owner
 
     def setUp(self):
         self._mock_osf = MockOSF()

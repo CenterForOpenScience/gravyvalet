@@ -87,7 +87,7 @@ class TestUserReferenceModel(TestCase):
         self.assertEqual(self._user.user_uri, _user_from_db.user_uri)
 
     def test_authorized_storage_accounts__empty(self):
-        _authed_storage_accounts_qs = self._user.authorized_storage_accounts
+        _authed_storage_accounts_qs = self._user.authorized_storage_accounts.all()
         self.assertIsInstance(_authed_storage_accounts_qs, QuerySet)
         self.assertEqual(list(_authed_storage_accounts_qs), [])
 
@@ -95,10 +95,10 @@ class TestUserReferenceModel(TestCase):
         _accounts = set(
             _factories.AuthorizedStorageAccountFactory.create_batch(
                 size=3,
-                external_account__owner=self._user,
+                account_owner=self._user,
             )
         )
-        _authed_storage_accounts_qs = self._user.authorized_storage_accounts
+        _authed_storage_accounts_qs = self._user.authorized_storage_accounts.all()
         self.assertIsInstance(_authed_storage_accounts_qs, QuerySet)
         self.assertEqual(set(_authed_storage_accounts_qs), _accounts)
 
@@ -208,7 +208,7 @@ class TestUserReferenceRelatedView(APITestCase):
     def test_get_related__several(self):
         _accounts = _factories.AuthorizedStorageAccountFactory.create_batch(
             size=5,
-            external_account__owner=self._user,
+            account_owner=self._user,
         )
         _resp = self._related_view(
             self.request,

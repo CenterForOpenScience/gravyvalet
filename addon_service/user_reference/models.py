@@ -4,7 +4,6 @@ from django.utils import timezone
 from addon_service.authorized_storage_account.models import AuthorizedStorageAccount
 from addon_service.common.base_model import AddonsServiceBaseModel
 from addon_service.configured_storage_addon.models import ConfiguredStorageAddon
-from addon_service.external_account.models import ExternalAccount
 
 
 class UserReference(AddonsServiceBaseModel):
@@ -12,15 +11,9 @@ class UserReference(AddonsServiceBaseModel):
     deactivated = models.DateTimeField(null=True, blank=True)
 
     @property
-    def authorized_storage_accounts(self):
-        return AuthorizedStorageAccount.objects.filter(
-            external_account__owner=self,
-        )
-
-    @property
     def configured_storage_addons(self):
         return ConfiguredStorageAddon.objects.filter(
-            base_account__external_account__owner=self,
+            base_account__account_owner=self,
         )
 
     class Meta:
@@ -58,5 +51,7 @@ class UserReference(AddonsServiceBaseModel):
         """
         This represents the user "being merged into", the "merge_with" is the old account that is deactivated.
         """
-        ExternalAccount.objects.filter(owner=merge_with).update(owner=self)
+        AuthorizedStorageAccount.objects.filter(account_owner=merge_with).update(
+            account_owner=self
+        )
         merge_with.deactivate()

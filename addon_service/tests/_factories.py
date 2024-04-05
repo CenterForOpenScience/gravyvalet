@@ -4,6 +4,7 @@ from factory.django import DjangoModelFactory
 
 from addon_service import models as db
 from addon_service.addon_imp.known import get_imp_by_name
+from addon_service.credentials import CredentialsFormats
 from addon_toolkit import AddonCapabilities
 
 
@@ -21,25 +22,12 @@ class ResourceReferenceFactory(DjangoModelFactory):
     resource_uri = factory.Sequence(lambda n: f"{settings.URI_ID}thing{n}")
 
 
-class CredentialsIssuerFactory(DjangoModelFactory):
+class OAuth2ClientConfigFactory(DjangoModelFactory):
     class Meta:
-        model = db.CredentialsIssuer
+        model = db.OAuth2ClientConfig
 
-    name = factory.Faker("word")
-
-
-class ExternalCredentialsFactory(DjangoModelFactory):
-    class Meta:
-        model = db.ExternalCredentials
-
-
-class ExternalAccountFactory(DjangoModelFactory):
-    class Meta:
-        model = db.ExternalAccount
-
-    credentials_issuer = factory.SubFactory(CredentialsIssuerFactory)
-    owner = factory.SubFactory(UserReferenceFactory)
-    credentials = factory.SubFactory(ExternalCredentialsFactory)
+    auth_uri = factory.Sequence(lambda n: f"{settings.AUTH_URI_ID}{n}")
+    client_id = factory.Faker("word")
 
 
 class AddonOperationInvocationFactory(DjangoModelFactory):
@@ -62,12 +50,14 @@ class ExternalStorageServiceFactory(DjangoModelFactory):
     class Meta:
         model = db.ExternalStorageService
 
+    service_name = factory.Faker("word")
     max_concurrent_downloads = factory.Faker("pyint")
     max_upload_mb = factory.Faker("pyint")
-    auth_uri = factory.Sequence(lambda n: f"{settings.AUTH_URI_ID}{n}")
-    callback_url = "https://osf.io/auth/callback"
-    credentials_issuer = factory.SubFactory(CredentialsIssuerFactory)
+    auth_callback_url = "https://osf.io/auth/callback"
+    int_credentials_format = CredentialsFormats.OAUTH2.value
     int_addon_imp = get_imp_by_name("BLARG").imp_number
+    oauth2_client_config = factory.SubFactory(OAuth2ClientConfigFactory)
+    default_scopes = ["service.url/grant_all"]
 
 
 class AuthorizedStorageAccountFactory(DjangoModelFactory):
@@ -76,10 +66,28 @@ class AuthorizedStorageAccountFactory(DjangoModelFactory):
 
     default_root_folder = "/"
     authorized_capabilities = factory.List([AddonCapabilities.ACCESS])
-    external_storage_service = factory.SubFactory(ExternalStorageServiceFactory)
-    external_account = factory.SubFactory(ExternalAccountFactory)
-    # TODO: external_account.credentials_issuer same as
-    #       external_storage_service.credentials_issuer
+
+    @classmethod
+    def _create(
+        cls,
+        model_class,
+        external_storage_service=None,
+        account_owner=None,
+        credentials_dict=None,
+        authorized_scopes=None,
+        *args,
+        **kwargs,
+    ):
+        account = super()._create(
+            model_class=model_class,
+            external_storage_service=external_storage_service
+            or ExternalStorageServiceFactory(),
+            account_owner=account_owner or UserReferenceFactory(),
+            *args,
+            **kwargs,
+        )
+        account.set_credentials(credentials_dict, authorized_scopes)
+        return account
 
 
 class ConfiguredStorageAddonFactory(DjangoModelFactory):
