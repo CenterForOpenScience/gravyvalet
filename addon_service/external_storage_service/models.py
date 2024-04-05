@@ -34,7 +34,7 @@ class ExternalStorageService(AddonsServiceBaseModel):
     class JSONAPIMeta:
         resource_name = "external-storage-services"
 
-    def get_oauth_data_from_callback(self, request):  # TODO: Where does this work with 
+    def get_oauth_data_from_callback(self, request):
         code = request.GET.get("code")
 
         query_params = {
