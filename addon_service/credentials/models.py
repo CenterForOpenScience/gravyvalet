@@ -73,7 +73,7 @@ class ExternalCredentials(AddonsServiceBaseModel):
         """
         if self.format is CredentialsFormats.OAUTH2:
             raise ValueError("Cannot direcly update OAuth credentials")
-        self._credentials_blob = dict(api_credentials_blob)
+        self.credentials_blob = dict(api_credentials_blob)
         self.save()
 
     def as_data(self):

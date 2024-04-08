@@ -63,7 +63,7 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
     def credentials_format(self):
         return self.external_service.credentials_format
 
-    @property
+    @cached_property
     def credentials(self):
         if self._credentials:
             return self._credentials.as_data()
@@ -119,8 +119,9 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
         )
 
     @transaction.atomic
-    def set_credentials(self, api_credentials_blob=dict, authorized_scopes=None):
+    def set_credentials(self, api_credentials_blob=None, authorized_scopes=None):
         known_credentials = self.credentials
+        del self.credentials  # Clear cached_property
         if known_credentials:
             self._credentials._update(api_credentials_blob)
             return

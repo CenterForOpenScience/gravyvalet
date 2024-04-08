@@ -54,10 +54,23 @@ class ExternalStorageServiceFactory(DjangoModelFactory):
     max_concurrent_downloads = factory.Faker("pyint")
     max_upload_mb = factory.Faker("pyint")
     auth_callback_url = "https://osf.io/auth/callback"
-    int_credentials_format = CredentialsFormats.OAUTH2.value
     int_addon_imp = get_imp_by_name("BLARG").imp_number
     oauth2_client_config = factory.SubFactory(OAuth2ClientConfigFactory)
     default_scopes = ["service.url/grant_all"]
+
+    @classmethod
+    def _create(cls, model_class, credentials_format=None, *args, **kwargs):
+        int_credentials_format = (
+            credentials_format.value
+            if credentials_format
+            else CredentialsFormats.OAUTH2.value
+        )
+        return super()._create(
+            model_class=model_class,
+            int_credentials_format=int_credentials_format,
+            *args,
+            **kwargs,
+        )
 
 
 class AuthorizedStorageAccountFactory(DjangoModelFactory):
@@ -74,6 +87,7 @@ class AuthorizedStorageAccountFactory(DjangoModelFactory):
         external_storage_service=None,
         account_owner=None,
         credentials_dict=None,
+        credentials_format=None,
         authorized_scopes=None,
         *args,
         **kwargs,
@@ -81,7 +95,7 @@ class AuthorizedStorageAccountFactory(DjangoModelFactory):
         account = super()._create(
             model_class=model_class,
             external_storage_service=external_storage_service
-            or ExternalStorageServiceFactory(),
+            or ExternalStorageServiceFactory(credentials_format=credentials_format),
             account_owner=account_owner or UserReferenceFactory(),
             *args,
             **kwargs,
