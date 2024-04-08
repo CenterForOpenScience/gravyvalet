@@ -54,11 +54,18 @@ class ExternalCredentials(AddonsServiceBaseModel):
     def initiate_oauth2_flow(authorized_scopes):
         """Function for initiating the flow for retrieving OAuth2 credentials"""
         creds = ExternalCredentials.objects.create(credentials_blob={})
-        OAuth2TokenMetadata.objects.create(
-            token_source=creds,
-            authorized_scopes=authorized_scopes,
-            state_token=token_urlsafe(16),
-        )
+        while True:
+            try:
+                OAuth2TokenMetadata.objects.create(
+                    token_source=creds,
+                    authorized_scopes=authorized_scopes,
+                    state_token=token_urlsafe(16),
+                )
+                break
+            except ValidationError as e:
+                if "state_token" in e.error_dict:
+                    continue
+                raise e
         return creds
 
     @property
