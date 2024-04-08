@@ -113,4 +113,7 @@ class ExternalCredentials(AddonsServiceBaseModel):
             data_representation = self.as_data()
         except TypeError as e:
             raise ValidationError(e)
-        data_representation.validate()
+        try:
+            data_representation.validate()
+        except ValueError as e:
+            raise ValidationError(e)

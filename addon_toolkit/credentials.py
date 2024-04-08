@@ -17,10 +17,9 @@ class OAuth2Credentials(CredentialsBase):
     authorized_scopes: list
 
     def validate(self):
-        if not (self.access_token or self.state_token):
+        if bool(self.access_token) == bool(self.state_token):
             raise ValueError(
-                "OAuth2 credentials without an active access token must specify "
-                "a state token to identify the active authorization flow"
+                "OAuth2 credentials must specify exactly one of `state_token` or `access token`"
             )
 
         if self.access_token and not self.refresh_token:
