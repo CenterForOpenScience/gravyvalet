@@ -1,11 +1,13 @@
 import json
 from http import HTTPStatus
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from addon_service import models as db
+from addon_service.credentials import CredentialsFormats
 from addon_service.external_storage_service.views import ExternalStorageServiceViewSet
 from addon_service.tests import _factories
 from addon_service.tests._helpers import get_test_request
@@ -80,6 +82,26 @@ class TestExternalStorageServiceModel(TestCase):
             set(self._ess.authorized_storage_accounts.all()),
             _accounts,
         )
+
+    def test_validation__invalid_format(self):
+        service = _factories.ExternalStorageServiceFactory()
+        service.int_credentials_format = -1
+        with self.assertRaises(ValidationError):
+            service.save()
+
+    def test_validation__unsupported_format(self):
+        service = _factories.ExternalStorageServiceFactory()
+        service.int_credentials_format = CredentialsFormats.UNSPECIFIED.value
+        with self.assertRaises(ValidationError):
+            service.save()
+
+    def test_validation__oauth_creds_require_client_config(self):
+        service = _factories.ExternalStorageServiceFactory(
+            credentials_format=CredentialsFormats.OAUTH2
+        )
+        service.oauth2_client_config = None
+        with self.assertRaises(ValidationError):
+            service.save()
 
 
 # unit-test viewset (call the view with test requests)

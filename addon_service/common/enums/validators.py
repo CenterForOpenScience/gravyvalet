@@ -7,11 +7,15 @@ from addon_toolkit.storage import StorageAddonProtocol
 
 
 # helper for enum-based validators
-def _validate_enum_value(enum_cls, value):
+def _validate_enum_value(enum_cls, value, excluded_members=None):
     try:
-        enum_cls(value)
+        member = enum_cls(value)
     except ValueError:
         raise ValidationError(f'no value "{value}" in {enum_cls}')
+    if excluded_members and member in excluded_members:
+        raise ValidationError(
+            f'"{member.name}" is not a supported value for this field'
+        )
 
 
 ###

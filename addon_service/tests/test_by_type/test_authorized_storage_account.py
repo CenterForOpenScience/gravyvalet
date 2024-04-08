@@ -22,6 +22,8 @@ from addon_toolkit import AddonCapabilities
 
 
 VALID_CREDENTIALS_FORMATS = set(CredentialsFormats) - {CredentialsFormats.UNSPECIFIED}
+NON_OAUTH_FORMATS = VALID_CREDENTIALS_FORMATS - {CredentialsFormats.OAUTH2}
+
 MOCK_CREDENTIALS_BLOBS = {
     CredentialsFormats.OAUTH2: {},
     CredentialsFormats.PERSONAL_ACCESS_TOKEN: {"access_token": "token"},
@@ -150,7 +152,7 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
         )
 
     def tet_post__does_not_set_auth_url(self):
-        for creds_format in VALID_CREDENTIALS_FORMATS - {CredentialsFormats.OAUTH2}:
+        for creds_format in NON_OAUTH_FORMATS:
             with self.subTest(creds_format=creds_format):
                 external_service = _factories.ExternalStorageServiceFactory(
                     credentials_format=creds_format
@@ -255,12 +257,7 @@ class TestAuthorizedStorageAccountModel(TestCase):
     def test_auth_url__non_oauth_provider(self):
         self.assertIsNotNone(self._asa.auth_url)
         service = self._asa.external_service
-        formats = [
-            member
-            for member in CredentialsFormats
-            if member is not CredentialsFormats.OAUTH2
-        ]
-        for creds_format in formats:
+        for creds_format in NON_OAUTH_FORMATS:
             with self.subTest(creds_format=creds_format):
                 service.int_credentials_format = creds_format.value
                 service.save()
@@ -306,7 +303,7 @@ class TestAuthorizedStorageAccountModel(TestCase):
             account.set_credentials()
 
     def test_set_credentials__create(self):
-        for creds_format in VALID_CREDENTIALS_FORMATS - {CredentialsFormats.OAUTH2}:
+        for creds_format in NON_OAUTH_FORMATS:
             with self.subTest(creds_format=creds_format):
                 external_service = _factories.ExternalStorageServiceFactory(
                     credentials_format=creds_format
@@ -324,7 +321,7 @@ class TestAuthorizedStorageAccountModel(TestCase):
                 )
 
     def test_set_credentials__update(self):
-        for creds_format in VALID_CREDENTIALS_FORMATS - {CredentialsFormats.OAUTH2}:
+        for creds_format in NON_OAUTH_FORMATS:
             with self.subTest(creds_format=creds_format):
                 account = _factories.AuthorizedStorageAccountFactory(
                     credentials_format=creds_format,
@@ -342,7 +339,7 @@ class TestAuthorizedStorageAccountModel(TestCase):
                     self.assertEqual(account._credentials.id, original_creds_id)
 
     def test_set_credentials__invalid(self):
-        for creds_format in VALID_CREDENTIALS_FORMATS - {CredentialsFormats.OAUTH2}:
+        for creds_format in NON_OAUTH_FORMATS:
             with self.subTest(creds_format=creds_format):
                 account = _factories.AuthorizedStorageAccountFactory(
                     credentials_format=creds_format,
