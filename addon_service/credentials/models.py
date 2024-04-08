@@ -1,22 +1,9 @@
-from secrets import token_urlsafe
-
 from django.core.exceptions import ValidationError
 from django.db import models
 
 from addon_service.common.base_model import AddonsServiceBaseModel
-from addon_service.oauth import OAuth2TokenMetadata
 
 from . import CredentialsFormats
-
-
-_CREDENTIALS_VALUE_FIELDS = [
-    "username",
-    "pwd",
-    "service_host",
-    "access_key",
-    "secret_key",
-    "oauth_access_token",
-]
 
 
 class ExternalCredentials(AddonsServiceBaseModel):
@@ -50,24 +37,6 @@ class ExternalCredentials(AddonsServiceBaseModel):
             credentials_blob=dict(api_credentials_blob)
         )
 
-    @staticmethod
-    def initiate_oauth2_flow(authorized_scopes):
-        """Function for initiating the flow for retrieving OAuth2 credentials"""
-        creds = ExternalCredentials.objects.create(credentials_blob={})
-        while True:
-            try:
-                OAuth2TokenMetadata.objects.create(
-                    token_source=creds,
-                    authorized_scopes=authorized_scopes,
-                    state_token=token_urlsafe(16),
-                )
-                break
-            except ValidationError as e:
-                if "state_token" in e.error_dict:
-                    continue
-                raise e
-        return creds
-
     @property
     def format(self):
         if not self.authorized_accounts:
@@ -90,16 +59,7 @@ class ExternalCredentials(AddonsServiceBaseModel):
         to the field names used for the appropriate dataclass so that the dataclasses can
         be DB-agnostic.
         """
-        match self.format:
-            case None:
-                return None
-            case CredentialsFormats.OAUTH2:
-                return self.format.dataclass(
-                    **self.credentials_blob,
-                    **self.oauth2_token_metadata.as_dataclass_kwargs(),
-                )
-            case _:
-                return self.format.dataclass(**self.credentials_blob)
+        return self.format.dataclass(**self.credentials_blob)
 
     def full_clean(self, *args, **kwargs):
         super().full_clean(*args, **kwargs)
@@ -110,10 +70,6 @@ class ExternalCredentials(AddonsServiceBaseModel):
             return  # Credentials may not be associated with an account to start
 
         try:
-            data_representation = self.as_data()
+            self.as_data()
         except TypeError as e:
-            raise ValidationError(e)
-        try:
-            data_representation.validate()
-        except ValueError as e:
             raise ValidationError(e)

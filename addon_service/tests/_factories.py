@@ -87,7 +87,7 @@ class AuthorizedStorageAccountFactory(DjangoModelFactory):
         external_storage_service=None,
         account_owner=None,
         credentials_dict=None,
-        credentials_format=None,
+        credentials_format=CredentialsFormats.OAUTH2,
         authorized_scopes=None,
         *args,
         **kwargs,
@@ -100,7 +100,10 @@ class AuthorizedStorageAccountFactory(DjangoModelFactory):
             *args,
             **kwargs,
         )
-        account.set_credentials(credentials_dict, authorized_scopes)
+        if credentials_format is CredentialsFormats.OAUTH2:
+            account.initiate_oauth2_flow(authorized_scopes)
+        else:
+            account.set_credentials(credentials_dict)
         return account
 
 

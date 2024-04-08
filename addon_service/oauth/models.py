@@ -15,12 +15,6 @@ class OAuth2ClientConfig(AddonsServiceBaseModel):
 
 
 class OAuth2TokenMetadata(AddonsServiceBaseModel):
-    token_source = models.OneToOneField(
-        "addon_service.ExternalCredentials",
-        on_delete=models.CASCADE,
-        primary_key=False,
-        related_name="oauth2_token_metadata",
-    )
     state_token = models.CharField(null=True, blank=True, db_index=True)
     refresh_token = models.CharField(null=True, blank=True, db_index=True)
     auth_token_expiration = models.DateTimeField(null=True, blank=True)
@@ -33,11 +27,3 @@ class OAuth2TokenMetadata(AddonsServiceBaseModel):
         constraints = [
             models.UniqueConstraint(fields=["state_token"], name="unique state token")
         ]
-
-    def as_dataclass_kwargs(self):
-        return {
-            "state_token": self.state_token,
-            "refresh_token": self.refresh_token,
-            "access_token_expiration": self.auth_token_expiration,
-            "authorized_scopes": self.authorized_scopes,
-        }

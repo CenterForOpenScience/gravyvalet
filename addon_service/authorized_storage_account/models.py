@@ -1,7 +1,9 @@
 from functools import cached_property
+from secrets import token_urlsafe
 from typing import Iterator
 
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from django.db import (
     models,
     transaction,
@@ -14,6 +16,7 @@ from addon_service.credentials import (
     CredentialsFormats,
     ExternalCredentials,
 )
+from addon_service.oauth.models import OAuth2TokenMetadata
 from addon_service.oauth.utils import build_auth_url
 from addon_toolkit import (
     AddonCapabilities,
@@ -45,6 +48,13 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
         null=True,
         blank=True,
         related_name="authorized_storage_account",
+    )
+    oauth2_token_metadata = models.ForeignKey(
+        "addon_service.OAuth2TokenMetadata",
+        on_delete=models.CASCADE,  # probs not
+        null=True,
+        blank=True,
+        related_name="authorized_storage_accounts",
     )
 
     class Meta:
@@ -107,37 +117,73 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
         if self.credentials_format is not CredentialsFormats.OAUTH2:
             return None
 
-        state_token = self.credentials.state_token
+        state_token = self.oauth2_token_metadata.state_token
         if not state_token:
             return None
         return build_auth_url(
             auth_uri=self.external_service.oauth2_client_config.auth_uri,
             client_id=self.external_service.oauth2_client_config.client_id,
             state_token=state_token,
-            authorized_scopes=self.credentials.authorized_scopes,
+            authorized_scopes=self.oauth2_token_metadata.authorized_scopes,
             redirect_uri=self.external_service.auth_callback_url,
         )
 
     @transaction.atomic
-    def set_credentials(self, api_credentials_blob=None, authorized_scopes=None):
+    def initiate_oauth2_flow(self, authorized_scopes=None):
+        if self.credentials_format is not CredentialsFormats.OAUTH2:
+            raise ValueError("Cannot initaite OAuth flow for non-OAuth credentials")
+        # It's theoretically possible to generate the same token multiple times.
+        # Since the token is UNIQUE in the database, this will result in a ValidationError
+        # Keep on trying if that happens (or maybe find a smrter solution)
+        while True:
+            try:
+                self.oauth2_token_metadata = OAuth2TokenMetadata.objects.create(
+                    authorized_scopes=authorized_scopes
+                    or self.external_service.default_scopes,
+                    state_token=token_urlsafe(16),
+                )
+            except ValidationError as e:
+                if "state_token" in e.error_dict:
+                    continue
+            else:
+                self.save()
+                return
+
+    @transaction.atomic
+    def set_credentials(self, api_credentials_blob):
+        if self.credentials_format is CredentialsFormats.OAUTH2:
+            raise ValueError("Cannot directly set OAuth credentials (for now)")
+
         known_credentials = self.credentials
         del self.credentials  # Clear cached_property
         if known_credentials:
             self._credentials._update(api_credentials_blob)
             return
 
-        if self.credentials_format is CredentialsFormats.OAUTH2:
-            _credentials = ExternalCredentials.initiate_oauth2_flow(
-                authorized_scopes or self.external_service.default_scopes
-            )
-        else:
-            _credentials = ExternalCredentials.from_api_blob(api_credentials_blob)
+        _credentials = ExternalCredentials.from_api_blob(api_credentials_blob)
         self._credentials = _credentials
         self.save()
-        _credentials.save()  # validate
 
     def iter_authorized_operations(self) -> Iterator[AddonOperationImp]:
         _addon_imp: AddonImp = self.external_storage_service.addon_imp.imp
         yield from _addon_imp.get_operation_imps(
             capabilities=self.authorized_capabilities
         )
+
+    def clean(self):
+        super().clean()
+        if (
+            self.credentials_format is not CredentialsFormats.OAUTH2
+            or not self.oauth2_token_metadata
+        ):
+            return
+
+        # Is this too heavy weight?
+        if bool(self.credentials) == bool(self.oauth2_token_metadata.state_token):
+            raise ValidationError(
+                "OAuth2 accounts must assign exactly one of state_token and access_token"
+            )
+        if self.credentials and not self.oauth2_token_metadata.refresh_token:
+            raise ValidationError(
+                "OAuth2 accounts with an access token must have a refresh token"
+            )

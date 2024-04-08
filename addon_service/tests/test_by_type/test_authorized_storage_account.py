@@ -1,6 +1,7 @@
 import json
 import urllib
 from http import HTTPStatus
+from unittest import mock
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -40,7 +41,8 @@ def _make_post_payload(*, external_service, capabilities=None, credentials=None)
         "data": {
             "type": "authorized-storage-accounts",
             "attributes": {
-                "authorized_capabilities": capabilities or ["ACCESS"],
+                "authorized_capabilities": capabilities
+                or [AddonCapabilities.ACCESS.name],
                 "credentials": credentials
                 or MOCK_CREDENTIALS_BLOBS[external_service.credentials_format],
             },
@@ -114,7 +116,7 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
         )
 
     def test_post__sets_credentials(self):
-        for creds_format in VALID_CREDENTIALS_FORMATS:
+        for creds_format in NON_OAUTH_FORMATS:
             with self.subTest(creds_format=creds_format):
                 external_service = _factories.ExternalStorageServiceFactory()
                 external_service.int_credentials_format = creds_format.value
@@ -246,9 +248,9 @@ class TestAuthorizedStorageAccountModel(TestCase):
             base_url, self._asa.external_service.oauth2_client_config.auth_uri
         )
         expected_query_params = {
-            "state": [self._asa.credentials.state_token],
+            "state": [self._asa.oauth2_token_metadata.state_token],
             "client_id": [self._asa.external_service.oauth2_client_config.client_id],
-            "scope": self._asa.credentials.authorized_scopes,
+            "scope": self._asa.oauth2_token_metadata.authorized_scopes,
             "redirect_uri": [self._asa.external_service.auth_callback_url],
             "response_type": ["code"],
         }
@@ -267,40 +269,59 @@ class TestAuthorizedStorageAccountModel(TestCase):
     def test_auth_url__no_active_state_token(self):
         self.assertIsNotNone(self._asa.auth_url)
         del self._asa.credentials  # clear cached_property
-        oauth_meta = self._asa._credentials.oauth2_token_metadata
+        oauth_meta = self._asa.oauth2_token_metadata
         oauth_meta.state_token = None
         oauth_meta.save()
         self.assertIsNone(self._asa.auth_url)
 
     # set_credentials
 
-    def test_set_credentials__oauth2(self):
-        external_service = _factories.ExternalStorageServiceFactory(
-            credentials_format=CredentialsFormats.OAUTH2
-        )
-        account = db.AuthorizedStorageAccount(
-            external_storage_service=external_service,
+    def test_initiate_oauth2_flow(self):
+        account = db.AuthorizedStorageAccount.objects.create(
+            external_storage_service=_factories.ExternalStorageServiceFactory(
+                credentials_format=CredentialsFormats.OAUTH2
+            ),
             account_owner=self._user,
             authorized_capabilities=[AddonCapabilities.ACCESS],
         )
-
-        account.set_credentials(api_credentials_blob={"access_token": "ignored"})
+        account.initiate_oauth2_flow()
         with self.subTest("State Token set on OAuth credentials creation"):
-            self.assertIsNotNone(account.credentials.state_token)
+            self.assertIsNotNone(account.oauth2_token_metadata.state_token)
         with self.subTest("Scopes set on OAuth credentials creation"):
             self.assertCountEqual(
-                account.credentials.authorized_scopes, external_service.default_scopes
+                account.oauth2_token_metadata.authorized_scopes,
+                account.external_service.default_scopes,
             )
-        with self.subTest("Provided OAuth credentials ignored"):
-            self.assertIsNone(account.credentials.access_token)
 
-    def test_set_credentials__oauth__update_fails(self):
+    def test_iniate_oauth2_flow__avoid_duplicate_state_tokens(self):
+        # Avoid factory magic that automatically does OAUTH stuffs
+        new_account = db.AuthorizedStorageAccount.objects.create(
+            external_storage_service=self._asa.external_storage_service,
+            account_owner=self._asa.account_owner,
+            authorized_capabilities=self._asa.authorized_capabilities,
+        )
+        with mock.patch(
+            "addon_service.authorized_storage_account.models.token_urlsafe"
+        ) as mock_token:
+            mock_token.side_effect = [
+                self._asa.oauth2_token_metadata.state_token,
+                "abcde",
+            ]
+            new_account.initiate_oauth2_flow()
+
+        with self.subTest("Multiple attempts at token creation in case of collision"):
+            self.assertEqual(mock_token.call_count, 2)
+            self.assertEqual(new_account.oauth2_token_metadata.state_token, "abcde")
+
+        with self.subTest("Colliding Tokens not stored in DB"):
+            self.assertEqual(db.OAuth2TokenMetadata.objects.count(), 2)
+
+    def test_set_credentials__update__oauth_fails(self):
         account = _factories.AuthorizedStorageAccountFactory(
             credentials_format=CredentialsFormats.OAUTH2,
         )
-        self.assertIsNotNone(account.credentials)
         with self.assertRaises(ValueError):
-            account.set_credentials()
+            account.set_credentials({"access_token": "nope"})
 
     def test_set_credentials__create(self):
         for creds_format in NON_OAUTH_FORMATS:

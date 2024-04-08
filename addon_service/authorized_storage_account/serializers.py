@@ -13,6 +13,7 @@ from addon_service.common.serializer_fields import (
     DataclassRelatedLinkField,
     ReadOnlyResourceRelatedField,
 )
+from addon_service.credentials import CredentialsFormats
 from addon_service.models import (
     AuthorizedStorageAccount,
     ConfiguredStorageAddon,
@@ -81,10 +82,13 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
             account_owner=account_owner,
             authorized_capabilities=validated_data.get("authorized_capabilities"),
         )
-        authorized_account.set_credentials(
-            validated_data.get("credentials"),
-            validated_data.get("authorized_scopes"),
-        )
+        if authorized_account.credentials_format is CredentialsFormats.OAUTH2:
+            authorized_account.initiate_oauth2_flow(
+                validated_data.get("authorized_scopes")
+            )
+        else:
+            authorized_account.set_credentials(validated_data.get("credentials"))
+
         return authorized_account
 
     class Meta:

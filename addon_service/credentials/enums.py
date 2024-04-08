@@ -14,11 +14,11 @@ class CredentialsFormats(Enum):
     def dataclass(self):
         match self:
             case CredentialsFormats.OAUTH2:
-                return credentials.OAuth2Credentials
+                return credentials.AccessTokenCredentials
             case CredentialsFormats.ACCESS_KEY_SECRET_KEY:
                 return credentials.AccessKeySecretKeyCredentials
             case CredentialsFormats.PERSONAL_ACCESS_TOKEN:
-                return credentials.PersonalAccessTokenCredentials
+                return credentials.AccessTokenCredentials
             case CredentialsFormats.USERNAME_PASSWORD:
                 return credentials.UsernamePasswordCredentials
         raise ValueError(f"No dataclass support for credentials type {self.name}")

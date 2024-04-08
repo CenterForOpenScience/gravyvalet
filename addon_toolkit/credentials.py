@@ -30,7 +30,7 @@ class OAuth2Credentials(CredentialsBase):
 
 
 @dataclasses.dataclass(kw_only=True)
-class PersonalAccessTokenCredentials(CredentialsBase):
+class AccessTokenCredentials(CredentialsBase):
     access_token: str
 
 
