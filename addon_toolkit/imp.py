@@ -32,7 +32,8 @@ class AddonImp:
     addon_protocol: AddonProtocolDeclaration = dataclasses.field(init=False)
 
     def __post_init__(self, addon_protocol_cls):
-        super().__setattr__(  # using __setattr__ to bypass dataclass frozenness
+        object.__setattr__(  # using __setattr__ to bypass dataclass frozenness
+            self,
             "addon_protocol",
             addon_protocol.get_declaration(addon_protocol_cls),
         )

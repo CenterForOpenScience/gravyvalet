@@ -21,3 +21,4 @@ async def close_client_session() -> None:
     global __SINGLETON_CLIENT_SESSION
     if __SINGLETON_CLIENT_SESSION is not None:
         await __SINGLETON_CLIENT_SESSION.close()
+        __SINGLETON_CLIENT_SESSION = None

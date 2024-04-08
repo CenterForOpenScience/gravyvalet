@@ -53,8 +53,8 @@ class AddonOperationDeclaration:
             assert dataclasses.is_dataclass(
                 _return_type
             ), f"operation methods must return a dataclass (got {_return_type} on {self.operation_fn})"
-            # use __setattr__ to bypass dataclass frozenness (only here in __post_init__)
-            super().__setattr__("return_type", _return_type)
+            # use object.__setattr__ to bypass dataclass frozenness (only here in __post_init__)
+            object.__setattr__(self, "return_type", _return_type)
         else:
             # return_type declared; enforce it
             assert dataclasses.is_dataclass(

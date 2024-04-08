@@ -24,8 +24,8 @@ class TestAddonOperationInvocationCreate(APITestCase):
     def setUpTestData(cls):
         cls._configured_addon = _factories.ConfiguredStorageAddonFactory()
         cls._user = cls._configured_addon.base_account.account_owner
-        cls._operation = models.AddonOperationModel.get_by_natural_key_str(
-            "BLARG:get_root_items"
+        cls._operation = models.AddonOperationModel.get_by_natural_key(
+            "BLARG", "get_root_items"
         )
 
     def setUp(self):
@@ -135,66 +135,6 @@ class TestAddonOperationInvocationModel(TestCase):
             id=self._configured_addon.id
         )
         self.assertEqual(self._configured_addon.pk, _resource_from_db.pk)
-
-
-# unit-test viewset (call the view with test requests)
-@unittest.skip("TODO")
-class TestAddonOperationInvocationViewSet(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls._invocation = _factories.AddonOperationInvocationFactory()
-        cls._view = AddonOperationInvocationViewSet.as_view(
-            {
-                "post": "create",
-                "get": "retrieve",
-                "delete": "destroy",
-            }
-        )
-
-    def test_get(self):
-        _resp = self._view(
-            get_test_request(),
-            pk=self._invocation.pk,
-        )
-        self.assertEqual(_resp.status_code, HTTPStatus.OK)
-        _content = json.loads(_resp.rendered_content)
-        self.assertEqual(
-            set(_content["data"]["attributes"].keys()),
-            {
-                "root_folder",
-                "connected_capabilities",
-            },
-        )
-        self.assertEqual(
-            _content["data"]["attributes"]["connected_capabilities"],
-            ["ACCESS"],
-        )
-        self.assertEqual(
-            set(_content["data"]["relationships"].keys()),
-            {
-                "authorized_resource",
-                "base_account",
-                "connected_operations",
-            },
-        )
-
-    @unittest.expectedFailure  # TODO
-    def test_unauthorized(self):
-        _anon_resp = self._view(get_test_request(), pk=self._user.pk)
-        self.assertEqual(_anon_resp.status_code, HTTPStatus.UNAUTHORIZED)
-
-    @unittest.expectedFailure  # TODO
-    def test_wrong_user(self):
-        _another_user = _factories.UserReferenceFactory()
-        _resp = self._view(
-            get_test_request(user=_another_user),
-            pk=self._user.pk,
-        )
-        self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
-
-    # def test_create(self):
-    #     _post_req = get_test_request(user=self._user, method='post')
-    #     self._view(_post_req, pk=
 
 
 @unittest.skip("TODO")
