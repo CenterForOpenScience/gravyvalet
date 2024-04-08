@@ -76,10 +76,8 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
         account_owner, _ = UserReference.objects.get_or_create(
             user_uri=session_user_uri
         )
-        service = validated_data["external_storage_service"]
-        # TODO(ENG-5189): Flesh this out better
         authorized_account = AuthorizedStorageAccount(
-            external_storage_service=service,
+            external_storage_service=validated_data["external_storage_service"],
             account_owner=account_owner,
             authorized_capabilities=validated_data.get("authorized_capabilities"),
         )
