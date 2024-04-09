@@ -2,15 +2,15 @@ import contextlib
 import dataclasses
 import logging
 import typing
+import weakref
 from http import HTTPStatus
 from urllib.parse import (
     urljoin,
     urlsplit,
 )
 
-import aiohttp
+import aiohttp  # type: ignore[import-not-found]
 
-from addon_service.common.private import PrivateInfo
 from addon_toolkit.constrained_http import (
     HttpRequestInfo,
     HttpRequestor,
@@ -79,8 +79,34 @@ class AiohttpRequestor(HttpRequestor):
 # for info or interfaces that should not be entangled with imps
 
 
+class _PrivateInfo:
+    """base class for conveniently assigning private info to an object
+
+    >>> @dataclasses.dataclass
+    >>> class _MyInfo(_PrivateInfo):
+    ...     foo: str
+    >>> _rando = object()
+    >>> _MyInfo('woo').assign(_rando)
+    >>> _MyInfo.get(_rando)
+    _MyInfo(foo='woo')
+    """
+
+    __private_map: typing.ClassVar[weakref.WeakKeyDictionary]
+
+    def __init_subclass__(cls):
+        # each subclass gets its own private map -- this base class itself is unusable
+        cls.__private_map = weakref.WeakKeyDictionary()
+
+    @classmethod
+    def get(cls, shared_obj: object):
+        return cls.__private_map.get(shared_obj)
+
+    def assign(self, shared_obj: object) -> None:
+        self.__private_map[shared_obj] = self
+
+
 @dataclasses.dataclass
-class _PrivateResponse(PrivateInfo):
+class _PrivateResponse(_PrivateInfo):
     """ "private" info associated with an _AiohttpResponseInfo instance"""
 
     # avoid exposing aiohttp directly to imps
@@ -88,7 +114,7 @@ class _PrivateResponse(PrivateInfo):
 
 
 @dataclasses.dataclass
-class _PrivateNetworkInfo(PrivateInfo):
+class _PrivateNetworkInfo(_PrivateInfo):
     """ "private" info associated with an AiohttpRequestor instance"""
 
     # avoid exposing aiohttp directly to imps

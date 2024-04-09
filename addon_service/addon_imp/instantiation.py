@@ -1,8 +1,8 @@
 from asgiref.sync import async_to_sync
 
-from addon_service.common.aiohttp_requestor import AiohttpRequestor
 from addon_service.common.aiohttp_session import get_aiohttp_client_session
 from addon_service.models import ConfiguredStorageAddon
+from addon_toolkit.constrained_aiohttp import AiohttpRequestor
 from addon_toolkit.storage import (
     StorageAddonProtocol,
     StorageConfig,
