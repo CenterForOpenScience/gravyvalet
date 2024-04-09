@@ -50,7 +50,8 @@ class AddonOperationInvocation(AddonsServiceBaseModel):
     def owner_uri(self) -> str:
         return self.by_user.user_uri
 
-    def clean(self):
+    def clean_fields(self, *args, **kwargs):
+        super().clean_fields(*args, **kwargs)
         try:
             jsonschema.validate(
                 instance=self.operation_kwargs,

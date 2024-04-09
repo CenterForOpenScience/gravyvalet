@@ -99,7 +99,8 @@ class ConfiguredStorageAddon(AddonsServiceBaseModel):
             if _operation_imp.operation.capability in _connected_caps:
                 yield _operation_imp
 
-    def clean(self):
+    def clean_fields(self, *args, **kwargs):
+        super().clean_fields(*args, **kwargs)
         _connected_caps = set(self.connected_capabilities)
         if not _connected_caps.issubset(self.base_account.authorized_capabilities):
             _unauthorized_caps = _connected_caps.difference(

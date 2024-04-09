@@ -56,7 +56,7 @@ class ExternalStorageServiceFactory(DjangoModelFactory):
     auth_callback_url = "https://osf.io/auth/callback"
     int_addon_imp = get_imp_by_name("BLARG").imp_number
     oauth2_client_config = factory.SubFactory(OAuth2ClientConfigFactory)
-    default_scopes = ["service.url/grant_all"]
+    supported_scopes = ["service.url/grant_all"]
 
     @classmethod
     def _create(cls, model_class, credentials_format=None, *args, **kwargs):

@@ -26,6 +26,13 @@ from addon_toolkit import (
 
 
 class AuthorizedStorageAccount(AddonsServiceBaseModel):
+    """Model for descirbing a user's account on an ExternalStorageService.
+
+    This model collects all of the information required to actually perform remote
+    operations against the service and to aggregate accounts under a known user.
+    """
+
+    account_name = models.CharField(null=False, blank=True, default="")
     int_authorized_capabilities = ArrayField(
         models.IntegerField(validators=[validate_addon_capability])
     )
@@ -65,11 +72,11 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
     class JSONAPIMeta:
         resource_name = "authorized-storage-accounts"
 
-    @cached_property
+    @property
     def external_service(self):
         return self.external_storage_service
 
-    @cached_property
+    @property
     def credentials_format(self):
         return self.external_service.credentials_format
 
@@ -96,6 +103,7 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
 
     @property
     def owner_uri(self) -> str:
+        """Convenience property to simplify permissions checking."""
         return self.account_owner.user_uri
 
     @property
@@ -114,6 +122,11 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
 
     @property
     def auth_url(self) -> str:
+        """Generates the url required to initiate OAuth2 credentials exchange.
+
+        Returns None if the ExternalStorageService does not support OAuth2
+        or if the initial credentials exchange has already ocurred.
+        """
         if self.credentials_format is not CredentialsFormats.OAUTH2:
             return None
 
@@ -139,7 +152,7 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
             try:
                 self.oauth2_token_metadata = OAuth2TokenMetadata.objects.create(
                     authorized_scopes=authorized_scopes
-                    or self.external_service.default_scopes,
+                    or self.external_service.supported_scopes,
                     state_token=token_urlsafe(16),
                 )
             except ValidationError as e:
@@ -151,17 +164,12 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
 
     @transaction.atomic
     def set_credentials(self, api_credentials_blob):
-        if self.credentials_format is CredentialsFormats.OAUTH2:
-            raise ValueError("Cannot directly set OAuth credentials (for now)")
-
-        known_credentials = self.credentials
-        del self.credentials  # Clear cached_property
-        if known_credentials:
+        if self._credentials:
             self._credentials._update(api_credentials_blob)
-            return
-
-        _credentials = ExternalCredentials.from_api_blob(api_credentials_blob)
-        self._credentials = _credentials
+        else:
+            self._credentials = ExternalCredentials.from_api_blob(api_credentials_blob)
+        if "credentials" in vars(self):  # clear cached property if present
+            del self.credentials
         self.save()
 
     def iter_authorized_operations(self) -> Iterator[AddonOperationImp]:
@@ -170,8 +178,8 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
             capabilities=self.authorized_capabilities
         )
 
-    def clean(self):
-        super().clean()
+    def clean(self, *args, **kwargs):
+        super().clean(*args, **kwargs)
         if (
             self.credentials_format is not CredentialsFormats.OAUTH2
             or not self.oauth2_token_metadata

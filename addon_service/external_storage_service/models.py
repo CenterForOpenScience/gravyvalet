@@ -22,10 +22,10 @@ class ExternalStorageService(AddonsServiceBaseModel):
         null=False,
         validators=[validate_credentials_format],
     )
-    default_scopes = ArrayField(models.CharField(), null=True, blank=True)
     max_concurrent_downloads = models.IntegerField(null=False)
     max_upload_mb = models.IntegerField(null=False)
     auth_callback_url = models.URLField(null=False, default="")
+    supported_scopes = ArrayField(models.CharField(), null=True, blank=True)
 
     oauth2_client_config = models.ForeignKey(
         "addon_service.OAuth2ClientConfig",
@@ -55,8 +55,8 @@ class ExternalStorageService(AddonsServiceBaseModel):
     def credentials_format(self):
         return CredentialsFormats(self.int_credentials_format)
 
-    def full_clean(self, *args, **kwargs):
-        super().full_clean(*args, **kwargs)
+    def clean_fields(self, *args, **kwargs):
+        super().clean_fields(*args, **kwargs)
         if (
             self.credentials_format is CredentialsFormats.OAUTH2
             and not self.oauth2_client_config

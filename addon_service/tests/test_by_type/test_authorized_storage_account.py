@@ -263,7 +263,6 @@ class TestAuthorizedStorageAccountModel(TestCase):
             with self.subTest(creds_format=creds_format):
                 service.int_credentials_format = creds_format.value
                 service.save()
-                del self._asa.credentials_format  # clear cached_property
                 self.assertIsNone(self._asa.auth_url)
 
     def test_auth_url__no_active_state_token(self):
@@ -274,7 +273,7 @@ class TestAuthorizedStorageAccountModel(TestCase):
         oauth_meta.save()
         self.assertIsNone(self._asa.auth_url)
 
-    # set_credentials
+    # initiate_oauth2_flow
 
     def test_initiate_oauth2_flow(self):
         account = db.AuthorizedStorageAccount.objects.create(
@@ -290,7 +289,7 @@ class TestAuthorizedStorageAccountModel(TestCase):
         with self.subTest("Scopes set on OAuth credentials creation"):
             self.assertCountEqual(
                 account.oauth2_token_metadata.authorized_scopes,
-                account.external_service.default_scopes,
+                account.external_service.supported_scopes,
             )
 
     def test_iniate_oauth2_flow__avoid_duplicate_state_tokens(self):
@@ -316,12 +315,28 @@ class TestAuthorizedStorageAccountModel(TestCase):
         with self.subTest("Colliding Tokens not stored in DB"):
             self.assertEqual(db.OAuth2TokenMetadata.objects.count(), 2)
 
-    def test_set_credentials__update__oauth_fails(self):
+    # set_credentials
+
+    def test_set_credentials__oauth__fails_if_state_token_exists(self):
         account = _factories.AuthorizedStorageAccountFactory(
             credentials_format=CredentialsFormats.OAUTH2,
         )
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             account.set_credentials({"access_token": "nope"})
+        account.refresh_from_db()  # Confirm transaction rollback
+        self.assertIsNone(account._credentials)
+
+    def test_set_credentials__oauth__fails_if_no_refresh_token(self):
+        account = _factories.AuthorizedStorageAccountFactory(
+            credentials_format=CredentialsFormats.OAUTH2
+        )
+        token_metadata = account.oauth2_token_metadata
+        token_metadata.state_token = None
+        token_metadata.save()
+        with self.assertRaises(ValidationError):
+            account.set_credentials({"access_token": "nope"})
+        account.refresh_from_db()  # Confirm transaction rollback
+        self.assertIsNone(account._credentials)
 
     def test_set_credentials__create(self):
         for creds_format in NON_OAUTH_FORMATS:
@@ -340,6 +355,21 @@ class TestAuthorizedStorageAccountModel(TestCase):
                 self.assertEqual(
                     account._credentials.credentials_blob, mock_credentials
                 )
+
+    def test_set_credentials__create__oauth(self):
+        account = _factories.AuthorizedStorageAccountFactory(
+            credentials_format=CredentialsFormats.OAUTH2
+        )
+        self.assertIsNone(account._credentials)
+
+        token_metadata = account.oauth2_token_metadata
+        token_metadata.state_token = None
+        token_metadata.refresh_token = "refresh"
+        token_metadata.save()
+
+        account.set_credentials({"access_token": "yep"})
+        account.refresh_from_db()  # Confirm that changes were committed
+        self.assertEqual(account.credentials.access_token, "yep")
 
     def test_set_credentials__update(self):
         for creds_format in NON_OAUTH_FORMATS:

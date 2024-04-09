@@ -3,8 +3,6 @@ from django.db import models
 
 from addon_service.common.base_model import AddonsServiceBaseModel
 
-from . import CredentialsFormats
-
 
 class ExternalCredentials(AddonsServiceBaseModel):
     # TODO: Settle on encryption solution
@@ -12,19 +10,11 @@ class ExternalCredentials(AddonsServiceBaseModel):
 
     # Attributes inherited from back-references:
     # authorized_storage_account (AuthorizedStorageAccount._credentials, One2One)
-    # oauth2_token_metadata (OAuth2TokenMetadata.token_source, One2One)
 
     class Meta:
         verbose_name = "External Credentials"
         verbose_name_plural = "External Credentials"
         app_label = "addon_service"
-
-    @property
-    def authorized_accounts(self):
-        try:
-            return (self.authorized_storage_account,)
-        except ExternalCredentials.authorized_storage_account.RelatedObjectDoesNotExist:
-            return None
 
     @staticmethod
     def from_api_blob(api_credentials_blob):
@@ -38,6 +28,18 @@ class ExternalCredentials(AddonsServiceBaseModel):
         )
 
     @property
+    def authorized_accounts(self):
+        """Returns the list of all accounts that point to this set of credentials.
+
+        For now, this will just be a single AuthorizedStorageAccount, but in the future
+        other types of accounts for the same user could point to the same set of credentials
+        """
+        try:
+            return (self.authorized_storage_account,)
+        except ExternalCredentials.authorized_storage_account.RelatedObjectDoesNotExist:
+            return None
+
+    @property
     def format(self):
         if not self.authorized_accounts:
             return None
@@ -47,8 +49,6 @@ class ExternalCredentials(AddonsServiceBaseModel):
         """Update credentials based on API.
         This should only be called from Authorized*Account.set_credentials()
         """
-        if self.format is CredentialsFormats.OAUTH2:
-            raise ValueError("Cannot direcly update OAuth credentials")
         self.credentials_blob = dict(api_credentials_blob)
         self.save()
 
@@ -61,14 +61,13 @@ class ExternalCredentials(AddonsServiceBaseModel):
         """
         return self.format.dataclass(**self.credentials_blob)
 
-    def full_clean(self, *args, **kwargs):
-        super().full_clean(*args, **kwargs)
+    def clean_fields(self, *args, **kwargs):
+        super().clean_fields(*args, **kwargs)
         self._validate_credentials()
 
     def _validate_credentials(self):
         if not self.authorized_accounts:
-            return  # Credentials may not be associated with an account to start
-
+            return
         try:
             self.as_data()
         except TypeError as e:
