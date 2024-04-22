@@ -1,0 +1,83 @@
+https://openscience.atlassian.net/browse/ENG-5547
+
+for each storage addon in osf (except osfstorage):
+
+- in `osf.io:addons/<addon_name>/models.py`, look at the return value
+  of `NodeSettings.serialize_waterbutler_settings`
+
+- in `waterbutler:waterbutler/providers/<addon_name>/provider.py`,
+  look at the `settings` arg passed to the provider class's `__init__`
+
+- cross-reference where the settings values come from (in osf) and how they are used (in wb)
+  to begin to make some sense of how these settings might could be represented in gravyvalet
+  CAREFUL: some variable names in addons code are lies! be wary of explanatory comments, too
+
+bespoke waterbutler settings
+============================
+
+
+bitbucket:
+    owner: str (id)
+    repo: str (id)
+
+box:
+    folder: str (id)
+
+dataverse:
+    host: str (used as url with "https://" prepended)
+    doi: str (dataset identifier, TODO: better understand)
+    id: str
+    name: str
+
+dropbox:
+    folder: str ("/"-delimited path)
+
+figshare:
+    container_id: str
+    container_type: str, controlled vocab
+        either 'project' (osf-specific value?) or string values mapped from integer in api:
+        FIGSHARE_IDS_TO_TYPES = {
+            1: 'figure',
+            2: 'media',
+            3: 'dataset',
+            4: 'fileset',  # Unofficially deprecated and replaced by type 3 dataset
+            5: 'poster',
+            6: 'journal contribution',
+            7: 'presentation',
+            8: 'thesis',
+            9: 'software',
+            # For unknown reasons, 10 does not exist
+            11: 'online resource',
+            12: 'preprints',
+            13: 'book',
+            14: 'conference',
+        }
+
+github:
+    owner: str (username)
+    repo: str (name)
+
+gitlab:
+    host: str (full url probably)
+    owner: str (username)
+    repo: str (name)
+    repo_id: str (id)
+
+googledrive:
+    folder: object with keys:
+        path: str ('/'-delimited path)
+        name: str (all but the first segment of `path`)
+        id: str (or int, sometimes?)
+
+onedrive:
+    drive_id: str
+    folder: str (id)
+
+owncloud:
+    folder: str ('/'-delimited path)
+    verify_ssl: bool
+
+s3:
+    id: str (format "bucket_id:base_folder_path")
+    bucket: str (prefixes `id`)
+    encrypt_uploads: bool
