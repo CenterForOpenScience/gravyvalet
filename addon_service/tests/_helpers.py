@@ -18,7 +18,7 @@ from rest_framework import exceptions as drf_exceptions
 from rest_framework.test import APIRequestFactory
 from rest_framework_json_api.utils import get_resource_type_from_model
 
-from addon_service.common.aiohttp_session import get_aiohttp_client_session_sync
+from addon_service.common.aiohttp_session import get_aiohttp_client_session
 
 
 class MockOSF:
@@ -126,15 +126,10 @@ class MockExternalService:
 
     @contextlib.contextmanager
     def mocking(self):
-        client_session = get_aiohttp_client_session_sync()
-        with patch.object(
-            client_session,
-            "get",
-            side_effect=self._route_get,
-        ), patch.object(
-            client_session,
-            "post",
-            side_effect=self._route_post,
+        client_session = get_aiohttp_client_session()
+        with (
+            patch.object(client_session, "get", new=self._route_get),
+            patch.object(client_session, "post", new=self._route_post),
         ):
             yield self
 
@@ -149,12 +144,13 @@ class MockExternalService:
         await sync_to_async(self._internal_client.get)(
             reverse("oauth2-callback"), {"state": state_token, "code": "authgrant"}
         )
-        return _MockResponse()
+        return _FakeAiohttpResponse()
 
+    @contextlib.asynccontextmanager
     async def _route_post(self, url, *args, **kwargs):
         if url.startswith(self._token_endpoint_url):
-            return _MockResponse(
-                status_code=HTTPStatus.CREATED,
+            yield _FakeAiohttpResponse(
+                status=HTTPStatus.CREATED,
                 data={
                     "access_token": self._static_access_token or secrets.token_hex(12),
                     "refresh_token": self._static_refresh_token
@@ -162,15 +158,16 @@ class MockExternalService:
                     "expires_in": 3600,
                 },
             )
-        raise RuntimeError(f"Received unrecognized endpoint {url}")
+        else:
+            raise RuntimeError(f"Received unrecognized endpoint {url}")
 
 
 @dataclasses.dataclass
-class _MockResponse:
-    status_code: HTTPStatus = HTTPStatus.OK
+class _FakeAiohttpResponse:
+    status: HTTPStatus = HTTPStatus.OK
     data: dict | None = None
 
-    def json(self):
+    async def json(self):
         return self.data
 
 

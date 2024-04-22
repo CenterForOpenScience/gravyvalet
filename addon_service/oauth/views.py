@@ -30,6 +30,7 @@ async def oauth2_callback_view(request):
         authorization_code=_authorization_code,
         auth_callback_url=_oauth_client_config.auth_callback_url,
         client_id=_oauth_client_config.client_id,
+        client_secret=_oauth_client_config.client_secret,
     )
     await _save_fresh_token(_token_metadata, _fresh_token_result)
     return HttpResponse(status=HTTPStatus.OK)

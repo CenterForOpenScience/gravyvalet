@@ -2,13 +2,9 @@ import dataclasses
 from http import HTTPStatus
 from secrets import token_urlsafe
 from typing import Iterable
-from urllib.parse import (
-    urlencode,
-    urlsplit,
-    urlunsplit,
-)
 
 from addon_service.common.aiohttp_session import get_aiohttp_client_session
+from addon_toolkit.iri_utils import iri_with_query
 
 
 _SCOPE_DELIMITER = " "  # https://www.rfc-editor.org/rfc/rfc6749.html#section-3.3
@@ -55,7 +51,7 @@ def build_auth_url(
     }
     if authorized_scopes:
         query_params["scope"] = " ".join(authorized_scopes)
-    return _url_with_query(auth_uri, query_params)
+    return iri_with_query(auth_uri, query_params)
 
 
 def generate_state_nonce(nonce_length: int = 16):
@@ -68,6 +64,7 @@ async def get_initial_access_token(
     authorization_code: str,
     auth_callback_url: str,
     client_id: str,
+    client_secret: str,
 ) -> FreshTokenResult:
     """get a fresh access token using a one-time authorization code
 
@@ -80,6 +77,7 @@ async def get_initial_access_token(
             "code": authorization_code,
             "redirect_uri": auth_callback_url,
             "client_id": client_id,
+            "client_secret": client_secret,
         },
     )
 
@@ -111,22 +109,18 @@ async def get_refreshed_access_token(
 
 
 async def _token_request(
-    token_endpoint_url: str, query_params: dict[str, str]
+    token_endpoint_url: str, request_body: dict[str, str]
 ) -> FreshTokenResult:
-    _url = _url_with_query(token_endpoint_url, query_params)
     _client = get_aiohttp_client_session()
-    async with _client.post(_url) as _token_response:
+    async with _client.post(token_endpoint_url, data=request_body) as _token_response:
         if not HTTPStatus(_token_response.status).is_success:
+            raise RuntimeError(await _token_response.json())
             raise RuntimeError  # TODO: https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2
         return FreshTokenResult.from_token_response_json(await _token_response.json())
 
 
-def _url_with_query(url: str, query_params: dict) -> str:
-    return urlunsplit(urlsplit(url)._replace(query=urlencode(query_params)))
-
-
-def _parse_scope_param_value(scope_value: str | None) -> list[str]:
-    return scope_value.split(_SCOPE_DELIMITER) if scope_value else []
+def _parse_scope_param_value(scope_value: str | None) -> list[str] | None:
+    return None if (scope_value is None) else scope_value.split(_SCOPE_DELIMITER)
 
 
 def _get_scope_param_value(scopes: Iterable[str] | None) -> str:

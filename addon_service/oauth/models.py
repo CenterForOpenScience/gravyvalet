@@ -39,11 +39,11 @@ class OAuth2ClientConfig(AddonsServiceBaseModel):
 class OAuth2TokenMetadataManager(models.Manager):
     def get_by_state_token(self, state_token: str):
         try:
-            _pk, _, _state_nonce = state_token.partition(".")
+            _pk, _state_nonce = state_token.split(".", maxsplit=1)
         except ValueError:
             raise ValueError('invalid state_token, expected "{pk}.{nonce}"')
         # may raise OAuth2TokenMetadata.DoesNotExist or OAuth2TokenMetadata.MultipleObjectsReturned
-        return self.filter(pk=_pk, state_nonce=_state_nonce).get()
+        return self.get(pk=_pk, state_nonce=_state_nonce)
 
 
 class OAuth2TokenMetadata(AddonsServiceBaseModel):
@@ -101,7 +101,8 @@ class OAuth2TokenMetadata(AddonsServiceBaseModel):
             self.access_token_expiration = timezone.now() + timedelta(
                 seconds=fresh_token_result.expires_in
             )
-        self.authorized_scopes = fresh_token_result.scopes
+        if fresh_token_result.scopes is not None:
+            self.authorized_scopes = fresh_token_result.scopes
         self.save()
         # update related records' fields
         _credentials = AccessTokenCredentials(

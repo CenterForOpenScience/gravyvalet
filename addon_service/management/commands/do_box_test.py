@@ -45,7 +45,7 @@ class Command(BaseCommand):
             # auth_callback_url="http://localhost:5000/oauth/callback/box/",
             token_endpoint_url="https://www.box.com/api/oauth2/token",
             client_id="xfsuitb3abwqbk2gaxbx29cqwlpdedrx",
-            client_secret="LBe6MxaHp7hNfDlCqk2QJf12NfQOiYyG",
+            client_secret="...",
         )
         _box_service, _ = db.ExternalStorageService.objects.update_or_create(
             int_addon_imp=get_imp_by_name("BOX_DOT_COM").imp_number,
@@ -66,7 +66,7 @@ class Command(BaseCommand):
             authorized_capabilities=AddonCapabilities.ACCESS | AddonCapabilities.UPDATE,
         )
         _account.initiate_oauth2_flow()
-        print(f"auth_url: {_account.auth_url}")
+        print(_account.auth_url)
         # _ir, _ = db.ResourceReference.objects.get_or_create(
         #     resource_uri="http://osf.example/blarg",
         # )

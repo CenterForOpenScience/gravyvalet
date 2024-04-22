@@ -93,15 +93,11 @@ DATABASES = {
     }
 }
 
-EXCEPTION_HANDLER = "rest_framework_json_api.exceptions.exception_handler"
-DEFAULT_PAGINATION_CLASS = (
-    "rest_framework_json_api.pagination.JsonApiPageNumberPagination"
-)
 
 REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
-    "EXCEPTION_HANDLER": EXCEPTION_HANDLER,
-    "DEFAULT_PAGINATION_CLASS": DEFAULT_PAGINATION_CLASS,
+    "EXCEPTION_HANDLER": "addon_service.exception_handler.api_exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework_json_api.pagination.JsonApiPageNumberPagination",
     "DEFAULT_PARSER_CLASSES": (
         "rest_framework_json_api.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
@@ -139,8 +135,6 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 
 USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 

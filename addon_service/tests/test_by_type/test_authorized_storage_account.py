@@ -1,6 +1,5 @@
 import urllib
 from http import HTTPStatus
-from unittest import mock
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -367,29 +366,6 @@ class TestAuthorizedStorageAccountModel(TestCase):
                 account.external_service.supported_scopes,
             )
 
-    def test_iniate_oauth2_flow__avoid_duplicate_state_tokens(self):
-        # Avoid factory magic that automatically does OAUTH stuffs
-        new_account = db.AuthorizedStorageAccount.objects.create(
-            external_storage_service=self._asa.external_storage_service,
-            account_owner=self._asa.account_owner,
-            authorized_capabilities=self._asa.authorized_capabilities,
-        )
-        with mock.patch(
-            "addon_service.authorized_storage_account.models.generate_state_nonce"
-        ) as mock_token:
-            mock_token.side_effect = [
-                self._asa.oauth2_token_metadata.state_token,
-                "abcde",
-            ]
-            new_account.initiate_oauth2_flow()
-
-        with self.subTest("Multiple attempts at token creation in case of collision"):
-            self.assertEqual(mock_token.call_count, 2)
-            self.assertEqual(new_account.oauth2_token_metadata.state_token, "abcde")
-
-        with self.subTest("Colliding Tokens not stored in DB"):
-            self.assertEqual(db.OAuth2TokenMetadata.objects.count(), 2)
-
     # set credentials
 
     def test_set_credentials__oauth__fails_if_state_token_exists(self):
@@ -428,7 +404,7 @@ class TestAuthorizedStorageAccountModel(TestCase):
         self.assertIsNone(account._credentials)
 
         token_metadata = account.oauth2_token_metadata
-        token_metadata.state_token = None
+        token_metadata.state_nonce = None
         token_metadata.refresh_token = "refresh"
         token_metadata.save()
 
