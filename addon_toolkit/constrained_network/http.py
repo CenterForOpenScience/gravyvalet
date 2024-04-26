@@ -7,9 +7,16 @@ from http import (
     HTTPStatus,
 )
 
-from .iri_utils import (
+from addon_toolkit.iri_utils import (
     KeyValuePairs,
     Multidict,
+)
+
+
+__all__ = (
+    "HttpRequestInfo",
+    "HttpResponseInfo",
+    "HttpRequestor",
 )
 
 
@@ -54,9 +61,8 @@ class HttpRequestor(typing.Protocol):
     def response_info_cls(self) -> type[HttpResponseInfo]: ...
 
     # abstract method for subclasses
-    def send(
-        self,
-        request: HttpRequestInfo,
+    def do_send(
+        self, request: HttpRequestInfo
     ) -> contextlib.AbstractAsyncContextManager[HttpResponseInfo]: ...
 
     @contextlib.asynccontextmanager
@@ -73,7 +79,7 @@ class HttpRequestor(typing.Protocol):
             query=(query if isinstance(query, Multidict) else Multidict(query)),
             headers=(headers if isinstance(headers, Multidict) else Multidict(headers)),
         )
-        async with self.send(_request_info) as _response:
+        async with self.do_send(_request_info) as _response:
             yield _response
 
     # TODO: streaming send/receive (only if/when needed)

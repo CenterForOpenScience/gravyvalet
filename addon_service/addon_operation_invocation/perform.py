@@ -1,4 +1,7 @@
-from asgiref.sync import sync_to_async
+from asgiref.sync import (
+    async_to_sync,
+    sync_to_async,
+)
 from django.db import transaction
 
 from addon_service.addon_imp.instantiation import get_storage_addon_instance
@@ -15,10 +18,12 @@ __all__ = (
 )
 
 
-def perform_invocation__blocking(
+@sync_to_async
+def perform_invocation__async(
     invocation: AddonOperationInvocation,
 ) -> AddonOperationInvocation:
-    # non-async for django transactions
+    # implemented as a sync function (for django transactions)
+    # wrapped in sync_to_async (to guarantee a running event loop)
     with dibs(invocation):  # TODO: handle dibs errors
         try:
             _addon_instance = get_storage_addon_instance(invocation.thru_addon)
@@ -26,7 +31,7 @@ def perform_invocation__blocking(
             # inner transaction to contain database errors,
             # so status can be saved in the outer transaction (from `dibs`)
             with transaction.atomic():
-                _result = _operation_imp.call_with_json_kwargs(
+                _result = _operation_imp.invoke_thru_addon__blocking(
                     _addon_instance,
                     invocation.operation_kwargs,
                 )
@@ -43,6 +48,6 @@ def perform_invocation__blocking(
     return invocation
 
 
-perform_invocation__async = sync_to_async(perform_invocation__blocking)
-# ^ someday, this may be reversed to `async def perform_invocation__async(...)`
-# and `perform_invocation__blocking = async_to_sync(perform_invocation__async)`
+# NOTE: yes this is `async_to_sync(sync_to_async(...))`; was an easy way
+# to guarantee a running event loop when called in a synchronous context
+perform_invocation__blocking = async_to_sync(perform_invocation__async)

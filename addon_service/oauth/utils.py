@@ -3,7 +3,7 @@ from http import HTTPStatus
 from secrets import token_urlsafe
 from typing import Iterable
 
-from addon_service.common.aiohttp_session import get_aiohttp_client_session
+from addon_service.common.aiohttp_session import get_singleton_client_session
 from addon_toolkit.iri_utils import iri_with_query
 
 
@@ -59,7 +59,7 @@ def generate_state_nonce(nonce_length: int = 16):
 
 
 async def get_initial_access_token(
-    *,
+    *,  # keywords only
     token_endpoint_url: str,
     authorization_code: str,
     auth_callback_url: str,
@@ -83,25 +83,27 @@ async def get_initial_access_token(
 
 
 async def get_refreshed_access_token(
+    *,  # keywords only
     token_endpoint_url: str,
     refresh_token: str,
     auth_callback_url: str,
     client_id: str,
+    client_secret: str,
     scopes: Iterable[str] = (),
 ) -> FreshTokenResult:
     """get a fresh access token using a refresh token
 
     see https://www.rfc-editor.org/rfc/rfc6749.html#section-6
     """
-    return await _token_request(
-        token_endpoint_url,
-        {
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
-            "scope": _get_scope_param_value(scopes),
-            "client_id": client_id,
-        },
-    )
+    _refresh_params = {
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+        "client_id": client_id,
+        "client_secret": client_secret,
+    }
+    if scopes:
+        _refresh_params["scope"] = _SCOPE_DELIMITER.join(scopes)
+    return await _token_request(token_endpoint_url, _refresh_params)
 
 
 ###
@@ -111,7 +113,7 @@ async def get_refreshed_access_token(
 async def _token_request(
     token_endpoint_url: str, request_body: dict[str, str]
 ) -> FreshTokenResult:
-    _client = get_aiohttp_client_session()
+    _client = await get_singleton_client_session()
     async with _client.post(token_endpoint_url, data=request_body) as _token_response:
         if not HTTPStatus(_token_response.status).is_success:
             raise RuntimeError(await _token_response.json())
@@ -121,7 +123,3 @@ async def _token_request(
 
 def _parse_scope_param_value(scope_value: str | None) -> list[str] | None:
     return None if (scope_value is None) else scope_value.split(_SCOPE_DELIMITER)
-
-
-def _get_scope_param_value(scopes: Iterable[str] | None) -> str:
-    return _SCOPE_DELIMITER.join(scopes) if scopes else ""

@@ -13,7 +13,7 @@ from addon_toolkit import (
     immediate_operation,
     redirect_operation,
 )
-from addon_toolkit.constrained_http import HttpRequestor
+from addon_toolkit.constrained_network import HttpRequestor
 from addon_toolkit.cursor import Cursor
 
 

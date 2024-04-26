@@ -15,6 +15,10 @@ def dibs(model_instance, *, refresh=True):
     """context manager that locks the database row for a given model instance
 
     a dibs'd block cannot be running twice for the same model instance at the same time
+
+    ---
+    "dibs" (noun): The right to use or enjoy something exclusively or before anyone else.
+    https://en.wiktionary.org/wiki/dibs
     """
     with transaction.atomic():
         _locked_obj = (

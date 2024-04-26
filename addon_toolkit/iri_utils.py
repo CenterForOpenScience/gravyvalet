@@ -70,6 +70,10 @@ class Multidict(Headers):
         """
         super().add_header(key, value, **mediatype_params)
 
+    def add_many(self, pairs: Iterable[tuple[str, str]]):
+        for _key, _value in pairs:
+            self.add(_key, _value)
+
     def as_headers(self) -> bytes:
         """format as http headers
 

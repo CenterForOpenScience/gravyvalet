@@ -10,16 +10,20 @@ from urllib.parse import (
 )
 
 import aiohttp
+from asgiref.sync import sync_to_async
 
-from addon_toolkit.constrained_http import (
+from addon_service import models as db
+from addon_service.common import exceptions
+from addon_service.oauth import utils as oauth_utils
+from addon_toolkit.constrained_network import (
     HttpRequestInfo,
     HttpRequestor,
     HttpResponseInfo,
-    Multidict,
 )
+from addon_toolkit.iri_utils import Multidict
 
 
-__all__ = ("AiohttpRequestor",)
+__all__ = ("GravyvaletHttpRequestor",)
 
 
 _logger = logging.getLogger(__name__)
@@ -47,7 +51,7 @@ class _AiohttpResponseInfo(HttpResponseInfo):
         return await _response.json()
 
 
-class AiohttpRequestor(HttpRequestor):
+class GravyvaletHttpRequestor(HttpRequestor):
     # abstract property from HttpRequestor:
     response_info_cls = _AiohttpResponseInfo
 
@@ -56,22 +60,37 @@ class AiohttpRequestor(HttpRequestor):
         *,
         client_session: aiohttp.ClientSession,
         prefix_url: str,
-        credentials: object,  # TODO: base credentials?
+        account: db.AuthorizedStorageAccount,
     ):
-        _PrivateNetworkInfo(client_session, prefix_url, credentials).assign(self)
+        _PrivateNetworkInfo(client_session, prefix_url, account).assign(self)
 
     # abstract method from HttpRequestor:
     @contextlib.asynccontextmanager
-    async def send(self, request: HttpRequestInfo):
-        _network = _PrivateNetworkInfo.get(self)
-        _url = _network.get_full_url(request.uri_path)
+    async def do_send(self, request: HttpRequestInfo):
+        try:
+            async with self._try_send(request) as _response:
+                yield _response
+        except exceptions.ExpiredAccessToken:
+            await _PrivateNetworkInfo.get(self).refresh_oauth_access_token()
+            # if this one fails, don't try refreshing again
+            async with self._try_send(request) as _response:
+                yield _response
+
+    @contextlib.asynccontextmanager
+    async def _try_send(self, request: HttpRequestInfo):
+        _private = _PrivateNetworkInfo.get(self)
+        _url = _private.get_full_url(request.uri_path)
         _logger.info(f"sending {request.http_method} to {_url}")
-        async with _network.client_session.request(
+        async with _private.client_session.request(
             request.http_method,
             _url,
-            headers=_network.get_headers(),
+            headers=await _private.get_headers(),
             # TODO: content
         ) as _response:
+            if _response.status == HTTPStatus.UNAUTHORIZED:
+                # assume unauthorized because of token expiration.
+                # if not, refresh will fail (which is fine)
+                raise exceptions.ExpiredAccessToken
             yield _AiohttpResponseInfo(_response)
 
 
@@ -115,20 +134,22 @@ class _PrivateResponse(_PrivateInfo):
 
 @dataclasses.dataclass
 class _PrivateNetworkInfo(_PrivateInfo):
-    """ "private" info associated with an AiohttpRequestor instance"""
+    """ "private" info associated with a GravyvaletHttpRequestor instance"""
 
     # avoid exposing aiohttp directly to imps
     client_session: aiohttp.ClientSession
 
     # keep network constraints away from imps
     prefix_url: str
+    account: db.AuthorizedStorageAccount
 
-    # protect credentials with utmost respect
-    credentials: object  # TODO: base credentials dataclass? (or something)
-
+    @sync_to_async
     def get_headers(self) -> Multidict:
-        # TODO: from self.credentials
-        return Multidict({"Authorization": "Bearer --"})
+        _headers = Multidict()
+        _credentials = self.account.credentials
+        if _credentials:
+            _headers.add_many(self.account.credentials.iter_headers())
+        return _headers
 
     def get_full_url(self, relative_url: str) -> str:
         """resolve a url relative to a given prefix
@@ -150,3 +171,24 @@ class _PrivateNetworkInfo(_PrivateInfo):
                 f'relative url may not alter the base url (maybe with dot segments "/../"? got "{relative_url}")'
             )
         return _full_url
+
+    @sync_to_async
+    def _get_oauth_models(self) -> tuple[db.OAuth2ClientConfig, db.OAuth2TokenMetadata]:
+        # wrap db access in `sync_to_async`
+        return (
+            self.account.external_service.oauth2_client_config,
+            self.account.oauth2_token_metadata,
+        )
+
+    async def refresh_oauth_access_token(self):
+        _oauth_client_config, _oauth_token_metadata = await self._get_oauth_models()
+        _fresh_token_result = await oauth_utils.get_refreshed_access_token(
+            token_endpoint_url=_oauth_client_config.token_endpoint_url,
+            refresh_token=_oauth_token_metadata.refresh_token,
+            auth_callback_url=_oauth_client_config.auth_callback_url,
+            client_id=_oauth_client_config.client_id,
+            client_secret=_oauth_client_config.client_secret,
+        )
+        await sync_to_async(_oauth_token_metadata.update_with_fresh_token)(
+            _fresh_token_result
+        )

@@ -176,7 +176,7 @@ class TestAddonProtocol(unittest.TestCase):
             HTTPMethod.GET,
         )
         _imp_for_get = self._my_imp.get_operation_imp_by_name("url_for_get")
-        _imp_for_get.call_with_json_kwargs(
+        _imp_for_get.invoke_thru_addon__blocking(
             _mock_addon_instance,
             {"checksum_iri": "..."},
         )

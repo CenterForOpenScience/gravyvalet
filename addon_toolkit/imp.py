@@ -6,7 +6,10 @@ from typing import (
     Iterator,
 )
 
-from asgiref.sync import async_to_sync
+from asgiref.sync import (
+    async_to_sync,
+    sync_to_async,
+)
 
 from .json_arguments import kwargs_from_json
 from .operation import AddonOperationDeclaration
@@ -85,14 +88,16 @@ class AddonOperationImp:
     def imp_function(self):
         return getattr(self.addon_imp.imp_cls, self.declaration.name)
 
-    def call_with_json_kwargs(self, addon_instance: object, json_kwargs: dict):
+    async def invoke_thru_addon(self, addon_instance: object, json_kwargs: dict):
         _method = self._get_instance_method(addon_instance)
         _kwargs = kwargs_from_json(self.declaration.call_signature, json_kwargs)
-        if inspect.iscoroutinefunction(_method):
-            _method = async_to_sync(_method)
-        _result = _method(**_kwargs)
+        if not inspect.iscoroutinefunction(_method):
+            _method = sync_to_async(_method)
+        _result = await _method(**_kwargs)
         assert isinstance(_result, self.declaration.return_type)
         return _result
+
+    invoke_thru_addon__blocking = async_to_sync(invoke_thru_addon)
 
     def _get_instance_method(self, addon_instance: object):
         return getattr(addon_instance, self.declaration.name)

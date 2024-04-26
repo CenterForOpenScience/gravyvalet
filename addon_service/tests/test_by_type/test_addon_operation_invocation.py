@@ -6,7 +6,9 @@ from http import HTTPStatus
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
-from addon_service.common.aiohttp_session import close_aiohttp_client_session_sync
+from addon_service.common.aiohttp_session import (
+    close_singleton_client_session__blocking,
+)
 from addon_service.common.invocation import InvocationStatus
 from addon_service.tests import _factories
 from addon_service.tests._helpers import (
@@ -57,7 +59,7 @@ class TestAddonOperationInvocationCreate(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.addCleanup(close_aiohttp_client_session_sync)
+        self.addCleanup(close_singleton_client_session__blocking)
         self._mock_osf = MockOSF({self._resource_uri: {self._user_uri: "admin"}})
         self._mock_osf.configure_assumed_caller(self._user_uri)
         self.enterContext(self._mock_osf.mocking())

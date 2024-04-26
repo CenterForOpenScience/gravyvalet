@@ -1,5 +1,3 @@
-from django.core.exceptions import ValidationError as DjangoValidationError
-from rest_framework.exceptions import ValidationError as RestFrameworkValidationError
 from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.utils import get_resource_type_from_model
@@ -80,17 +78,12 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
         _operation = _addon_imp_model.get_operation_imp(_operation_name)
         _user_uri = self.context["request"].session.get("user_reference_uri")
         _user, _ = UserReference.objects.get_or_create(user_uri=_user_uri)
-        try:
-            _invocation = AddonOperationInvocation.objects.create(
-                operation_identifier=_operation.natural_key_str,
-                operation_kwargs=validated_data["operation_kwargs"],
-                thru_addon=validated_data["thru_addon"],
-                by_user=_user,
-            )
-        except DjangoValidationError as _exception:
-            raise RestFrameworkValidationError(
-                detail=serializers.as_serializer_error(_exception)
-            )
+        _invocation = AddonOperationInvocation.objects.create(
+            operation_identifier=_operation.natural_key_str,
+            operation_kwargs=validated_data["operation_kwargs"],
+            thru_addon=validated_data["thru_addon"],
+            by_user=_user,
+        )
         match _operation.operation_type:
             case AddonOperationType.REDIRECT | AddonOperationType.IMMEDIATE:
                 perform_invocation__blocking(_invocation)
