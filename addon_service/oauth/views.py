@@ -10,8 +10,6 @@ from addon_service.models import (
 )
 from addon_service.oauth.utils import get_initial_access_token
 
-from .utils import FreshTokenResult
-
 
 @transaction.non_atomic_requests  # async views and ATOMIC_REQUESTS do not mix
 async def oauth2_callback_view(request):
@@ -32,8 +30,8 @@ async def oauth2_callback_view(request):
         client_id=_oauth_client_config.client_id,
         client_secret=_oauth_client_config.client_secret,
     )
-    await _save_fresh_token(_token_metadata, _fresh_token_result)
-    return HttpResponse(status=HTTPStatus.OK)
+    await _token_metadata.update_with_fresh_token(_fresh_token_result)
+    return HttpResponse(status=HTTPStatus.OK)  # TODO: redirect
 
 
 ###
@@ -46,10 +44,3 @@ def _resolve_state_token(
 ) -> tuple[OAuth2TokenMetadata, OAuth2ClientConfig]:
     _token_metadata = OAuth2TokenMetadata.objects.get_by_state_token(state_token)
     return (_token_metadata, _token_metadata.client_details)
-
-
-@sync_to_async
-def _save_fresh_token(
-    token_metadata: OAuth2TokenMetadata, fresh_token_result: FreshTokenResult
-) -> None:
-    token_metadata.update_with_fresh_token(fresh_token_result)

@@ -50,7 +50,7 @@ def build_auth_url(
         "redirect_uri": redirect_uri,
     }
     if authorized_scopes:
-        query_params["scope"] = " ".join(authorized_scopes)
+        query_params["scope"] = _SCOPE_DELIMITER.join(authorized_scopes)
     return iri_with_query(auth_uri, query_params)
 
 

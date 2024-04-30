@@ -89,7 +89,7 @@ class GravyvaletHttpRequestor(HttpRequestor):
         ) as _response:
             if _response.status == HTTPStatus.UNAUTHORIZED:
                 # assume unauthorized because of token expiration.
-                # if not, refresh will fail (which is fine)
+                # if not, will fail again after refresh (which is fine)
                 raise exceptions.ExpiredAccessToken
             yield _AiohttpResponseInfo(_response)
 
@@ -180,7 +180,7 @@ class _PrivateNetworkInfo(_PrivateInfo):
             self.account.oauth2_token_metadata,
         )
 
-    async def refresh_oauth_access_token(self):
+    async def refresh_oauth_access_token(self) -> None:
         _oauth_client_config, _oauth_token_metadata = await self._get_oauth_models()
         _fresh_token_result = await oauth_utils.get_refreshed_access_token(
             token_endpoint_url=_oauth_client_config.token_endpoint_url,
@@ -189,6 +189,4 @@ class _PrivateNetworkInfo(_PrivateInfo):
             client_id=_oauth_client_config.client_id,
             client_secret=_oauth_client_config.client_secret,
         )
-        await sync_to_async(_oauth_token_metadata.update_with_fresh_token)(
-            _fresh_token_result
-        )
+        await _oauth_token_metadata.update_with_fresh_token(_fresh_token_result)

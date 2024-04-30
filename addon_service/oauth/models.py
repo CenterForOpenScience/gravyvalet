@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from asgiref.sync import sync_to_async
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import (
@@ -90,6 +91,7 @@ class OAuth2TokenMetadata(AddonsServiceBaseModel):
                 "Error in OAuth2 Flow: Neither state nonce nor refresh token present."
             )
 
+    @sync_to_async
     @transaction.atomic
     def update_with_fresh_token(self, fresh_token_result: FreshTokenResult):
         # update this record's fields

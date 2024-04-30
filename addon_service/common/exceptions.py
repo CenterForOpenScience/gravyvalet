@@ -1,5 +1,5 @@
 class AddonServiceException(Exception):
-    pass
+    pass  # TODO: unique error codes; translatable names/descriptions
 
 
 class ExpiredAccessToken(AddonServiceException):
