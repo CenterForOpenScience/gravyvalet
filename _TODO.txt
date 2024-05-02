@@ -7,77 +7,148 @@ for each storage addon in osf (except osfstorage):
 
 - in `waterbutler:waterbutler/providers/<addon_name>/provider.py`,
   look at the `settings` arg passed to the provider class's `__init__`
+  (NOT what's imported from `waterbutler.providers.<addon_name>.settings`
+   -- those are different provider-specific waterbutler settings)
+
+(tho you'd have no reason to know it, those two are the same thing!)
 
 - cross-reference where the settings values come from (in osf) and how they are used (in wb)
   to begin to make some sense of how these settings might could be represented in gravyvalet
   CAREFUL: some variable names in addons code are lies! be wary of explanatory comments, too
 
+- additionally consider `NodeSettings.serialize_waterbutler_credentials`
+  (sometimes addon "credentials" contain data not entirely unlike settings)
+
+
 bespoke waterbutler settings
 ============================
 
-
 bitbucket:
-    owner: str (id)
-    repo: str (id)
+    setts:
+        owner: str (id)
+        repo: str (id)
+    creds:
+        token: str (access token)
 
 box:
-    folder: str (id)
+    setts:
+        folder: str (id)
+    creds:
+        token: str (access token)
 
 dataverse:
-    host: str (used as url with "https://" prepended)
-    doi: str (dataset identifier, TODO: better understand)
-    id: str
-    name: str
+    setts:
+        host: str (used as url with "https://" prepended)
+        doi: str (dataset identifier, TODO: better understand)
+        id: str
+        name: str
+    creds:
+        token: str (access token)
+        
 
 dropbox:
-    folder: str ("/"-delimited path)
+    setts:
+        folder: str ("/"-delimited path)
+    creds:
+        token: str (access token)
 
 figshare:
-    container_id: str
-    container_type: str, controlled vocab
-        either 'project' (osf-specific value?) or string values mapped from integer in api:
-        FIGSHARE_IDS_TO_TYPES = {
-            1: 'figure',
-            2: 'media',
-            3: 'dataset',
-            4: 'fileset',  # Unofficially deprecated and replaced by type 3 dataset
-            5: 'poster',
-            6: 'journal contribution',
-            7: 'presentation',
-            8: 'thesis',
-            9: 'software',
-            # For unknown reasons, 10 does not exist
-            11: 'online resource',
-            12: 'preprints',
-            13: 'book',
-            14: 'conference',
-        }
+    setts:
+        container_id: str
+        container_type: str, controlled vocab
+            either 'project' (osf-specific value?) or string values mapped from integer in api:
+            FIGSHARE_IDS_TO_TYPES = {
+                1: 'figure',
+                2: 'media',
+                3: 'dataset',
+                4: 'fileset',  # Unofficially deprecated and replaced by type 3 dataset
+                5: 'poster',
+                6: 'journal contribution',
+                7: 'presentation',
+                8: 'thesis',
+                9: 'software',
+                # For unknown reasons, 10 does not exist
+                11: 'online resource',
+                12: 'preprints',
+                13: 'book',
+                14: 'conference',
+            }
+    creds:
+        token: str (access token)
 
 github:
-    owner: str (username)
-    repo: str (name)
+    setts:
+        owner: str (username)
+        repo: str (name)
+    creds:
+        token: str (access token)
 
 gitlab:
-    host: str (full url probably)
-    owner: str (username)
-    repo: str (name)
-    repo_id: str (id)
+    setts:
+        host: str (full url probably)
+        owner: str (username)
+        repo: str (name)
+        repo_id: str (id)
+    creds:
+        token: str (access token)
 
 googledrive:
-    folder: object with keys:
-        path: str ('/'-delimited path)
-        name: str (all but the first segment of `path`)
-        id: str (or int, sometimes?)
+    setts:
+        folder: object with keys:
+            path: str ('/'-delimited path)
+            name: str (all but the first segment of `path`)
+            id: str (or int, sometimes?)
+    creds:
+        token: str (access token)
 
 onedrive:
-    drive_id: str
-    folder: str (id)
+    setts:
+        drive_id: str
+        folder: str (id)
+    creds:
+        token: str (access token)
 
 owncloud:
-    folder: str ('/'-delimited path)
-    verify_ssl: bool
+    setts:
+        folder: str ('/'-delimited path)
+        verify_ssl: bool
+    creds:
+        host: str (full url) (ONE OF THESE THINGS IS NOT LIKE THE OTHERS)
+        username: str
+        password: str
 
 s3:
-    id: str (format "bucket_id:base_folder_path")
-    bucket: str (prefixes `id`)
-    encrypt_uploads: bool
+    setts:
+        id: str (format "bucket_id:base_folder_path")
+        bucket: str (prefixes `id`)
+        encrypt_uploads: bool
+    creds:
+        access_key: str
+        secret_key: str
+
+
+
+recognizing patterns
+====================
+
+
+"owner" id/username:
+    sometimes required for building urls
+    gv: new field on Authorized_Account? or maybe credentials?
+
+"host" url:
+    sometimes given by user, sometimes from per-deployment `local.py` (stop that)
+    gv: Authorized_Account.api_base_url (with fallback to External_Service.api_base_url)
+
+"container" id (aka "folder", "bucket", "repo"):
+    regardless of service-specific typename, same basic concept (allow access only within this container item)
+    gv: treat as opaque id (maybe path, maybe int; only the imp it came from should care)
+        Configured_Addon.root_folder (must be within Authorized_Account.default_root_folder?)
+        imp-specific validation
+
+optional security ("verify_ssl", "encrypt_uploads"):
+    can we default to secure? do some ownclouds not support ssl? 
+
+names and paths:
+    in cases where an item has an `id` distinct from its name or path, prefer the `id`
+    TODO: differentiate between name/path for display vs those required for url construction
