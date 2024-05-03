@@ -39,9 +39,9 @@ box:
 dataverse:
     setts:
         host: str (used as url with "https://" prepended)
-        doi: str (dataset identifier, TODO: better understand)
-        id: str
-        name: str
+        doi: str (dataset identifier, unique across hosts, (maybe always starts with "doi:10..."?))
+        id: str (another dataset identifier, specific to host -- can use either, currently uses both (for different operations))
+        name: str (for display?)
     creds:
         token: str (access token)
         
@@ -78,15 +78,15 @@ figshare:
 
 github:
     setts:
-        owner: str (username)
-        repo: str (name)
+        owner: str (username (unique within github domain))
+        repo: str (name (unique within username-space))
     creds:
         token: str (access token)
 
 gitlab:
     setts:
         host: str (full url probably)
-        owner: str (username)
+        owner: str (username?)
         repo: str (name)
         repo_id: str (id)
     creds:
@@ -131,11 +131,6 @@ s3:
 recognizing patterns
 ====================
 
-
-"owner" id/username:
-    sometimes required for building urls
-    gv: new field on Authorized_Account? or maybe credentials?
-
 "host" url:
     sometimes given by user, sometimes from per-deployment `local.py` (stop that)
     gv: Authorized_Account.api_base_url (with fallback to External_Service.api_base_url)
@@ -143,8 +138,13 @@ recognizing patterns
 "container" id (aka "folder", "bucket", "repo"):
     regardless of service-specific typename, same basic concept (allow access only within this container item)
     gv: treat as opaque id (maybe path, maybe int; only the imp it came from should care)
-        Configured_Addon.root_folder (must be within Authorized_Account.default_root_folder?)
-        imp-specific validation
+        Configured_Addon.root_folder (validate within (and fallback to) Authorized_Account.default_root_folder)
+        imp-specific validation (depending path vs id -- may require api request(s))
+
+"owner" id/username:
+    sometimes required for building urls
+    could (sometimes) be inferred from credentials (via api request)
+    gv: per-imp config? new field on Authorized_Account? or maybe credentials?
 
 optional security ("verify_ssl", "encrypt_uploads"):
     can we default to secure? do some ownclouds not support ssl? 
