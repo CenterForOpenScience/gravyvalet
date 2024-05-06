@@ -103,7 +103,7 @@ googledrive:
 
 onedrive:
     setts:
-        drive_id: str
+        drive_id: str (inferred from access token via api)
         folder: str (id)
     creds:
         token: str (access token)
@@ -152,3 +152,12 @@ optional security ("verify_ssl", "encrypt_uploads"):
 names and paths:
     in cases where an item has an `id` distinct from its name or path, prefer the `id`
     TODO: differentiate between name/path for display vs those required for url construction
+
+
+tentative proposal
+==================
+
+consistent wb settings:
+- `base_url`
+- `root_item_id`
+- `external_account_id`
