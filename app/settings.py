@@ -90,7 +90,16 @@ DATABASES = {
         "HOST": env.POSTGRES_HOST,
         "PORT": env.POSTGRES_PORT,
         "ATOMIC_REQUESTS": True,
-    }
+    },
+    "osf": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env.OSFDB_NAME,
+        "USER": env.OSFDB_USER,
+        "PASSWORD": env.OSFDB_PASSWORD,
+        "HOST": env.OSFDB_HOST,
+        "PORT": env.OSFDB_PORT,
+        "ATOMIC_REQUESTS": True,
+    },
 }
 
 
