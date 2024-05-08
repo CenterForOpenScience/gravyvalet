@@ -71,14 +71,3 @@ class ConfiguredStorageAddonSerializer(serializers.HyperlinkedModelSerializer):
             "connected_operations",
             "connected_operation_names",
         ]
-
-
-class WaterButlerConfigurationSerializer(serializers.Serializer):
-    """Serialize ConfiguredStorageAccount information required by WaterButler.
-
-    The returned data should share a shape with the existing `serialize_waterbutler_credentials`
-    and `serialize_waterbutler_settings` functions used by the OSF-based Addons.
-    """
-
-    credentials = serializers.JSONField()
-    settings = serializers.JSONField()

@@ -170,3 +170,6 @@ class StorageAddonImp(StorageAddonProtocol):
 
     config: StorageConfig
     network: HttpRequestor
+
+    # set on subclasses for waterbutler compat:
+    waterbutler_provider_key: typing.ClassVar[str | None] = None

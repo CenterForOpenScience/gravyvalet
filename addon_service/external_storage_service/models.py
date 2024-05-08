@@ -10,6 +10,7 @@ from addon_service.credentials import (
     CredentialsFormats,
     validate_credentials_format,
 )
+from addon_toolkit.storage import StorageAddonImp
 
 from .enums import ServiceTypes
 from .validators import validate_service_type
@@ -72,6 +73,15 @@ class ExternalStorageService(AddonsServiceBaseModel):
     @property
     def configurable_api_root(self):
         return ServiceTypes.HOSTED in self.service_type
+
+    @property
+    def waterbutler_provider_key(self) -> str | None:
+        _imp_cls = get_imp_by_number(self.int_addon_imp).imp_cls
+        return (
+            _imp_cls.waterbutler_provider_key
+            if issubclass(_imp_cls, StorageAddonImp)
+            else None
+        )
 
     def clean_fields(self, *args, **kwargs):
         super().clean_fields(*args, **kwargs)

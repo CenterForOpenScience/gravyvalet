@@ -8,12 +8,13 @@ from addon_toolkit.cursor import OffsetCursor
 ROOT_FOLDER_ID: str = "0"
 
 
-@dataclasses.dataclass(frozen=True)
 class BoxDotComStorageImp(storage.StorageAddonImp):
     """storage on box.com
 
     see https://developer.box.com/reference/
     """
+
+    waterbutler_provider_key = "box"
 
     async def get_root_folders(self, page_cursor: str = "") -> storage.ItemSampleResult:
         return await self.get_child_folders(

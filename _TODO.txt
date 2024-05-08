@@ -158,6 +158,6 @@ tentative proposal
 ==================
 
 consistent wb settings:
-- `base_url`
-- `root_item_id`
+- `external_api_url`
+- `connected_root`
 - `external_account_id`
