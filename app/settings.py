@@ -157,3 +157,6 @@ STATIC_URL = "/static/"
 EXCHANGE_NAME = (
     "account_status_changes"  # Assuming this is the exchange name used for publishing
 )
+
+OSF_SENSITIVE_DATA_SECRET = ""
+OSF_SENSITIVE_DATA_SALT = ""
