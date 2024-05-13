@@ -1,17 +1,17 @@
 import dataclasses
 import enum
 import inspect
-from typing import (
-    Iterable,
-    Iterator,
-)
+import typing
 
 from asgiref.sync import (
     async_to_sync,
     sync_to_async,
 )
 
-from .json_arguments import kwargs_from_json
+from .json_arguments import (
+    JsonableDict,
+    kwargs_from_json,
+)
 from .operation import AddonOperationDeclaration
 from .protocol import (
     AddonProtocolDeclaration,
@@ -34,7 +34,7 @@ class AddonImp:
     imp_number: int
     addon_protocol: AddonProtocolDeclaration = dataclasses.field(init=False)
 
-    def __post_init__(self, addon_protocol_cls):
+    def __post_init__(self, addon_protocol_cls: type) -> None:
         object.__setattr__(  # using __setattr__ to bypass dataclass frozenness
             self,
             "addon_protocol",
@@ -42,8 +42,8 @@ class AddonImp:
         )
 
     def get_operation_imps(
-        self, *, capabilities: Iterable[enum.Enum] = ()
-    ) -> Iterator["AddonOperationImp"]:
+        self, *, capabilities: typing.Iterable[enum.Enum] = ()
+    ) -> typing.Iterator["AddonOperationImp"]:
         for _declaration in self.addon_protocol.get_operation_declarations(
             capabilities=capabilities
         ):
@@ -71,13 +71,13 @@ class AddonOperationImp:
     addon_imp: AddonImp
     declaration: AddonOperationDeclaration
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         _protocol_fn = getattr(
             self.addon_imp.addon_protocol.protocol_cls, self.declaration.name
         )
         try:
             _imp_fn = self.imp_function
-        except AttributeError:
+        except Exception:
             _imp_fn = _protocol_fn
         if _imp_fn is _protocol_fn:
             raise NotImplementedError(  # TODO: helpful exception type
@@ -85,10 +85,12 @@ class AddonOperationImp:
             )
 
     @property
-    def imp_function(self):
+    def imp_function(self) -> typing.Any:  # TODO: less typing.Any
         return getattr(self.addon_imp.imp_cls, self.declaration.name)
 
-    async def invoke_thru_addon(self, addon_instance: object, json_kwargs: dict):
+    async def invoke_thru_addon(
+        self, addon_instance: object, json_kwargs: JsonableDict
+    ) -> typing.Any:  # TODO: less typing.Any
         _method = self._get_instance_method(addon_instance)
         _kwargs = kwargs_from_json(self.declaration.call_signature, json_kwargs)
         if not inspect.iscoroutinefunction(_method):
@@ -99,7 +101,7 @@ class AddonOperationImp:
 
     invoke_thru_addon__blocking = async_to_sync(invoke_thru_addon)
 
-    def _get_instance_method(self, addon_instance: object):
+    def _get_instance_method(
+        self, addon_instance: object
+    ) -> typing.Any:  # TODO: less typing.Any
         return getattr(addon_instance, self.declaration.name)
-
-    # TODO: async def async_call_with_json_kwargs(self, addon_instance: object, json_kwargs: dict):

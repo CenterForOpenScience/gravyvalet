@@ -63,14 +63,14 @@ class Multidict(Headers):
                 _headerslist = list(key_value_pairs)
         super().__init__(_headerslist)
 
-    def add(self, key: str, value: str, **mediatype_params):
+    def add(self, key: str, value: str) -> None:
         """add a key-value pair (allowing other values to exist)
 
         alias of `wsgiref.headers.Headers.add_header`
         """
-        super().add_header(key, value, **mediatype_params)
+        super().add_header(key, value)
 
-    def add_many(self, pairs: Iterable[tuple[str, str]]):
+    def add_many(self, pairs: Iterable[tuple[str, str]]) -> None:
         for _key, _value in pairs:
             self.add(_key, _value)
 

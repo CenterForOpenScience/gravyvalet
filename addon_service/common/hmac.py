@@ -2,7 +2,7 @@ import base64
 import hashlib
 import hmac
 import re
-import urllib
+import urllib.parse
 from datetime import (
     UTC,
     datetime,
@@ -16,7 +16,7 @@ _AUTH_HEADER_REGEX = re.compile(
 )
 
 
-def _sign_message(message: str, hmac_key: str = None) -> str:
+def _sign_message(message: str, hmac_key: str | None = None) -> str:
     key = hmac_key or settings.DEFAULT_HMAC_KEY
     encoded_message = base64.b64encode(message.encode())
     return hmac.new(
@@ -30,25 +30,31 @@ def _get_signed_components(
     parsed_url = urllib.parse.urlparse(request_url)
     if isinstance(body, str):
         body = body.encode()
-    content_hash = hashlib.sha256(body).hexdigest if body else None
-    auth_timestamp = datetime.now(UTC)
-    signed_segments = [
-        request_method,
-        parsed_url.path,
-        parsed_url.query,
-        str(auth_timestamp),
-        content_hash,
-    ]
+    content_hash = hashlib.sha256(body).hexdigest() if body else None
+    auth_timestamp = str(datetime.now(UTC))
     # Filter out query string and content_hash if none present
-    signed_segments = [segment for segment in signed_segments if segment]
-    signed_headers = {"X-Authorization-Timestamp": auth_timestamp}
+    signed_segments = [
+        segment
+        for segment in [
+            request_method,
+            parsed_url.path,
+            parsed_url.query,
+            auth_timestamp,
+            content_hash,
+        ]
+        if segment
+    ]
+    signed_headers: dict[str, str] = {"X-Authorization-Timestamp": auth_timestamp}
     if content_hash:
         signed_headers["X-Content-SHA256"] = content_hash
     return signed_segments, signed_headers
 
 
 def make_signed_headers(
-    request_url: str, request_method: str, body: str | bytes = "", hmac_key: str = None
+    request_url: str,
+    request_method: str,
+    body: str | bytes = "",
+    hmac_key: str | None = None,
 ) -> dict:
     signed_string_segments, signed_headers = _get_signed_components(
         request_url, request_method, body

@@ -61,25 +61,25 @@ class HttpRequestor(typing.Protocol):
     def response_info_cls(self) -> type[HttpResponseInfo]: ...
 
     # abstract method for subclasses
-    def do_send(
+    def send_request(
         self, request: HttpRequestInfo
     ) -> contextlib.AbstractAsyncContextManager[HttpResponseInfo]: ...
 
     @contextlib.asynccontextmanager
-    async def request(
+    async def _request(
         self,
         http_method: HTTPMethod,
         uri_path: str,
         query: Multidict | KeyValuePairs | None = None,
         headers: Multidict | KeyValuePairs | None = None,
-    ):
+    ) -> typing.Any:  # loose type; method-specific methods below are more accurate
         _request_info = HttpRequestInfo(
             http_method=http_method,
             uri_path=uri_path,
             query=(query if isinstance(query, Multidict) else Multidict(query)),
             headers=(headers if isinstance(headers, Multidict) else Multidict(headers)),
         )
-        async with self.do_send(_request_info) as _response:
+        async with self.send_request(_request_info) as _response:
             yield _response
 
     # TODO: streaming send/receive (only if/when needed)
@@ -88,10 +88,10 @@ class HttpRequestor(typing.Protocol):
     # convenience methods for http methods
     # (same call signature as self.request, minus `http_method`)
 
-    OPTIONS: _MethodRequestMethod = partialmethod(request, HTTPMethod.OPTIONS)
-    HEAD: _MethodRequestMethod = partialmethod(request, HTTPMethod.HEAD)
-    GET: _MethodRequestMethod = partialmethod(request, HTTPMethod.GET)
-    PATCH: _MethodRequestMethod = partialmethod(request, HTTPMethod.PATCH)
-    POST: _MethodRequestMethod = partialmethod(request, HTTPMethod.POST)
-    PUT: _MethodRequestMethod = partialmethod(request, HTTPMethod.PUT)
-    DELETE: _MethodRequestMethod = partialmethod(request, HTTPMethod.DELETE)
+    OPTIONS: _MethodRequestMethod = partialmethod(_request, HTTPMethod.OPTIONS)
+    HEAD: _MethodRequestMethod = partialmethod(_request, HTTPMethod.HEAD)
+    GET: _MethodRequestMethod = partialmethod(_request, HTTPMethod.GET)
+    PATCH: _MethodRequestMethod = partialmethod(_request, HTTPMethod.PATCH)
+    POST: _MethodRequestMethod = partialmethod(_request, HTTPMethod.POST)
+    PUT: _MethodRequestMethod = partialmethod(_request, HTTPMethod.PUT)
+    DELETE: _MethodRequestMethod = partialmethod(_request, HTTPMethod.DELETE)

@@ -68,7 +68,7 @@ def _make_post_payload(
     }
     credentials = credentials or MOCK_CREDENTIALS[external_service.credentials_format]
     if credentials:
-        payload["data"]["attributes"]["credentials"] = credentials.asdict()
+        payload["data"]["attributes"]["credentials"] = credentials.asdict()  # type: ignore
     return payload
 
 
@@ -143,10 +143,12 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
             self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
 
             account = db.AuthorizedStorageAccount.objects.get(id=_resp.data["id"])
+            mock_credentials = MOCK_CREDENTIALS[creds_format]
+            assert mock_credentials is not None
             with self.subTest(creds_format=creds_format):
                 self.assertEqual(
                     account._credentials.credentials_blob,
-                    MOCK_CREDENTIALS[creds_format].asdict(),
+                    mock_credentials.asdict(),
                 )
 
     def test_post__sets_auth_url(self):
@@ -390,6 +392,7 @@ class TestAuthorizedStorageAccountModel(TestCase):
             )
             self.assertIsNone(account._credentials)
             mock_credentials = MOCK_CREDENTIALS[creds_format]
+            assert mock_credentials is not None
             account.credentials = mock_credentials
             account.save()
             with self.subTest(creds_format=creds_format):

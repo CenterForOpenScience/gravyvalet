@@ -1,26 +1,32 @@
 import base64
 import dataclasses
 import json
-from typing import (
-    ClassVar,
-    Protocol,
-)
+import typing
 
 
-def encode_cursor_dataclass(dataclass_instance) -> str:
+class DataclassInstance(typing.Protocol):
+    __dataclass_fields__: typing.ClassVar[dict[str, typing.Any]]
+
+
+SomeDataclassInstance = typing.TypeVar("SomeDataclassInstance", bound=DataclassInstance)
+
+
+def encode_cursor_dataclass(dataclass_instance: DataclassInstance) -> str:
     _as_json = json.dumps(dataclasses.astuple(dataclass_instance))
     _cursor_bytes = base64.b64encode(_as_json.encode())
     return _cursor_bytes.decode()
 
 
-def decode_cursor_dataclass(cursor: str, dataclass_class):
+def decode_cursor_dataclass(
+    cursor: str, dataclass_class: type[SomeDataclassInstance]
+) -> SomeDataclassInstance:
     _as_list = json.loads(base64.b64decode(cursor))
     return dataclass_class(*_as_list)
 
 
-class Cursor(Protocol):
+class Cursor(DataclassInstance, typing.Protocol):
     @classmethod
-    def from_str(cls, cursor: str):
+    def from_str(cls, cursor: str) -> typing.Self:
         return decode_cursor_dataclass(cursor, cls)
 
     @property
@@ -52,7 +58,7 @@ class OffsetCursor(Cursor):
     limit: int
     total_count: int  # use -1 to mean "many more"
 
-    MAX_INDEX: ClassVar[int] = 9999
+    MAX_INDEX: typing.ClassVar[int] = 9999
 
     @property
     def next_cursor_str(self) -> str | None:

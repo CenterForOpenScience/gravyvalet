@@ -1,7 +1,26 @@
 import doctest
+import typing
+import unittest
+from types import ModuleType
 
 
-def load_doctests(*modules):
+class LoadTestsFunction(typing.Protocol):
+    """structural type for the function expected by the "load_tests protocol"
+    https://docs.python.org/3/library/unittest.html#load-tests-protocol
+    """
+
+    def __call__(
+        _,  # implicit, nonexistent "self"
+        loader: unittest.TestLoader,
+        tests: unittest.TestSuite,
+        pattern: str | None,
+    ) -> unittest.TestSuite: ...
+
+
+def load_doctests(
+    *modules: ModuleType,
+    doctestflags: int = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE,
+) -> LoadTestsFunction:
     """shorthand for unittests from doctests
 
     meant for implementing the "load_tests protocol"
@@ -18,12 +37,16 @@ def load_doctests(*modules):
     (if there's a need, could support pass-thru kwargs to DocTestSuite)
     """
 
-    def _load_tests(loader, tests, pattern):
+    def _load_tests(
+        loader: unittest.TestLoader,
+        tests: unittest.TestSuite,
+        pattern: str | None,
+    ) -> unittest.TestSuite:
         for _module in modules:
             tests.addTests(
                 doctest.DocTestSuite(
                     _module,
-                    optionflags=doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE,
+                    optionflags=doctestflags,
                 )
             )
         return tests

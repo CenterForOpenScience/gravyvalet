@@ -61,7 +61,7 @@ class BoxDotComStorageImp(storage.StorageAddonImp):
         # https://developer.box.com/guides/api-calls/pagination/offset-based/
         try:
             _cursor = OffsetCursor.from_str(cursor)
-            return {"offset": _cursor.offset, "limit": _cursor.limit}
+            return {"offset": str(_cursor.offset), "limit": str(_cursor.limit)}
         except ValueError:
             return {}
 

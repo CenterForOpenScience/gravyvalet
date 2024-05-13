@@ -66,7 +66,7 @@ class GravyvaletHttpRequestor(HttpRequestor):
 
     # abstract method from HttpRequestor:
     @contextlib.asynccontextmanager
-    async def do_send(self, request: HttpRequestInfo):
+    async def send_request(self, request: HttpRequestInfo):
         try:
             async with self._try_send(request) as _response:
                 yield _response

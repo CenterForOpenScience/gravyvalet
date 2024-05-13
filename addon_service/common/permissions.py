@@ -91,10 +91,20 @@ class IsValidHMACSignedRequest(permissions.BasePermission):
         expiration_time = datetime.now(UTC) - timedelta(
             seconds=self.REQUEST_EXPIRATION_SECONDS
         )
-        request_timestamp = request.headers.get("X-Authorization-Timestamp")
-        if not request_timestamp or request_timestamp < expiration_time:
+        request_timestamp_str = request.headers.get("X-Authorization-Timestamp")
+        if not request_timestamp_str:
+            raise exceptions.PermissionDenied(
+                "Missing required 'X-Authorization-Timestamp' value"
+            )
+        try:
+            _request_timestamp = datetime.fromisoformat(request_timestamp_str)
+        except ValueError:
+            raise exceptions.PermissionDenied(
+                "Invalid 'X-Authorization-Timestamp' value"
+            )
+        if _request_timestamp < expiration_time:
             raise exceptions.PermissionDenied("HMAC Signed Request is expired")
-        elif request_timestamp > datetime.now(UTC):
+        if _request_timestamp > datetime.now(UTC):
             raise exceptions.PermissionDenied(
                 "HMAC Signed Request provided a timestamp from the future"
             )

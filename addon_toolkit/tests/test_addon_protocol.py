@@ -21,7 +21,7 @@ class TestAddonProtocol(unittest.TestCase):
     # the basics of an addon protocol
 
     ###
-    # shared test env (on `self`)
+    # shared test env (initialized by setUpClass)
     _MyProtocol: type  # typing.Protocol subclass decorated with `@addon_protocol`
     _MyImplementation: type  # subclass of _MyProtocol
     _my_imp: AddonImp

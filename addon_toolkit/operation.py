@@ -1,12 +1,11 @@
 import dataclasses
 import enum
+import functools
 import inspect
+import typing
 from http import HTTPMethod
-from typing import (
-    Callable,
-    Iterator,
-)
 
+from .capabilities import AddonCapabilities
 from .declarator import Declarator
 
 
@@ -35,38 +34,37 @@ class AddonOperationDeclaration:
     """
 
     operation_type: AddonOperationType
-    capability: enum.Enum
-    operation_fn: Callable  # the decorated function
-    return_type: type = dataclasses.field(
-        default=type(None),  # if not provided, inferred by __post_init__
-        compare=False,
-    )
+    capability: AddonCapabilities
+    operation_fn: typing.Callable[..., typing.Any]  # the decorated function
+    required_return_type: type | None = dataclasses.field(default=None, compare=False)
 
     @classmethod
-    def for_function(self, fn: Callable) -> "AddonOperationDeclaration":
+    def for_function(
+        self, fn: typing.Callable[..., typing.Any]
+    ) -> "AddonOperationDeclaration":
         return addon_operation.get_declaration(fn)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        if self.required_return_type and not issubclass(
+            self.return_type, self.required_return_type
+        ):
+            raise ValueError(
+                f"expected return type {self.return_type} on operation function {self.operation_fn} (got {self.return_type})"
+            )
+
+    @functools.cached_property
+    def return_type(self) -> type:
         _return_type = self.call_signature.return_annotation
-        if self.return_type is type(None):
-            # no return_type declared; infer from type annotation
-            assert dataclasses.is_dataclass(
-                _return_type
-            ), f"operation methods must return a dataclass (got {_return_type} on {self.operation_fn})"
-            # use object.__setattr__ to bypass dataclass frozenness (only here in __post_init__)
-            object.__setattr__(self, "return_type", _return_type)
-        else:
-            # return_type declared; enforce it
-            assert dataclasses.is_dataclass(
-                self.return_type
-            ), f"return_type must be a dataclass (got {self.return_type})"
-            if not issubclass(_return_type, self.return_type):
-                raise ValueError(
-                    f"expected return type {self.return_type} on operation function {self.operation_fn} (got {_return_type})"
-                )
+        if not (
+            isinstance(_return_type, type) and dataclasses.is_dataclass(_return_type)
+        ):
+            raise ValueError(
+                f"operation methods must return a dataclass (got {_return_type} on {self.operation_fn})"
+            )
+        return _return_type
 
     @property
-    def name(self):
+    def name(self) -> str:
         # TODO: language tag (kwarg for tagged string?)
         return self.operation_fn.__name__
 
@@ -76,17 +74,9 @@ class AddonOperationDeclaration:
         # TODO: docstring/description param on operation decorators, since __doc__ is removed on -O
         return self.operation_fn.__doc__ or ""
 
-    @property
+    @functools.cached_property
     def call_signature(self) -> inspect.Signature:
         return inspect.signature(self.operation_fn)
-
-    def param_dataclasses(self) -> Iterator[type]:
-        for _param_name, _param in self.call_signature.parameters.items():
-            if not dataclasses.is_dataclass(_param.annotation):
-                raise ValueError(
-                    f"operation parameters must have dataclass annotations (TODO: decorator to infer dataclass from annotated kwargs), got `{_param_name}: {_param.annotation}`"
-                )
-            yield _param.annotation
 
 
 # declarator for all types of operations -- use operation_type-specific decorators below
@@ -105,7 +95,7 @@ class RedirectResult:
 # decorator for operations that may be performed by a client request (e.g. redirect to waterbutler)
 redirect_operation = addon_operation.with_kwargs(
     operation_type=AddonOperationType.REDIRECT,
-    return_type=RedirectResult,
+    required_return_type=RedirectResult,
     # TODO: consider adding `save_invocation: bool = True`, set False here
 )
 

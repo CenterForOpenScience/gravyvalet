@@ -11,6 +11,9 @@ black==24.*
 isort
 pre-commit
 
+# Type checking
+mypy
+
 # ASGI server for local use
 # https://docs.djangoproject.com/en/4.2/howto/deployment/asgi/daphne/#integration-with-runserver
 daphne

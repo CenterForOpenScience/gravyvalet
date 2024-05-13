@@ -7,13 +7,14 @@ from typing import (
     TypeVar,
 )
 
+from addon_toolkit.typing import DataclassInstance
+
 
 DecoratorTarget = TypeVar("DecoratorTarget")
-DeclarationDataclass = TypeVar("DeclarationDataclass")
 
 
 @dataclasses.dataclass
-class Declarator(Generic[DeclarationDataclass]):
+class Declarator(Generic[DataclassInstance]):
     """Declarator: add declarative metadata in python using decorators and dataclasses
 
     define a dataclass with fields you want declared in your decorator, plus a field
@@ -48,15 +49,15 @@ class Declarator(Generic[DeclarationDataclass]):
     TwoPartGreetingDeclaration(a='kia', b='ora', on=<function _kia_ora at 0x...>)
     """
 
-    declaration_dataclass: type[DeclarationDataclass]
+    declaration_dataclass: type[DataclassInstance]
     field_for_target: str
     static_kwargs: dict[str, Any] | None = None
 
     # private storage linking a decorated class or function to data gleaned from its decorator
-    __declarations_by_target: weakref.WeakKeyDictionary[
-        object, DeclarationDataclass
-    ] = dataclasses.field(
-        default_factory=weakref.WeakKeyDictionary,
+    __declarations_by_target: weakref.WeakKeyDictionary[object, DataclassInstance] = (
+        dataclasses.field(
+            default_factory=weakref.WeakKeyDictionary,
+        )
     )
 
     def __post_init__(self) -> None:
@@ -69,7 +70,7 @@ class Declarator(Generic[DeclarationDataclass]):
         ), f'expected field "{self.field_for_target}" on dataclass "{self.declaration_dataclass}"'
 
     def __call__(
-        self, **declaration_dataclass_kwargs
+        self, **declaration_dataclass_kwargs: Any
     ) -> Callable[[DecoratorTarget], DecoratorTarget]:
         """for using a Declarator as a decorator"""
 
@@ -79,13 +80,13 @@ class Declarator(Generic[DeclarationDataclass]):
 
         return _decorator
 
-    def with_kwargs(self, **static_kwargs) -> "Declarator":
+    def with_kwargs(self, **static_kwargs: Any) -> "Declarator[DataclassInstance]":
         """convenience for decorators that differ only by static field values"""
         # note: shared __declarations_by_target
         return dataclasses.replace(self, static_kwargs=static_kwargs)
 
     def set_declaration(
-        self, declaration_target: DecoratorTarget, **declaration_dataclass_kwargs
+        self, declaration_target: DecoratorTarget, **declaration_dataclass_kwargs: Any
     ) -> None:
         """create a declaration associated with the target
 
@@ -98,14 +99,14 @@ class Declarator(Generic[DeclarationDataclass]):
             **{self.field_for_target: declaration_target},
         )
 
-    def get_declaration(self, target) -> DeclarationDataclass:
+    def get_declaration(self, target: DecoratorTarget) -> DataclassInstance:
         try:
             return self.__declarations_by_target[target]
         except KeyError:
             raise ValueError(f"no declaration found for {target}")
 
 
-class ClassDeclarator(Declarator):
+class ClassDeclarator(Declarator[DataclassInstance]):
     """add declarative metadata to python classes using decorators
 
     (same as Declarator but with additional methods that only make
@@ -157,13 +158,15 @@ class ClassDeclarator(Declarator):
     SemanticVersionDeclaration(major=4, minor=2, patch=9, subj=<class 'addon_toolkit.declarator.MyLongLivedBaseClass'>)
     """
 
-    def get_declaration_for_class_or_instance(self, type_or_object: type | object):
+    def get_declaration_for_class_or_instance(
+        self, type_or_object: type | object
+    ) -> DataclassInstance:
         _cls = (
             type_or_object if isinstance(type_or_object, type) else type(type_or_object)
         )
         return self.get_declaration_for_class(_cls)
 
-    def get_declaration_for_class(self, cls: type):
+    def get_declaration_for_class(self, cls: type) -> DataclassInstance:
         for _cls in cls.__mro__:
             try:
                 return self.get_declaration(_cls)
