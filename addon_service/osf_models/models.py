@@ -1,6 +1,7 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from osf_models.fields import (
+
+from addon_service.osf_models.fields import (
     DateTimeAwareJSONField,
     EncryptedTextField,
 )
@@ -51,21 +52,33 @@ class ExternalAccount(models.Model):
 
     class Meta:
         managed = False
+        app_label = "osf"
+
+
+ExternalAccount.objects = ExternalAccount.objects.using("osf")
+
 
 class BaseOAuthNodeSettings(models.Model):
     class Meta:
         abstract = True
         managed = False
+        app_label = "addon"
 
-    external_account = models.ForeignKey(ExternalAccount, null=True, blank=True,
-                                         related_name='%(app_label)s_node_settings',
-                                         on_delete=models.CASCADE)
+    external_account = models.ForeignKey(
+        ExternalAccount,
+        null=True,
+        blank=True,
+        related_name="%(app_label)s_node_settings",
+        on_delete=models.CASCADE,
+    )
+
 
 class BaseOAuthUserSettings(models.Model):
     class Meta:
         abstract = True
         managed = False
-    
+        app_label = "addon"
+
     # Keeps track of what nodes have been given permission to use external
     #   accounts belonging to the user.
     oauth_grants = DateTimeAwareJSONField(default=dict, blank=True)
@@ -80,124 +93,266 @@ class BaseOAuthUserSettings(models.Model):
     #
     # metadata here is the specific to each addon.
 
+
 class BitbucketUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_bitbucket_usersettings"
+
 
 class BitbucketNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_bitbucket_nodesettings"
+
     user = models.TextField(blank=True, null=True)
     repo = models.TextField(blank=True, null=True)
     hook_id = models.TextField(blank=True, null=True)
-    user_settings = models.ForeignKey(BitbucketUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        BitbucketUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class BoaUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_boa_usersettings"
+
 
 class BoaNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_boa_nodesettings"
+
     folder_id = models.TextField(blank=True, null=True)
-    user_settings = models.ForeignKey(BoaUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        BoaUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class BoxUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_box_usersettings"
+
 
 class BoxNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_box_nodesettings"
+
     folder_id = models.TextField(null=True, blank=True)
     folder_name = models.TextField(null=True, blank=True)
     folder_path = models.TextField(null=True, blank=True)
-    user_settings = models.ForeignKey(BoxUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        BoxUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class DataverseUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_dataverse_usersettings"
+
 
 class DataverseNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_dataverse_nodesettings"
+
     dataverse_alias = models.TextField(blank=True, null=True)
     dataverse = models.TextField(blank=True, null=True)
     dataset_doi = models.TextField(blank=True, null=True)
     _dataset_id = models.TextField(blank=True, null=True)
     dataset = models.TextField(blank=True, null=True)
-    user_settings = models.ForeignKey(DataverseUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        DataverseUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class DropboxUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_dropbox_usersettings"
+
 
 class DropboxNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_dropbox_nodesettings"
+
     folder = models.TextField(null=True, blank=True)
-    user_settings = models.ForeignKey(DropboxUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        DropboxUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class FigshareUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_figshare_usersettings"
 
-class FigshareUserSettings(BaseOAuthNodeSettings):
+
+class FigshareNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_figshare_nodesettings"
+
     folder_id = models.TextField(blank=True, null=True)
     folder_name = models.TextField(blank=True, null=True)
     folder_path = models.TextField(blank=True, null=True)
-    user_settings = models.ForeignKey(FigshareUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        FigshareUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class GithubUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_github_usersettings"
+
 
 class GithubNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_github_nodesettings"
+
     user = models.TextField(blank=True, null=True)
     repo = models.TextField(blank=True, null=True)
     hook_id = models.TextField(blank=True, null=True)
     hook_secret = models.TextField(blank=True, null=True)
     registration_data = DateTimeAwareJSONField(default=dict, blank=True, null=True)
-    user_settings = models.ForeignKey(GithubUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        GithubUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class GitlabUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_gitlab_usersettings"
+
 
 class GitlabNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_gitlab_nodesettings"
+
     user = models.TextField(blank=True, null=True)
     repo = models.TextField(blank=True, null=True)
     repo_id = models.TextField(blank=True, null=True)
     hook_id = models.TextField(blank=True, null=True)
     hook_secret = models.TextField(blank=True, null=True)
-    user_settings = models.ForeignKey(GitlabUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        GitlabUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class GoogleDriveUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_googledrive_usersettings"
+
 
 class GoogleDriveNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_googledrive_nodesettings"
+
     older_id = models.TextField(null=True, blank=True)
     folder_path = models.TextField(null=True, blank=True)
-    user_settings = models.ForeignKey(GoogleDriveUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        GoogleDriveUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class MendeleyUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_mendeley_usersettings"
+
 
 class MendeleyNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_mendeley_nodesettings"
+
     list_id = models.TextField(blank=True, null=True)
-    user_settings = models.ForeignKey(MendeleyUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        MendeleyUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class OneDriveUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_onedrive_usersettings"
+
 
 class OneDriveNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_onedrive_nodesettings"
+
     folder_id = models.TextField(null=True, blank=True)
     folder_path = models.TextField(null=True, blank=True)
     drive_id = models.TextField(null=True, blank=True)
-    user_settings = models.ForeignKey(OneDriveUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        OneDriveUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class OwnCloudUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_owncloud_usersettings"
+
 
 class OwnCloudNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_owncloud_nodesettings"
+
     folder_id = models.TextField(blank=True, null=True)
-    user_settings = models.ForeignKey(OwnCloudUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        OwnCloudUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class S3UserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_s3_usersettings"
+
 
 class S3NodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_s3_nodesettings"
+
     folder_id = models.TextField(blank=True, null=True)
     folder_name = models.TextField(blank=True, null=True)
     encrypt_uploads = models.BooleanField(default=True)
-    user_settings = models.ForeignKey(S3UserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        S3UserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
 
 class ZoteroUserSettings(BaseOAuthUserSettings):
-    #TODO: specify which db table?
+    class Meta:
+        db_table = "addons_zotero_usersettings"
+
 
 class ZoteroNodeSettings(BaseOAuthNodeSettings):
+    class Meta:
+        db_table = "addons_zotero_nodesettings"
+
     list_id = models.TextField(blank=True, null=True)
     library_id = models.TextField(blank=True, null=True)
-    user_settings = models.ForeignKey(ZoteroUserSettings, null=True, blank=True, on_delete=models.CASCADE)
+    user_settings = models.ForeignKey(
+        ZoteroUserSettings, null=True, blank=True, on_delete=models.CASCADE
+    )
+
+
+BitbucketUserSettings.objects = BitbucketUserSettings.objects.using("osf")
+BitbucketNodeSettings.objects = BitbucketNodeSettings.objects.using("osf")
+BoaUserSettings.objects = BoaUserSettings.objects.using("osf")
+BoaNodeSettings.objects = BoaNodeSettings.objects.using("osf")
+BoxUserSettings.objects = BoxUserSettings.objects.using("osf")
+BoxNodeSettings.objects = BoxNodeSettings.objects.using("osf")
+DataverseUserSettings.objects = DataverseUserSettings.objects.using("osf")
+DataverseNodeSettings.objects = DataverseNodeSettings.objects.using("osf")
+DropboxUserSettings.objects = DropboxUserSettings.objects.using("osf")
+DropboxNodeSettings.objects = DropboxNodeSettings.objects.using("osf")
+FigshareUserSettings.objects = FigshareUserSettings.objects.using("osf")
+FigshareNodeSettings.objects = FigshareNodeSettings.objects.using("osf")
+GithubUserSettings.objects = GithubUserSettings.objects.using("osf")
+GithubNodeSettings.objects = GithubNodeSettings.objects.using("osf")
+GitlabUserSettings.objects = GitlabUserSettings.objects.using("osf")
+GitlabNodeSettings.objects = GitlabNodeSettings.objects.using("osf")
+GoogleDriveUserSettings.objects = GoogleDriveUserSettings.objects.using("osf")
+GoogleDriveNodeSettings.objects = GoogleDriveNodeSettings.objects.using("osf")
+MendeleyUserSettings.objects = MendeleyUserSettings.objects.using("osf")
+MendeleyNodeSettings.objects = MendeleyNodeSettings.objects.using("osf")
+OneDriveUserSettings.objects = OneDriveUserSettings.objects.using("osf")
+OneDriveNodeSettings.objects = OneDriveNodeSettings.objects.using("osf")
+OwnCloudUserSettings.objects = OwnCloudUserSettings.objects.using("osf")
+OwnCloudNodeSettings.objects = OwnCloudNodeSettings.objects.using("osf")
+S3UserSettings.objects = S3UserSettings.objects.using("osf")
+S3NodeSettings.objects = S3NodeSettings.objects.using("osf")
+ZoteroUserSettings.objects = ZoteroUserSettings.objects.using("osf")
+ZoteroNodeSettings.objects = ZoteroNodeSettings.objects.using("osf")
