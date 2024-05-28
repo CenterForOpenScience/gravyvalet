@@ -90,6 +90,10 @@ DATABASES = {
         "HOST": env.POSTGRES_HOST,
         "PORT": env.POSTGRES_PORT,
         "ATOMIC_REQUESTS": True,
+        "CONN_MAX_AGE": env.OSFDB_CONN_MAX_AGE,
+        "OPTIONS": {
+            "sslmode": env.OSFDB_SSLMODE,
+        },
     },
     "osf": {
         "ENGINE": "django.db.backends.postgresql",
@@ -99,6 +103,10 @@ DATABASES = {
         "HOST": env.OSFDB_HOST,
         "PORT": env.OSFDB_PORT,
         "ATOMIC_REQUESTS": True,
+        "CONN_MAX_AGE": env.OSFDB_CONN_MAX_AGE,
+        "OPTIONS": {
+            "sslmode": env.OSFDB_SSLMODE,
+        },
     },
 }
 
@@ -158,5 +166,5 @@ EXCHANGE_NAME = (
     "account_status_changes"  # Assuming this is the exchange name used for publishing
 )
 
-OSF_SENSITIVE_DATA_SECRET = ""
-OSF_SENSITIVE_DATA_SALT = ""
+OSF_SENSITIVE_DATA_SECRET = env.OSF_SENSITIVE_DATA_SECRET
+OSF_SENSITIVE_DATA_SALT = env.OSF_SENSITIVE_DATA_SALT
