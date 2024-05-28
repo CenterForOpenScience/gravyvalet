@@ -1,14 +1,11 @@
 import datetime as dt
-import json
 from decimal import Decimal
 
 import jwe
 from dateutil.parser import isoparse
-from django.contrib.postgres import lookups
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import JSONField
-from django.forms import JSONField as JSONFormField
 
 from app.settings import (
     OSF_SENSITIVE_DATA_SALT,
@@ -45,11 +42,12 @@ def encrypt_string(value, prefix="jwe:::") -> str:
 
 def decrypt_string(value, prefix="jwe:::") -> str:
     prefix = ensure_bytes(prefix)
+    prefix_length = len(prefix)
     if value:
         _value_bytes = ensure_bytes(value)
         if _value_bytes.startswith(prefix):
             value = jwe.decrypt(
-                _value_bytes[len(prefix):], SENSITIVE_DATA_KEY
+                _value_bytes[prefix_length:], SENSITIVE_DATA_KEY
             ).decode()
     return value
 
@@ -63,24 +61,13 @@ class EncryptedTextField(models.TextField):
     prefix = "jwe:::"
 
     def get_db_prep_value(self, value, **kwargs):
-        return encrypt_string(value, prefix=self.prefix)
+        raise NotImplementedError()
 
     def to_python(self, value):
         return decrypt_string(value, prefix=self.prefix)
 
     def from_db_value(self, value, expression, connection):
         return self.to_python(value)
-
-
-class NonNaiveDateTimeField(models.DateTimeField):
-    # It seems get_prep_value would not be called in gravyvalet because gv only reads from OSFDB
-    def get_prep_value(self, value):
-        value = super(NonNaiveDateTimeField, self).get_prep_value(value)
-        if value is not None and (
-            value.tzinfo is None or value.tzinfo.utcoffset(value) is None
-        ):
-            raise NaiveDatetimeException("Tried to encode a naive datetime.")
-        return value
 
 
 class NaiveDatetimeException(Exception):
@@ -126,22 +113,6 @@ def decode_datetime_objects(nested_value):
     return nested_value
 
 
-class DateTimeAwareJSONFormField(JSONFormField):
-
-    def to_python(self, value):
-        value = super(DateTimeAwareJSONFormField, self).to_python(value)
-        try:
-            return decode_datetime_objects(value)
-        except TypeError:
-            raise Exception()
-
-    def prepare_value(self, value):
-        try:
-            return json.dumps(value, cls=DateTimeAwareJSONEncoder)
-        except TypeError:
-            raise Exception()
-
-
 class DateTimeAwareJSONField(JSONField):
 
     def __init__(
@@ -151,11 +122,6 @@ class DateTimeAwareJSONField(JSONField):
             verbose_name, name, encoder, **kwargs
         )
 
-    def formfield(self, **kwargs):
-        defaults = {"form_class": DateTimeAwareJSONFormField}
-        defaults.update(kwargs)
-        return super(DateTimeAwareJSONField, self).formfield(**defaults)
-
     def from_db_value(self, value, expression, connection):
         value = super(DateTimeAwareJSONField, self).from_db_value(value, None, None)
         return decode_datetime_objects(value)
@@ -164,10 +130,3 @@ class DateTimeAwareJSONField(JSONField):
         if lookup_type in ("has_key", "has_keys", "has_any_keys"):
             return value
         return super(JSONField, self).get_prep_lookup(lookup_type, value)
-
-
-JSONField.register_lookup(lookups.DataContains)
-JSONField.register_lookup(lookups.ContainedBy)
-JSONField.register_lookup(lookups.HasKey)
-JSONField.register_lookup(lookups.HasKeys)
-JSONField.register_lookup(lookups.HasAnyKeys)
