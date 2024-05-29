@@ -82,7 +82,7 @@ def json_for_typed_value(type_annotation: typing.Any, value: typing.Any):
         if not isinstance(value, _type):
             raise ValueError(f"expected instance of {_type}, got {value}")
         return json_for_dataclass(value)
-    if issubclass(_type, enum.Enum):
+    if isinstance(_type, type) and issubclass(_type, enum.Enum):
         if value not in _type:
             raise ValueError(f"expected member of enum {_type}, got {value}")
         return value.name
@@ -149,8 +149,9 @@ def json_for_dataclass(dataclass_instance) -> dict:
         (_field, getattr(dataclass_instance, _field.name))
         for _field in dataclasses.fields(dataclass_instance)
     )
+    _annotations = inspect.get_annotations(dataclass_instance.__class__, eval_str=True)
     return {
-        _field.name: json_for_typed_value(_field.type, _value)
+        _field.name: json_for_typed_value(_annotations[_field.name], _value)
         for _field, _value in _field_value_pairs
         if (_value is not None) or (_field.default is not None)
     }

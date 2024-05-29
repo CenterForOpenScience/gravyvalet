@@ -38,10 +38,14 @@ class AddonOperationInvocationFactory(DjangoModelFactory):
     class Meta:
         model = db.AddonOperationInvocation
 
-    operation_identifier = "BLARG:download"
+    operation_identifier = "BLARG:get_item"
     operation_kwargs = {"item_id": "foo"}
+    thru_account = factory.SubFactory(
+        "addon_service.tests._factories.AuthorizedStorageAccountFactory"
+    )
     thru_addon = factory.SubFactory(
-        "addon_service.tests._factories.ConfiguredStorageAddonFactory"
+        "addon_service.tests._factories.ConfiguredStorageAddonFactory",
+        base_account=factory.SelfAttribute("..thru_account"),
     )
     by_user = factory.SubFactory(UserReferenceFactory)
 

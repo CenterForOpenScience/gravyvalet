@@ -1,15 +1,11 @@
 """a static (and still in progress) definition of what composes a storage addon"""
 
-import collections.abc
 import dataclasses
 import enum
 import typing
+from collections import abc
 
-from addon_toolkit.addon_operation_declaration import (
-    immediate_operation,
-    redirect_operation,
-)
-from addon_toolkit.addon_operation_results import RedirectResult
+from addon_toolkit.addon_operation_declaration import immediate_operation
 from addon_toolkit.capabilities import AddonCapabilities
 from addon_toolkit.constrained_network import HttpRequestor
 from addon_toolkit.cursor import Cursor
@@ -21,7 +17,6 @@ from ._base import AddonInterface
 __all__ = (
     "ItemResult",
     "ItemSampleResult",
-    "PathResult",
     "PossibleSingleItemResult",
     "StorageAddonInterface",
     "StorageAddonImp",
@@ -51,12 +46,7 @@ class ItemResult:
     item_id: str
     item_name: str
     item_type: ItemType
-    item_path: list[str] | None = None
-
-
-@dataclasses.dataclass
-class PathResult:
-    ancestor_ids: collections.abc.Sequence[str]  # most distant first
+    item_path: "list[ItemResult] | None" = None  # most distant first
 
 
 @dataclasses.dataclass
@@ -68,7 +58,7 @@ class PossibleSingleItemResult:
 class ItemSampleResult:
     """a sample from a possibly-large population of result items"""
 
-    items: collections.abc.Collection[ItemResult]
+    items: abc.Collection[ItemResult]
     total_count: int | None = None
     this_sample_cursor: str = ""
     next_sample_cursor: str | None = None  # when None, this is the last page of results
@@ -93,14 +83,14 @@ class ItemSampleResult:
 class StorageAddonInterface(AddonInterface, typing.Protocol):
 
     ###
-    # declared operations:
+    # single-item operations:
 
-    @redirect_operation(capability=AddonCapabilities.ACCESS)
-    def download(self, item_id: str) -> RedirectResult: ...
+    # @redirect_operation(capability=AddonCapabilities.ACCESS)
+    # def download(self, item_id: str) -> RedirectResult: ...
 
-    #
-    #    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    #    async def get_item_description(self, item_id: str) -> dict: ...
+    @immediate_operation(capability=AddonCapabilities.ACCESS)
+    async def get_item(self, item_id: str) -> ItemResult: ...
+
     #
     #    ##
     #    # "item-write" operations:
@@ -113,19 +103,10 @@ class StorageAddonInterface(AddonInterface, typing.Protocol):
     #
 
     ##
-    # "tree-read" operations:
-
-    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_root_folders(self, page_cursor: str = "") -> ItemSampleResult: ...
+    # tree-read operations:
 
     @immediate_operation(capability=AddonCapabilities.ACCESS)
     async def get_root_items(self, page_cursor: str = "") -> ItemSampleResult: ...
-
-    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_parent_item_id(self, item_id: str) -> PossibleSingleItemResult: ...
-
-    @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_item_path(self, item_id: str) -> PathResult: ...
 
     @immediate_operation(capability=AddonCapabilities.ACCESS)
     async def get_child_items(

@@ -66,21 +66,18 @@ class SessionUserIsReferencedResourceAdmin(permissions.BasePermission):
 class SessionUserMayAccessInvocation(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         _user_uri = request.session.get("user_reference_uri")
-        if _user_uri == obj.by_user.user_uri:
-            return True  # invoker
-        if _user_uri == obj.thru_addon.owner_uri:
-            return True  # addon owner
-        # user with "read" access on the connected osf project
-        return osf.has_osf_permission_on_resource(
-            request,
-            obj.thru_addon.authorized_resource.resource_uri,
-            osf.OSFPermission.READ,
+        return bool(
+            # must be the invoker:
+            (_user_uri == obj.by_user.user_uri)
+            # or the account owner:
+            or (_user_uri == obj.thru_account.owner_uri)
+            # or a user with "read" access on the connected osf project:
+            or osf.has_osf_permission_on_resource(
+                request,
+                obj.thru_addon.authorized_resource.resource_uri,
+                osf.OSFPermission.READ,
+            )
         )
-
-
-class SessionUserMayInvokeThruAddon(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        raise NotImplementedError  # TODO: check invoked operation is allowed
 
 
 class IsValidHMACSignedRequest(permissions.BasePermission):

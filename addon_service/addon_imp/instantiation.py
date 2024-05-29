@@ -1,21 +1,23 @@
 from addon_service.common.aiohttp_session import get_singleton_client_session__blocking
 from addon_service.common.network import GravyvaletHttpRequestor
-from addon_service.models import ConfiguredStorageAddon
-from addon_toolkit.interfaces.storage import StorageAddonImp
+from addon_service.models import AuthorizedStorageAccount
+from addon_toolkit.interfaces.storage import (
+    StorageAddonImp,
+    StorageConfig,
+)
 
 
 def get_storage_addon_instance(
-    configured_storage_addon: ConfiguredStorageAddon,
+    imp_cls: type[StorageAddonImp],
+    account: AuthorizedStorageAccount,
+    config: StorageConfig,
 ) -> StorageAddonImp:
-    _account = configured_storage_addon.base_account
-    _external_storage_service = _account.external_storage_service
-    _imp_cls = _external_storage_service.addon_imp.imp_cls
-    assert issubclass(_imp_cls, StorageAddonImp)
-    return _imp_cls(
-        config=configured_storage_addon.storage_imp_config(),
+    assert issubclass(imp_cls, StorageAddonImp)
+    return imp_cls(
+        config=config,
         network=GravyvaletHttpRequestor(
             client_session=get_singleton_client_session__blocking(),
-            prefix_url=_external_storage_service.api_base_url,
-            account=_account,
+            prefix_url=config.external_api_url,
+            account=account,
         ),
     )

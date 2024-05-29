@@ -53,7 +53,19 @@ class Command(BaseCommand):
                 case "connect":
                     self._connect_addon(account_id=kwargs["account_id"])
                 case "invoke":
-                    self._do_invoke(addon_id=kwargs["addon_id"])
+                    self._do_invoke(
+                        kwargs["addon_id"], "BOX_DOT_COM:get_root_items", {}
+                    )
+                    # self._do_invoke(
+                    #     kwargs["addon_id"],
+                    #     "BOX_DOT_COM:get_child_items",
+                    #     {"item_id": "2:0"},
+                    # )
+                    # self._do_invoke(
+                    #     kwargs["addon_id"],
+                    #     "BOX_DOT_COM:get_item",
+                    #     {"item_id": "1:1484968395678"},  # update with an actual item_id
+                    # )
                 case _:
                     raise RuntimeError
         finally:
@@ -69,9 +81,11 @@ class Command(BaseCommand):
             client_secret=client_secret,
         )
         _box_service, _ = db.ExternalStorageService.objects.update_or_create(
-            addon_imp=db.AddonImpModel(known_imps.get_imp_by_name("BOX_DOT_COM")),
+            int_addon_imp=known_imps.get_imp_number(
+                known_imps.get_imp_by_name("BOX_DOT_COM")
+            ),
             defaults=dict(
-                name="my-box-dot-com",
+                display_name="my-box-dot-com",
                 oauth2_client_config=_oauth2_config,
                 api_base_url="https://api.box.com/2.0/",
                 int_credentials_format=CredentialsFormats.OAUTH2.value,
@@ -99,7 +113,7 @@ class Command(BaseCommand):
     def _connect_addon(self, account_id):
         _account = db.AuthorizedStorageAccount.objects.get(pk=account_id)
         _ir, _ = db.ResourceReference.objects.get_or_create(
-            resource_uri="http://osf.example/blarg",
+            resource_uri="http://localhost:5000/haen7",
         )
         _configured_addon = db.ConfiguredStorageAddon.objects.create(
             base_account=_account,
@@ -110,13 +124,14 @@ class Command(BaseCommand):
             f"{self.style.SUCCESS('connected! to invoke, run again with:')} do_box_test invoke {_configured_addon.pk}"
         )
 
-    def _do_invoke(self, addon_id):
+    def _do_invoke(self, addon_id, op_id, op_kwargs):
         _configured_addon = db.ConfiguredStorageAddon.objects.get(pk=addon_id)
         _invocation = db.AddonOperationInvocation.objects.create(
             invocation_status=InvocationStatus.STARTING,
-            operation_identifier="BOX_DOT_COM:get_root_items",
-            operation_kwargs={},
+            operation_identifier=op_id,
+            operation_kwargs=op_kwargs,
             thru_addon=_configured_addon,
+            thru_account=_configured_addon.base_account,
             by_user=_configured_addon.account_owner,
         )
         perform_invocation__blocking(_invocation)

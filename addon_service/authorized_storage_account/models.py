@@ -23,6 +23,14 @@ from addon_toolkit import (
     AddonCapabilities,
     AddonImp,
 )
+from addon_toolkit.interfaces.storage import StorageConfig
+
+
+class AuthorizedStorageAccountManager(models.Manager):
+
+    def active(self):
+        """filter to accounts owned by non-deactivated users"""
+        return self.get_queryset().filter(account_owner__deactivated__isnull=True)
 
 
 class AuthorizedStorageAccount(AddonsServiceBaseModel):
@@ -31,6 +39,8 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
     This model collects all of the information required to actually perform remote
     operations against the service and to aggregate accounts under a known user.
     """
+
+    objects = AuthorizedStorageAccountManager()
 
     account_name = models.CharField(null=False, blank=True, default="")
     external_account_id = models.CharField(null=False, blank=True, default="")
@@ -178,6 +188,14 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
             state_nonce=oauth_utils.generate_state_nonce(),
         )
         self.save()
+
+    def storage_imp_config(self) -> StorageConfig:
+        return StorageConfig(
+            max_upload_mb=self.external_service.max_upload_mb,
+            external_api_url=self.api_base_url,
+            connected_root_id=self.default_root_folder,
+            external_account_id=self.external_account_id,
+        )
 
     def clean(self, *args, **kwargs):
         super().clean(*args, **kwargs)

@@ -56,12 +56,21 @@ class TestAddonOperationInvocationCreate(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls._configured_addon = _factories.ConfiguredStorageAddonFactory()
+        cls._account = cls._configured_addon.base_account
 
     def setUp(self):
         super().setUp()
         self.addCleanup(close_singleton_client_session__blocking)
-        self._mock_osf = MockOSF({self._resource_uri: {self._user_uri: "admin"}})
-        self._mock_osf.configure_assumed_caller(self._user_uri)
+        self._collaborator_uri = "https://user.example/collaborator"
+        self._mock_osf = MockOSF(
+            {
+                self._resource_uri: {
+                    self._owner_uri: "admin",
+                    self._collaborator_uri: "write",
+                }
+            }
+        )
+        self._mock_osf.configure_assumed_caller(self._owner_uri)
         self.enterContext(self._mock_osf.mocking())
 
     @property
@@ -69,69 +78,105 @@ class TestAddonOperationInvocationCreate(APITestCase):
         return self._configured_addon.resource_uri
 
     @property
-    def _user_uri(self):
+    def _owner_uri(self):
         return self._configured_addon.owner_uri
 
     @property
     def _invocation_list_path(self):
         return reverse("addon-operation-invocations-list")
 
-    def _invocation_post_payload(self, case: _InvocationCase):
-        return {
+    def _post_invocation(
+        self,
+        case: _InvocationCase,
+        *,
+        thru_addon=None,
+        thru_account=None,
+    ):
+        _relationships = {}
+        if thru_addon is not None:
+            _relationships["thru_addon"] = {"data": jsonapi_ref(thru_addon)}
+        if thru_account is not None:
+            _relationships["thru_account"] = {"data": jsonapi_ref(thru_account)}
+        _payload = {
             "data": {
                 "type": "addon-operation-invocations",
                 "attributes": {
                     "operation_kwargs": case.operation_kwargs,
                     "operation_name": case.operation_name,
                 },
-                "relationships": {
-                    "thru_addon": {
-                        "data": jsonapi_ref(self._configured_addon),
-                    },
-                },
-            }
+                "relationships": _relationships,
+            },
         }
+        return self.client.post(
+            self._invocation_list_path,
+            data=json.dumps(_payload),
+            content_type="application/vnd.api+json",
+        )
 
     def test_immediate_success(self):
         for _inv_case in self._INVOKE_SUCCESS_CASES:
             with self.subTest(_inv_case):
-                _resp = self.client.post(
-                    self._invocation_list_path,
-                    data=json.dumps(self._invocation_post_payload(_inv_case)),
-                    content_type="application/vnd.api+json",
+                _resp = self._post_invocation(
+                    _inv_case,
+                    thru_addon=self._configured_addon,
                 )
-                with self.subTest("expected http status"):
-                    self.assertEqual(_resp.status_code, _inv_case.expected_http_status)
-                with self.subTest("expected invocation status"):
-                    self.assertEqual(
-                        _resp.data["invocation_status"],
-                        _inv_case.expected_invocation_status.name,
-                    )
-                with self.subTest("expected operation result"):
-                    self.assertEqual(
-                        _resp.data["operation_result"], _inv_case.expected_result
-                    )
+                self._assert_invocation_response(_inv_case, _resp)
 
     def test_immediate_problem(self):
         for _inv_case in self._INVOKE_PROBLEM_CASES:
-            with self.subTest(_inv_case):
-                _resp = self.client.post(
-                    self._invocation_list_path,
-                    data=json.dumps(self._invocation_post_payload(_inv_case)),
-                    content_type="application/vnd.api+json",
+            with self.subTest(_inv_case, thru="addon"):
+                _resp = self._post_invocation(
+                    _inv_case, thru_addon=self._configured_addon
                 )
-                with self.subTest("expected http status"):
-                    self.assertEqual(_resp.status_code, _inv_case.expected_http_status)
-                if _inv_case.expected_http_status.is_success:
-                    with self.subTest("expected invocation status"):
-                        self.assertEqual(
-                            _resp.data["invocation_status"],
-                            _inv_case.expected_invocation_status.name,
-                        )
-                    with self.subTest("expected operation result"):
-                        self.assertEqual(
-                            _resp.data["operation_result"], _inv_case.expected_result
-                        )
+                self._assert_invocation_response(_inv_case, _resp)
+            with self.subTest(_inv_case, thru="account"):
+                _resp = self._post_invocation(_inv_case, thru_account=self._account)
+                self._assert_invocation_response(_inv_case, _resp)
+
+    def test_invoke_permissions(self):
+        _inv_case = self._INVOKE_SUCCESS_CASES[0]
+        with self.subTest("anonymous user cannot invoke"):
+            self._mock_osf.configure_assumed_caller(None)
+            _resp = self._post_invocation(_inv_case, thru_account=self._account)
+            self.assertEqual(_resp.status_code, HTTPStatus.UNAUTHORIZED)
+            _resp = self._post_invocation(_inv_case, thru_addon=self._configured_addon)
+            self.assertEqual(_resp.status_code, HTTPStatus.UNAUTHORIZED)
+        with self.subTest("rando user cannot invoke"):
+            self._mock_osf.configure_assumed_caller("https://user.example/rando")
+            _resp = self._post_invocation(_inv_case, thru_account=self._account)
+            self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
+            _resp = self._post_invocation(_inv_case, thru_addon=self._configured_addon)
+            self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
+        with self.subTest("non-owner can invoke only thru addon delegation"):
+            self._mock_osf.configure_assumed_caller(self._collaborator_uri)
+            _resp = self._post_invocation(_inv_case, thru_account=self._account)
+            self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
+            _resp = self._post_invocation(_inv_case, thru_addon=self._configured_addon)
+            self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
+            self._assert_invocation_response(_inv_case, _resp)
+        with self.subTest("account owner can invoke thru account or addon"):
+            self._mock_osf.configure_assumed_caller(self._owner_uri)
+            _resp = self._post_invocation(_inv_case, thru_account=self._account)
+            self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
+            self._assert_invocation_response(_inv_case, _resp)
+            _resp = self._post_invocation(_inv_case, thru_addon=self._configured_addon)
+            self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
+            self._assert_invocation_response(_inv_case, _resp)
+
+    def _assert_invocation_response(self, inv_case: _InvocationCase, response):
+        with self.subTest("expected http status"):
+            self.assertEqual(response.status_code, inv_case.expected_http_status)
+        if inv_case.expected_http_status.is_success:
+            with self.subTest("expected invocation status"):
+                self.assertEqual(
+                    response.data["invocation_status"],
+                    inv_case.expected_invocation_status.name,
+                )
+            with self.subTest("expected operation result"):
+                self.assertEqual(
+                    response.data["operation_result"],
+                    inv_case.expected_result,
+                )
 
 
 class TestAddonOperationInvocationErrors(APITestCase):
@@ -170,6 +215,7 @@ class TestAddonOperationInvocationErrors(APITestCase):
             self._invocation_list_path: {"get", "patch", "put"},
             self._detail_path: {"put", "post", "delete"},
             self._related_path("thru_addon"): {"patch", "put", "post", "delete"},
+            self._related_path("thru_account"): {"patch", "put", "post", "delete"},
             self._related_path("by_user"): {"patch", "put", "post", "delete"},
             self._related_path("operation"): {"patch", "put", "post", "delete"},
         }
@@ -183,6 +229,7 @@ class TestAddonOperationInvocationErrors(APITestCase):
 
 class TestAddonOperationInvocationRelatedView(APITestCase):
     _EXPOSED_RELATIONS = (
+        "thru_account",
         "thru_addon",
         "by_user",
     )

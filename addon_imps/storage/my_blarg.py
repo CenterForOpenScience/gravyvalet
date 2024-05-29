@@ -1,4 +1,3 @@
-from addon_toolkit import RedirectResult
 from addon_toolkit.interfaces.storage import (
     ItemResult,
     ItemSampleResult,
@@ -10,9 +9,11 @@ from addon_toolkit.interfaces.storage import (
 class MyBlargStorage(StorageAddonImp):
     """blarg?"""
 
-    def download(self, item_id: str) -> RedirectResult:
+    def get_item(self, item_id: str) -> ItemResult:
         """blarg blarg blarg"""
-        return RedirectResult(f"/{item_id}")
+        return ItemResult(
+            item_id=item_id, item_name=f"item{item_id}!", item_type=ItemType.FILE
+        )
 
     async def get_root_items(self, page_cursor: str = "") -> ItemSampleResult:
         return ItemSampleResult(

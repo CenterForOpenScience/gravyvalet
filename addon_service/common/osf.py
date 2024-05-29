@@ -8,6 +8,7 @@ from django import http as django_http
 from django.conf import settings
 
 from addon_service.common.aiohttp_session import get_singleton_client_session
+from addon_toolkit import AddonCapabilities
 
 
 __all__ = (
@@ -21,6 +22,14 @@ class OSFPermission(enum.StrEnum):
     READ = "read"
     WRITE = "write"
     ADMIN = "admin"
+
+    @staticmethod
+    def for_capabilities(capabilities: AddonCapabilities) -> "OSFPermission":
+        if AddonCapabilities.UPDATE in capabilities:
+            return OSFPermission.WRITE
+        if AddonCapabilities.ACCESS in capabilities:
+            return OSFPermission.READ
+        raise ValueError(capabilities)
 
 
 @async_to_sync

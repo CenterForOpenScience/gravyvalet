@@ -1,42 +1,31 @@
 import dataclasses
+import functools
 import typing
 
 from addon_toolkit.cursor import OffsetCursor
 from addon_toolkit.interfaces import storage
 
 
-ROOT_FOLDER_ID: str = "0"
-
-
-@dataclasses.dataclass(frozen=True)
 class BoxDotComStorageImp(storage.StorageAddonImp):
     """storage on box.com
 
     see https://developer.box.com/reference/
     """
 
-    async def get_root_folders(self, page_cursor: str = "") -> storage.ItemSampleResult:
-        return await self.get_child_folders(
-            item_id=ROOT_FOLDER_ID,
-            page_cursor=page_cursor,
-        )
-
     async def get_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
-        return await self.get_child_items(
-            item_id=ROOT_FOLDER_ID,
-            page_cursor=page_cursor,
+        return storage.ItemSampleResult(
+            items=[await self.get_item(_box_root_id())],
+            total_count=1,
         )
 
-    async def get_child_folders(
-        self,
-        item_id: str,
-        page_cursor: str = "",
-    ) -> storage.ItemSampleResult:
-        return await self.get_child_items(
-            item_id=ROOT_FOLDER_ID,
-            page_cursor=page_cursor,
-            item_type=storage.ItemType.FOLDER,
-        )
+    async def get_item(self, item_id: str) -> storage.ItemResult:
+        async with self.network.GET(
+            _box_item_url(item_id),
+            query={"fields": "id,type,name,path"},
+        ) as _response:
+            return _BoxDotComParsedJson(
+                await _response.json_content()
+            ).single_item_result()
 
     async def get_child_items(
         self,
@@ -45,7 +34,7 @@ class BoxDotComStorageImp(storage.StorageAddonImp):
         item_type: storage.ItemType | None = None,
     ) -> storage.ItemSampleResult:
         async with self.network.GET(
-            _box_folder_items_url(item_id),
+            _box_child_items_url(item_id),
             query={
                 "fields": "id,type,name",
                 **self._params_from_cursor(page_cursor),
@@ -70,12 +59,46 @@ class BoxDotComStorageImp(storage.StorageAddonImp):
 # module-local helpers
 
 
+def _make_item_id(item_type: storage.ItemType, item_id: str) -> str:
+    return ":".join((str(item_type.value), item_id))
+
+
+def _parse_item_id(item_id: str) -> tuple[storage.ItemType, str]:
+    try:
+        (_type, _box_item_id) = item_id.split(":", maxsplit=1)
+        return (storage.ItemType(int(_type)), _box_item_id)
+    except ValueError:
+        raise ValueError(
+            f'expected id of format "typeint:id", e.g. "1:1235" (got "{item_id}")'
+        )
+
+
+@functools.cache
+def _box_root_id() -> str:
+    return _make_item_id(storage.ItemType.FOLDER, "0")
+
+
+def _box_file_url(file_id: str) -> str:
+    return f"files/{file_id}"
+
+
 def _box_folder_url(folder_id: str) -> str:
     return f"folders/{folder_id}"
 
 
-def _box_folder_items_url(folder_id: str) -> str:
-    return f"{_box_folder_url(folder_id)}/items"
+def _box_item_url(item_id: str) -> str:
+    _itemtype, _item_id = _parse_item_id(item_id)
+    match _itemtype:
+        case storage.ItemType.FILE:
+            return _box_file_url(_item_id)
+        case storage.ItemType.FOLDER:
+            return _box_folder_url(_item_id)
+        case _:
+            raise NotImplementedError(f"no item url for type {_itemtype}")
+
+
+def _box_child_items_url(item_id: str) -> str:
+    return f"{_box_item_url(item_id)}/items"
 
 
 @dataclasses.dataclass
@@ -85,13 +108,19 @@ class _BoxDotComParsedJson:
     ITEM_TYPE: typing.ClassVar[dict[str, storage.ItemType]] = {
         "file": storage.ItemType.FILE,
         "folder": storage.ItemType.FOLDER,
+        # "collection":
     }
+
+    def single_item_result(self) -> storage.ItemResult:
+        return self._parse_item(self.response_json)
 
     def item_results(
         self,
         item_type: storage.ItemType | None = None,
     ) -> typing.Iterator[storage.ItemResult]:
         # https://developer.box.com/reference/resources/items/
+        if "entries" not in self.response_json:
+            breakpoint()
         for _item in self.response_json["entries"]:
             if (item_type is None) or self._item_has_type(_item, item_type):
                 yield self._parse_item(_item)
@@ -114,8 +143,23 @@ class _BoxDotComParsedJson:
         self,
         item_json: dict[str, typing.Any],
     ) -> storage.ItemResult:
-        return storage.ItemResult(
-            item_id=item_json["id"],
+        _item_type = self.ITEM_TYPE[item_json["type"]]
+        _item_result = storage.ItemResult(
+            item_id=_make_item_id(_item_type, item_json["id"]),
             item_name=item_json["name"],
-            item_type=self.ITEM_TYPE[item_json["type"]],
+            item_type=_item_type,
         )
+        try:
+            _path = item_json["path_collection"]
+        except KeyError:
+            pass
+        else:
+            _item_result.item_path = self._parse_path_collection(_path)
+        return _item_result
+
+    def _parse_path_collection(
+        self, path_json: dict[str, typing.Any]
+    ) -> list[storage.ItemResult]:
+        return [
+            self._parse_item(_path_item) for _path_item in path_json.get("entries", ())
+        ]

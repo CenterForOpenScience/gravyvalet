@@ -2,7 +2,6 @@ from addon_service.common.permissions import (
     IsAuthenticated,
     SessionUserIsOwner,
     SessionUserMayAccessInvocation,
-    SessionUserMayInvokeThruAddon,
 )
 from addon_service.common.viewsets import RetrieveWriteViewSet
 
@@ -21,7 +20,7 @@ class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
             case "partial_update" | "update" | "destroy":
                 return [IsAuthenticated(), SessionUserIsOwner()]
             case "create":
-                return [IsAuthenticated(), SessionUserMayInvokeThruAddon()]
+                return [IsAuthenticated()]  # additional checks in serializer
             case None:
                 return super().get_permissions()
             case _:
