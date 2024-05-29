@@ -1,5 +1,10 @@
 """ Import serializers here for convenience """
 
+from addon_service.addon_imp.serializers import AddonImpSerializer
+from addon_service.addon_operation.serializers import AddonOperationSerializer
+from addon_service.addon_operation_invocation.serializers import (
+    AddonOperationInvocationSerializer,
+)
 from addon_service.authorized_storage_account.serializers import (
     AuthorizedStorageAccountSerializer,
 )
@@ -18,5 +23,8 @@ __all__ = (
     "ConfiguredStorageAddonSerializer",
     "ExternalStorageServiceSerializer",
     "ResourceReferenceSerializer",
+    "AddonImpSerializer",
+    "AddonOperationInvocationSerializer",
+    "AddonOperationSerializer",
     "UserReferenceSerializer",
 )

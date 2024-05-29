@@ -1,6 +1,7 @@
 import json
 from http import HTTPStatus
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.test import TestCase
@@ -14,7 +15,6 @@ from addon_service.tests._helpers import (
     get_test_request,
 )
 from addon_service.user_reference.views import UserReferenceViewSet
-from app import settings
 
 
 class TestUserReferenceAPI(APITestCase):
@@ -26,7 +26,7 @@ class TestUserReferenceAPI(APITestCase):
         super().setUp()
         self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
         self._mock_osf = MockOSF()
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     @property
     def _detail_path(self):
@@ -50,18 +50,51 @@ class TestUserReferenceAPI(APITestCase):
         _resp = self.client.get(self._detail_path)
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         _content = json.loads(_resp.rendered_content)
-        self.assertEqual(
-            set(_content["data"]["attributes"].keys()),
-            {
-                "user_uri",
-            },
+        with self.subTest("Confirm expected attributes"):
+            self.assertEqual(
+                _resp.data.keys(),
+                {
+                    "id",
+                    "url",
+                    "user_uri",
+                },
+            )
+        with self.subTest("Confirm expected relationships"):
+            self.assertEqual(
+                # ToMany relationships do not appear in response.data
+                _content["data"]["relationships"].keys(),
+                {
+                    "authorized_storage_accounts",
+                },
+            )
+
+    def test_list__success(self):
+        _resp = self.client.get(
+            self._list_path, {"filter[user_uri]": self._user.user_uri}
         )
-        self.assertEqual(
-            set(_content["data"]["relationships"].keys()),
-            {
-                "authorized_storage_accounts",
-            },
+        self.assertEqual(_resp.status_code, HTTPStatus.OK)
+
+    def test_list__multiple_filters_okay(self):
+        _resp = self.client.get(
+            self._list_path,
+            {"filter[user_uri]": self._user.user_uri, "filter[id]": self._user.id},
         )
+        self.assertEqual(_resp.status_code, HTTPStatus.OK)
+
+    def test_list__no_filter(self):
+        _resp = self.client.get(self._list_path)
+        self.assertEqual(_resp.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_list__wrong_filter(self):
+        _resp = self.client.get(self._list_path, {"filter[id]": self._user.id})
+        self.assertEqual(_resp.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_list__wrong_user(self):
+        other_user = _factories.UserReferenceFactory()
+        _resp = self.client.get(
+            self._list_path, {"filter[user_uri]": other_user.user_uri}
+        )
+        self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
 
     def test_methods_not_allowed(self):
         _methods_not_allowed = {
@@ -87,7 +120,7 @@ class TestUserReferenceModel(TestCase):
         self.assertEqual(self._user.user_uri, _user_from_db.user_uri)
 
     def test_authorized_storage_accounts__empty(self):
-        _authed_storage_accounts_qs = self._user.authorized_storage_accounts
+        _authed_storage_accounts_qs = self._user.authorized_storage_accounts.all()
         self.assertIsInstance(_authed_storage_accounts_qs, QuerySet)
         self.assertEqual(list(_authed_storage_accounts_qs), [])
 
@@ -95,10 +128,10 @@ class TestUserReferenceModel(TestCase):
         _accounts = set(
             _factories.AuthorizedStorageAccountFactory.create_batch(
                 size=3,
-                external_account__owner=self._user,
+                account_owner=self._user,
             )
         )
-        _authed_storage_accounts_qs = self._user.authorized_storage_accounts
+        _authed_storage_accounts_qs = self._user.authorized_storage_accounts.all()
         self.assertIsInstance(_authed_storage_accounts_qs, QuerySet)
         self.assertEqual(set(_authed_storage_accounts_qs), _accounts)
 
@@ -106,6 +139,31 @@ class TestUserReferenceModel(TestCase):
         self._user.user_uri = "not a uri"
         with self.assertRaises(ValidationError):
             self._user.clean_fields(exclude=["modified"])
+
+    def test_deactivate(self):
+        self.assertIsNone(self._user.deactivated)
+        self._user.deactivate()
+        self.assertIsNotNone(self._user.deactivated)
+
+    def test_delete(self):
+        with self.assertRaises(NotImplementedError):
+            self._user.delete()
+
+    def test_reactivate(self):
+        self._user.deactivate()
+        self.assertIsNotNone(self._user.deactivated)
+        self._user.reactivate()
+        self.assertIsNone(self._user.deactivated)
+
+    def test_merge(self):
+        merge_with = _factories.UserReferenceFactory()
+        _accounts_before_merge = self._user.configured_storage_addons.count()
+        self._user.merge(merge_with)
+        _accounts_after_merge = self._user.configured_storage_addons.count()
+        self.assertEqual(
+            _accounts_after_merge,
+            _accounts_before_merge + merge_with.configured_storage_addons.count(),
+        )
 
 
 # unit-test viewset (call the view with test requests)
@@ -118,7 +176,7 @@ class TestUserReferenceViewSet(TestCase):
     def setUp(self):
         super().setUp()
         self._mock_osf = MockOSF()
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     def test_get(self):
         _resp = self._view(
@@ -165,7 +223,7 @@ class TestUserReferenceRelatedView(APITestCase):
     def setUp(self):
         super().setUp()
         self._mock_osf = MockOSF()
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
         self.request = get_test_request(
             user=self._user,
             cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri},
@@ -183,7 +241,7 @@ class TestUserReferenceRelatedView(APITestCase):
     def test_get_related__several(self):
         _accounts = _factories.AuthorizedStorageAccountFactory.create_batch(
             size=5,
-            external_account__owner=self._user,
+            account_owner=self._user,
         )
         _resp = self._related_view(
             self.request,

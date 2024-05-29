@@ -7,6 +7,7 @@ import raven
 
 
 SECRET_KEY = env.SECRET_KEY
+DEFAULT_HMAC_KEY = env.OSF_HMAC_KEY or "lmaoooooo"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -18,19 +19,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.DEBUG
 
-RESOURCE_REFERENCE_LOOKUP_URL = "https://api.osf.io/v2/guids/{0}/"
-USER_REFERENCE_LOOKUP_URL = "https://api.osf.io/v2/users/me/"
 USER_REFERENCE_COOKIE = "osf"
-
-URI_ID = "http://osf.example/"
-AUTH_URI_ID = "http://osf.auth/"
+OSF_BASE_URL = env.OSF_BASE_URL.rstrip("/")
+OSF_API_BASE_URL = env.OSF_API_BASE_URL.rstrip("/")
+OSF_BROKER_URL = "amqp://guest:guest@192.168.168.167:5672//"
+ALLOWED_RESOURCE_URI_PREFIXES = {OSF_BASE_URL}
+if DEBUG:
+    # allow for local osf shenanigans
+    ALLOWED_RESOURCE_URI_PREFIXES.update(
+        [
+            "http://192.168.168.167:5000",
+            "http://localhost:5000",
+        ]
+    )
 
 ALLOWED_HOSTS = env.ALLOWED_HOSTS
 
 
 # Application definition
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -40,7 +48,12 @@ INSTALLED_APPS = (
     "rest_framework_json_api",
     'raven.contrib.django.raven_compat',
     "addon_service",
-)
+]
+
+if DEBUG:
+    # run under ASGI locally:
+    INSTALLED_APPS.append("daphne")  # django's reference asgi server
+    ASGI_APPLICATION = "app.asgi.application"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -89,15 +102,11 @@ DATABASES = {
     }
 }
 
-EXCEPTION_HANDLER = "rest_framework_json_api.exceptions.exception_handler"
-DEFAULT_PAGINATION_CLASS = (
-    "rest_framework_json_api.pagination.JsonApiPageNumberPagination"
-)
 
 REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
-    "EXCEPTION_HANDLER": EXCEPTION_HANDLER,
-    "DEFAULT_PAGINATION_CLASS": DEFAULT_PAGINATION_CLASS,
+    "EXCEPTION_HANDLER": "addon_service.exception_handler.api_exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework_json_api.pagination.JsonApiPageNumberPagination",
     "DEFAULT_PARSER_CLASSES": (
         "rest_framework_json_api.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
@@ -124,7 +133,7 @@ REST_FRAMEWORK = {
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
-AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS = []  # type: ignore
 
 
 # Internationalization
@@ -135,8 +144,6 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 
 USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 
@@ -155,3 +162,4 @@ RAVEN_CONFIG = {
     'dsn': 'https://55518489ffd04b70bb55351ad10f10be:01a8846e3f2745e4b0099be83ed12b55@staging-sentry.cos.io/74',
     'release': raven.fetch_git_sha(os.path.abspath(os.pardir)),
 }
+

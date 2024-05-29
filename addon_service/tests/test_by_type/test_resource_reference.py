@@ -1,6 +1,7 @@
 import json
 from http import HTTPStatus
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
@@ -13,7 +14,6 @@ from addon_service.tests._helpers import (
     MockOSF,
     get_test_request,
 )
-from app import settings
 
 
 class TestResourceReferenceAPI(APITestCase):
@@ -22,7 +22,7 @@ class TestResourceReferenceAPI(APITestCase):
         cls._csa = _factories.ConfiguredStorageAddonFactory()
         cls._resource = cls._csa.authorized_resource
         # _user magically becomes the current requester
-        cls._user = cls._csa.base_account.external_account.owner
+        cls._user = cls._csa.base_account.account_owner
 
     def setUp(self):
         super().setUp()
@@ -33,7 +33,7 @@ class TestResourceReferenceAPI(APITestCase):
             resource_uri=self._resource.resource_uri,
             role="admin",
         )
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     @property
     def _detail_path(self):
@@ -57,6 +57,28 @@ class TestResourceReferenceAPI(APITestCase):
         _resp = self.client.get(self._detail_path)
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         self.assertEqual(_resp.data["resource_uri"], self._resource.resource_uri)
+
+    def test_list__success(self):
+        _resp = self.client.get(
+            self._list_path, {"filter[resource_uri]": self._resource.resource_uri}
+        )
+        self.assertEqual(_resp.status_code, HTTPStatus.OK)
+
+    def test_list__no_filter(self):
+        _resp = self.client.get(self._list_path)
+        self.assertEqual(_resp.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_list__wrong_filter(self):
+        _resp = self.client.get(self._list_path, {"filter[id]": self._resource.id})
+        self.assertEqual(_resp.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_list__wrong_user(self):
+        other_user = _factories.UserReferenceFactory()
+        self.client.cookies[settings.USER_REFERENCE_COOKIE] = other_user.user_uri
+        _resp = self.client.get(
+            self._list_path, {"filter[resource_uri]": self._resource.resource_uri}
+        )
+        self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
 
     def test_methods_not_allowed(self):
         _methods_not_allowed = {
@@ -113,14 +135,14 @@ class TestResourceReferenceViewSet(TestCase):
         cls._csa = _factories.ConfiguredStorageAddonFactory()
         cls._resource = cls._csa.authorized_resource
         # _user magically becomes the current requester
-        cls._user = cls._csa.base_account.external_account.owner
+        cls._user = cls._csa.base_account.account_owner
 
     def setUp(self):
         self._mock_osf = MockOSF()
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._resource.resource_uri, "admin"
         )
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     def test_get(self):
         _resp = self._view(
@@ -128,19 +150,17 @@ class TestResourceReferenceViewSet(TestCase):
             pk=self._resource.pk,
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
-        _content = json.loads(_resp.rendered_content)
-        self.assertEqual(
-            set(_content["data"]["attributes"].keys()),
-            {
-                "resource_uri",
-            },
-        )
-        self.assertEqual(
-            set(_content["data"]["relationships"].keys()),
-            {
-                "configured_storage_addons",
-            },
-        )
+        with self.subTest("Confirm expected attributes"):
+            self.assertEqual(
+                # ToMany relationships do not show up in response.data
+                _resp.data.keys(),
+                {"id", "url", "resource_uri"},
+            )
+        with self.subTest("Confirm expected relationships"):
+            self.assertEqual(
+                json.loads(_resp.rendered_content)["data"]["relationships"].keys(),
+                {"configured_storage_addons"},
+            )
 
     def test_unauthorized__private_resource(self):
         self._mock_osf.configure_resource_visibility(
@@ -191,14 +211,14 @@ class TestResourceReferenceRelatedView(TestCase):
         cls._csa = _factories.ConfiguredStorageAddonFactory()
         cls._resource = cls._csa.authorized_resource
         # _user magically becomes the current requester
-        cls._user = cls._csa.base_account.external_account.owner
+        cls._user = cls._csa.base_account.account_owner
 
     def setUp(self):
         self._mock_osf = MockOSF()
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._resource.resource_uri, "admin"
         )
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     def test_get_related__empty(self):
         self._csa.delete()

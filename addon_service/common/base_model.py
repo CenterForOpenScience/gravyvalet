@@ -10,6 +10,7 @@ class AddonsServiceBaseModel(models.Model):
         if not self.id:
             self.created = timezone.now()
         self.modified = timezone.now()
+        self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self):

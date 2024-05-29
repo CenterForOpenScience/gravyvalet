@@ -51,7 +51,7 @@ jobs:
         run: pre-commit run --all-files --show-diff-on-failure
 
       - name: run tests
-        run: python3 manage.py test
+        run: python3 -Werror manage.py test
         env:
           DEBUG: 1
           POSTGRES_HOST: localhost

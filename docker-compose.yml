@@ -14,6 +14,8 @@ services:
       POSTGRES_USER: postgres
       ALLOWED_HOSTS: 0.0.0.0,localhost
       SECRET_KEY: so-secret
+      OSF_BASE_URL: "http://192.168.168.167:5000"
+      OSF_API_BASE_URL: "http://192.168.168.167:8000"
     ports:
       - 8004:8004
     stdin_open: true

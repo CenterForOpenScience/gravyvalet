@@ -1,0 +1,68 @@
+"""the single static source of truth for addon implementations known to the addon service
+
+import and add new implementations here to make them available in the api
+"""
+
+import enum
+
+from addon_imps.storage import box_dot_com
+from addon_service.common.enum_decorators import enum_names_same_as
+from addon_toolkit import AddonImp
+
+
+if __debug__:
+    from addon_imps.storage import my_blarg
+
+
+__all__ = (
+    "get_imp_by_name",
+    "get_imp_name",
+    "get_imp_by_number",
+)
+
+
+###
+# Public interface for accessing concrete AddonImps via their API-facing name or integer ID (and vice-versa)
+
+
+def get_imp_by_name(imp_name: str) -> type[AddonImp]:
+    return _KnownAddonImps[imp_name].value
+
+
+def get_imp_name(imp: type[AddonImp]) -> str:
+    return _KnownAddonImps(imp).name
+
+
+def get_imp_by_number(imp_number: int) -> type[AddonImp]:
+    _imp_name = _AddonImpNumbers(imp_number).name
+    return get_imp_by_name(_imp_name)
+
+
+def get_imp_number(imp: type[AddonImp]) -> int:
+    _imp_name = get_imp_name(imp)
+    return _AddonImpNumbers[_imp_name].value
+
+
+###
+# Static registry of known addon implementations -- add new imps to the enums below
+
+
+@enum.unique
+class _KnownAddonImps(enum.Enum):
+    """Static mapping from API-facing name for an AddonImp to the Imp itself"""
+
+    BOX_DOT_COM = box_dot_com.BoxDotComStorageImp
+
+    if __debug__:
+        BLARG = my_blarg.MyBlargStorage
+
+
+@enum.unique
+@enum_names_same_as(_KnownAddonImps)
+class _AddonImpNumbers(enum.Enum):
+    """Static mapping from each AddonImp name to a unique integer (for database use)"""
+
+    BOX_DOT_COM = 1001
+
+    if __debug__:
+        BLARG = -7

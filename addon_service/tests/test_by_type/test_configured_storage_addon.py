@@ -1,17 +1,27 @@
 import base64
+from datetime import (
+    UTC,
+    datetime,
+    timedelta,
+)
 from http import HTTPStatus
+from unittest import mock
 
+from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.test import APITestCase
 
+from addon_service.common import hmac as hmac_utils
+from addon_service.common.credentials_formats import CredentialsFormats
 from addon_service.models import (
     ConfiguredStorageAddon,
     ResourceReference,
 )
 from addon_service.tests import _factories as test_factories
 from addon_service.tests._helpers import MockOSF
-from app import settings
+from addon_toolkit.credentials import AccessTokenCredentials
 
 
 class BaseAPITest(APITestCase):
@@ -30,7 +40,7 @@ class BaseAPITest(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls._configured_storage_addon = test_factories.ConfiguredStorageAddonFactory()
-        cls._user = cls._configured_storage_addon.base_account.external_account.owner
+        cls._user = cls._configured_storage_addon.base_account.account_owner
 
     def setUp(self):
         super().setUp()
@@ -39,7 +49,7 @@ class BaseAPITest(APITestCase):
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._configured_storage_addon.resource_uri, "admin"
         )
-        self.enterContext(self._mock_osf)
+        self.enterContext(self._mock_osf.mocking())
 
     def detail_url(self):
         return reverse(
@@ -65,7 +75,7 @@ class ConfiguredStorageAddonAPITests(BaseAPITest):
         response = self.client.get(self.detail_url())
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(
-            response.json()["data"]["attributes"]["root_folder"],
+            response.data["root_folder"],
             self._configured_storage_addon.root_folder,
         )
 
@@ -84,13 +94,36 @@ class ConfiguredStorageAddonAPITests(BaseAPITest):
 class ConfiguredStorageAddonModelTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls._configured_storage_addon = test_factories.ConfiguredStorageAddonFactory()
+        # Create active and deactivated users via your factory setup or directly
+        cls.active_user = test_factories.UserReferenceFactory(
+            deactivated=None
+        )  # Assuming you have a factory for UserReference
+        cls.disabled_user = test_factories.UserReferenceFactory(
+            deactivated=timezone.now()
+        )
+
+        cls.active_configured_storage_addon = (
+            test_factories.ConfiguredStorageAddonFactory(account_owner=cls.active_user)
+        )
+        cls.disabled_configured_storage_addon = (
+            test_factories.ConfiguredStorageAddonFactory(
+                account_owner=cls.disabled_user
+            )
+        )
 
     def test_model_loading(self):
         loaded_addon = ConfiguredStorageAddon.objects.get(
-            id=self._configured_storage_addon.id
+            id=self.active_configured_storage_addon.id
         )
-        self.assertEqual(self._configured_storage_addon.pk, loaded_addon.pk)
+        self.assertEqual(self.active_configured_storage_addon.pk, loaded_addon.pk)
+
+    def test_active_user_manager_excludes_disabled_users(self):
+        # Fetch all configured storage addons using the manager
+        addons = ConfiguredStorageAddon.objects.active()
+
+        # Ensure that only addons associated with active users are returned
+        self.assertIn(self.active_configured_storage_addon, addons)
+        self.assertNotIn(self.disabled_configured_storage_addon, addons)
 
 
 class ConfiguredStorageAddonViewSetTests(BaseAPITest):
@@ -105,23 +138,24 @@ class ConfiguredStorageAddonViewSetTests(BaseAPITest):
 
 
 class ConfiguredStorageAddonPOSTTests(BaseAPITest):
-    default_payload = {
-        "data": {
-            "type": "configured-storage-addons",
-            "relationships": {
-                "base_account": {
-                    "data": {"type": "authorized-storage-accounts", "id": ""}
+    def get_payload(self, resource_uri: str) -> dict:
+        return {
+            "data": {
+                "type": "configured-storage-addons",
+                "attributes": {
+                    "connected_capabilities": ["ACCESS"],
+                    "authorized_resource_uri": resource_uri,
                 },
-                "authorized_resource": {"data": {"type": "resource-references"}},
-            },
+                "relationships": {
+                    "base_account": {
+                        "data": {
+                            "type": "authorized-storage-accounts",
+                            "id": self._configured_storage_addon.base_account.pk,
+                        },
+                    },
+                },
+            }
         }
-    }
-
-    def setUp(self):
-        super().setUp()
-        self.default_payload["data"]["relationships"]["base_account"]["data"][
-            "id"
-        ] = self._configured_storage_addon.base_account_id
 
     def test_post_with_new_resource(self):
         new_resource_uri = "http://example.com/new_resource/"
@@ -131,12 +165,13 @@ class ConfiguredStorageAddonPOSTTests(BaseAPITest):
         self.assertFalse(
             ResourceReference.objects.filter(resource_uri=new_resource_uri).exists()
         )
-        self.default_payload["data"]["relationships"]["authorized_resource"]["data"][
-            "resource_uri"
-        ] = new_resource_uri
 
         response = self.client.post(
-            self.list_url(), self.default_payload, format="vnd.api+json"
+            self.list_url(),
+            self.get_payload(
+                new_resource_uri,
+            ),
+            format="vnd.api+json",
         )
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         self.assertTrue(
@@ -144,3 +179,105 @@ class ConfiguredStorageAddonPOSTTests(BaseAPITest):
                 authorized_resource__resource_uri=new_resource_uri
             ).exists()
         )
+
+
+class TestWBConfigRetrieval(APITestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls._configured_storage_addon = test_factories.ConfiguredStorageAddonFactory(
+            credentials_format=CredentialsFormats.PERSONAL_ACCESS_TOKEN,
+            credentials=AccessTokenCredentials(access_token="access"),
+        )
+        cls._user = cls._configured_storage_addon.account_owner
+
+    def test_get_waterbutler_config(self):
+        request_url = reverse(
+            "configured-storage-addons-waterbutler-config",
+            kwargs={
+                "pk": self._configured_storage_addon.pk,
+            },
+        )
+        response = self.client.get(
+            request_url,
+            headers=hmac_utils.make_signed_headers(
+                request_url=request_url,
+                request_method="GET",
+            ),
+        )
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        with self.subTest("Confirm Credentials"):
+            self.assertEqual(response.data["credentials"], {"token": "access"})
+        with self.subTest("Confirm Settings"):
+            root_folder = self._configured_storage_addon.root_folder
+            self.assertEqual(
+                response.data["settings"],
+                {
+                    "folder": root_folder,
+                    "service": self._configured_storage_addon.external_service.name,
+                },
+            )
+
+    def test_get_waterbutler_config__error__invalid_signature(self):
+        request_url = reverse(
+            "configured-storage-addons-waterbutler-config",
+            kwargs={
+                "pk": self._configured_storage_addon.pk,
+            },
+        )
+        response = self.client.get(
+            request_url,
+            headers=hmac_utils.make_signed_headers(
+                request_url=request_url,
+                request_method="GET",
+                hmac_key="she'sabadbadkey",
+            ),
+        )
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+    def test_get_waterbutler_config__error__no_headers(self):
+        request_url = reverse(
+            "configured-storage-addons-waterbutler-config",
+            kwargs={
+                "pk": self._configured_storage_addon.pk,
+            },
+        )
+        response = self.client.get(
+            request_url,
+        )
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+    def test_get_waterbutler_config__error__expired_header(self):
+        request_url = reverse(
+            "configured-storage-addons-waterbutler-config",
+            kwargs={
+                "pk": self._configured_storage_addon.pk,
+            },
+        )
+        five_minutes_ago = datetime.now(UTC) - timedelta(minutes=5)
+        with mock.patch("addon_service.common.hmac.datetime") as mock_datetime:
+            mock_datetime.now.return_value = five_minutes_ago
+            headers = hmac_utils.make_signed_headers(
+                request_url=request_url,
+                request_method="GET",
+            )
+        response = self.client.get(request_url, headers=headers)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+    def test_get_waterbutler_config__error__future_header(self):
+        request_url = reverse(
+            "configured-storage-addons-waterbutler-config",
+            kwargs={
+                "pk": self._configured_storage_addon.pk,
+            },
+        )
+        five_minutes_from_now = datetime.now(UTC) + timedelta(minutes=5)
+        with mock.patch("addon_service.common.hmac.datetime") as mock_datetime:
+            mock_datetime.now.return_value = five_minutes_from_now
+            headers = hmac_utils.make_signed_headers(
+                request_url=request_url,
+                request_method="GET",
+            )
+        response = self.client.get(request_url, headers=headers)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)

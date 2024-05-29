@@ -1,3 +1,4 @@
+from django.urls import path
 from rest_framework.routers import (
     Route,
     SimpleRouter,
@@ -19,7 +20,7 @@ class _AddonServiceRouter(SimpleRouter):
         Route(
             url=r"^{prefix}/{lookup}/(?P<related_field>[^/]+){trailing_slash}",
             mapping={"get": "retrieve_related"},
-            name="{basename}-related",
+            name="{basename}-related",  # agrees with addon_service.common.view_names.related_view
             detail=False,
             initkwargs={"suffix": "Related"},
         ),
@@ -34,12 +35,12 @@ _router = _AddonServiceRouter()
 
 
 def _register_viewset(viewset):
-    # NOTE: assumes each viewset corresponds to a distinct resource_name
-    _resource_name = get_resource_type_from_serializer(viewset.serializer_class)
+    # NOTE: assumes each viewset corresponds to a distinct resource_type
+    _resource_type = get_resource_type_from_serializer(viewset.serializer_class)
     _router.register(
-        prefix=_resource_name,
+        prefix=_resource_type,
         viewset=viewset,
-        basename=_resource_name,
+        basename=_resource_type,
     )
 
 
@@ -50,6 +51,9 @@ _register_viewset(views.AuthorizedStorageAccountViewSet)
 _register_viewset(views.ConfiguredStorageAddonViewSet)
 _register_viewset(views.ExternalStorageServiceViewSet)
 _register_viewset(views.ResourceReferenceViewSet)
+_register_viewset(views.AddonOperationInvocationViewSet)
+_register_viewset(views.AddonOperationViewSet)
+_register_viewset(views.AddonImpViewSet)
 _register_viewset(views.UserReferenceViewSet)
 
 
@@ -58,4 +62,8 @@ _register_viewset(views.UserReferenceViewSet)
 
 __all__ = ("urlpatterns",)
 
-urlpatterns = _router.urls
+urlpatterns = [
+    *_router.urls,
+    path(r"oauth/callback/", views.oauth2_callback_view, name="oauth2-callback"),
+    path(r"status/", views.status, name="status"),
+]
