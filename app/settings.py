@@ -1,6 +1,9 @@
 from pathlib import Path
 
 from app import env
+import os
+import raven
+
 
 
 SECRET_KEY = env.SECRET_KEY
@@ -35,6 +38,7 @@ INSTALLED_APPS = (
     # 'django.contrib.staticfiles',
     "rest_framework",
     "rest_framework_json_api",
+    'raven.contrib.django.raven_compat',
     "addon_service",
 )
 
@@ -141,3 +145,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = "/static/"
+
+# Queue names and routing keys for Rabbit/Celery Messaging
+EXCHANGE_NAME = (
+    "account_status_changes"  # Assuming this is the exchange name used for publishing
+)
+
+RAVEN_CONFIG = {
+    'dsn': 'https://55518489ffd04b70bb55351ad10f10be:01a8846e3f2745e4b0099be83ed12b55@staging-sentry.cos.io/74',
+    'release': raven.fetch_git_sha(os.path.abspath(os.pardir)),
+}
