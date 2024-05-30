@@ -55,20 +55,15 @@ class ExternalAccount(models.Model):
         app_label = "osf"
 
 
-ExternalAccount.objects = ExternalAccount.objects.using("osf")
-
-
 class BaseOAuthNodeSettings(models.Model):
     class Meta:
         abstract = True
         managed = False
-        app_label = "addon"
 
     external_account = models.ForeignKey(
         ExternalAccount,
         null=True,
         blank=True,
-        related_name="%(app_label)s_node_settings",
         on_delete=models.CASCADE,
     )
 
@@ -77,7 +72,6 @@ class BaseOAuthUserSettings(models.Model):
     class Meta:
         abstract = True
         managed = False
-        app_label = "addon"
 
     # Keeps track of what nodes have been given permission to use external
     #   accounts belonging to the user.
@@ -328,6 +322,7 @@ class ZoteroNodeSettings(BaseOAuthNodeSettings):
     )
 
 
+ExternalAccount.objects = ExternalAccount.objects.using("osf")
 BitbucketUserSettings.objects = BitbucketUserSettings.objects.using("osf")
 BitbucketNodeSettings.objects = BitbucketNodeSettings.objects.using("osf")
 BoaUserSettings.objects = BoaUserSettings.objects.using("osf")
