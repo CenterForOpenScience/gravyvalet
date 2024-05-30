@@ -110,6 +110,7 @@ DATABASES = {
     },
 }
 
+DATABASE_ROUTERS = ["addon_service.osf_models.db_router.OsfDatabaseRouter"]
 
 REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
