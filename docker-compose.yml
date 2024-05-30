@@ -12,6 +12,7 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_DB: gravyvalet
       POSTGRES_USER: postgres
+      OSFDB_HOST: 192.168.168.167
       ALLOWED_HOSTS: 0.0.0.0,localhost
       SECRET_KEY: so-secret
     ports:

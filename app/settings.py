@@ -95,7 +95,10 @@ DATABASES = {
             "sslmode": env.OSFDB_SSLMODE,
         },
     },
-    "osf": {
+}
+
+if env.OSFDB_HOST:
+    DATABASES["osf"] = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": env.OSFDB_NAME,
         "USER": env.OSFDB_USER,
@@ -107,8 +110,7 @@ DATABASES = {
         "OPTIONS": {
             "sslmode": env.OSFDB_SSLMODE,
         },
-    },
-}
+    }
 
 DATABASE_ROUTERS = ["addon_service.osf_models.db_router.OsfDatabaseRouter"]
 
