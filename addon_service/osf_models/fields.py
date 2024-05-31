@@ -1,21 +1,21 @@
 import datetime as dt
+import functools
 from decimal import Decimal
 
 import jwe
 from dateutil.parser import isoparse
+from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import JSONField
 
-from app.settings import (
-    OSF_SENSITIVE_DATA_SALT,
-    OSF_SENSITIVE_DATA_SECRET,
-)
 
-
-SENSITIVE_DATA_KEY = jwe.kdf(
-    OSF_SENSITIVE_DATA_SECRET.encode("utf-8"), OSF_SENSITIVE_DATA_SALT.encode("utf-8")
-)
+@functools.cache
+def sensitive_data_key():
+    return jwe.kdf(
+        settings.OSF_SENSITIVE_DATA_SECRET.encode("utf-8"),
+        settings.OSF_SENSITIVE_DATA_SALT.encode("utf-8"),
+    )
 
 
 def ensure_bytes(value):
@@ -36,7 +36,7 @@ def encrypt_string(value, prefix="jwe:::") -> str:
     if value:
         _value_bytes = ensure_bytes(value)
         if _value_bytes and not _value_bytes.startswith(prefix):
-            value = (prefix + jwe.encrypt(_value_bytes, SENSITIVE_DATA_KEY)).decode()
+            value = (prefix + jwe.encrypt(_value_bytes, sensitive_data_key())).decode()
     return value
 
 
@@ -47,7 +47,7 @@ def decrypt_string(value, prefix="jwe:::") -> str:
         _value_bytes = ensure_bytes(value)
         if _value_bytes.startswith(prefix):
             value = jwe.decrypt(
-                _value_bytes[prefix_length:], SENSITIVE_DATA_KEY
+                _value_bytes[prefix_length:], sensitive_data_key()
             ).decode()
     return value
 
