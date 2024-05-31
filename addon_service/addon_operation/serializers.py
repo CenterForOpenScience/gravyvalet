@@ -26,6 +26,7 @@ class AddonOperationSerializer(serializers.Serializer):
     implementation_docstring = serializers.CharField(read_only=True)
     capability = EnumNameChoiceField(enum_cls=AddonCapabilities, read_only=True)
     params_jsonschema = serializers.JSONField()
+    result_jsonschema = serializers.JSONField()
 
     ###
     # relationships

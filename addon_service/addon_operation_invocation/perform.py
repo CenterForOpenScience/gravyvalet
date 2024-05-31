@@ -39,7 +39,7 @@ def perform_invocation__async(invocation: AddonOperationInvocation) -> None:
                     invocation.operation_kwargs,
                 )
             invocation.operation_result = json_for_typed_value(
-                _operation.declaration.return_type,
+                _operation.declaration.result_dataclass,
                 _result,
             )
             invocation.invocation_status = InvocationStatus.SUCCESS

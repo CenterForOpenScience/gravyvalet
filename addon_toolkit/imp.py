@@ -95,7 +95,7 @@ class AddonImp:
         if not inspect.iscoroutinefunction(_operation_method):
             _operation_method = sync_to_async(_operation_method)
         _result = await _operation_method(**_kwargs)
-        assert isinstance(_result, operation.return_type)
+        assert isinstance(_result, operation.result_dataclass)
         return _result
 
     invoke_operation__blocking = async_to_sync(invoke_operation)

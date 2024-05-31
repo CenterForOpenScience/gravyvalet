@@ -39,7 +39,7 @@ class AddonOperationDeclaration:
     operation_type: AddonOperationType
     capability: AddonCapabilities
     operation_fn: Callable  # the decorated function
-    return_type: type = dataclasses.field(
+    result_dataclass: type = dataclasses.field(
         default=type(None),  # if not provided, inferred by __post_init__
         compare=False,
     )
@@ -55,21 +55,21 @@ class AddonOperationDeclaration:
         if len(self.capability) != 1:
             raise exceptions.OperationNotValid
         _return_type = self.call_signature.return_annotation
-        if self.return_type is type(None):
-            # no return_type declared; infer from type annotation
+        if self.result_dataclass is type(None):
+            # no result_dataclass declared; infer from type annotation
             assert dataclasses.is_dataclass(
                 _return_type
             ), f"operation methods must return a dataclass (got {_return_type} on {self.operation_fn})"
             # use object.__setattr__ to bypass dataclass frozenness (only here in __post_init__)
-            object.__setattr__(self, "return_type", _return_type)
+            object.__setattr__(self, "result_dataclass", _return_type)
         else:
-            # return_type declared; enforce it
+            # result_dataclass declared; enforce it
             assert dataclasses.is_dataclass(
-                self.return_type
-            ), f"return_type must be a dataclass (got {self.return_type})"
-            if not issubclass(_return_type, self.return_type):
+                self.result_dataclass
+            ), f"result_dataclass must be a dataclass (got {self.result_dataclass})"
+            if not issubclass(_return_type, self.result_dataclass):
                 raise exceptions.OperationNotValid(
-                    f"expected return type {self.return_type} on operation function {self.operation_fn} (got {_return_type})"
+                    f"expected return type {self.result_dataclass} on operation function {self.operation_fn} (got {_return_type})"
                 )
 
     @property
@@ -105,7 +105,7 @@ addon_operation = Declarator(
 # decorator for operations that may be performed by a client request (e.g. redirect to waterbutler)
 redirect_operation = addon_operation.with_kwargs(
     operation_type=AddonOperationType.REDIRECT,
-    return_type=RedirectResult,
+    result_dataclass=RedirectResult,
     # TODO: consider adding `save_invocation: bool = True`, set False here
 )
 

@@ -9,7 +9,10 @@ from addon_toolkit import (
     AddonOperationDeclaration,
     AddonOperationType,
 )
-from addon_toolkit.json_arguments import jsonschema_for_signature_params
+from addon_toolkit.json_arguments import (
+    jsonschema_for_dataclass,
+    jsonschema_for_signature_params,
+)
 
 
 # dataclass wrapper for an operation implemented on a concrete AddonImp subclass
@@ -58,6 +61,10 @@ class AddonOperationModel(StaticDataclassModel):
     @cached_property
     def params_jsonschema(self) -> dict:
         return jsonschema_for_signature_params(self.declaration.call_signature)
+
+    @cached_property
+    def result_jsonschema(self) -> dict:
+        return jsonschema_for_dataclass(self.declaration.result_dataclass)
 
     @cached_property
     def implemented_by(self):
