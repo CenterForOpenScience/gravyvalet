@@ -46,7 +46,7 @@ class ItemResult:
     item_id: str
     item_name: str
     item_type: ItemType
-    item_path: "list[ItemResult] | None" = None  # most distant first
+    item_path: abc.Sequence[typing.Self] | None = None
 
 
 @dataclasses.dataclass

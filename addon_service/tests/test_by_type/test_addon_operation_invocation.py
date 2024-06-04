@@ -40,8 +40,6 @@ class TestAddonOperationInvocationCreate(APITestCase):
                     }
                 ],
                 "total_count": 1,
-                "this_sample_cursor": "",
-                "first_sample_cursor": "",
             },
         ),
     )
