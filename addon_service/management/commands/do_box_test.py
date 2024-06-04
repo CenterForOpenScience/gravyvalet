@@ -1,6 +1,10 @@
 import argparse
 import pprint
 
+from asgiref.sync import (
+    async_to_sync,
+    sync_to_async,
+)
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
@@ -53,19 +57,7 @@ class Command(BaseCommand):
                 case "connect":
                     self._connect_addon(account_id=kwargs["account_id"])
                 case "invoke":
-                    self._do_invoke(
-                        kwargs["addon_id"], "BOX_DOT_COM:get_root_items", {}
-                    )
-                    # self._do_invoke(
-                    #     kwargs["addon_id"],
-                    #     "BOX_DOT_COM:get_child_items",
-                    #     {"item_id": "2:0"},
-                    # )
-                    # self._do_invoke(
-                    #     kwargs["addon_id"],
-                    #     "BOX_DOT_COM:get_item",
-                    #     {"item_id": "1:1484968395678"},  # update with an actual item_id
-                    # )
+                    self._do_invokes__blocking(kwargs)
                 case _:
                     raise RuntimeError
         finally:
@@ -85,7 +77,7 @@ class Command(BaseCommand):
                 known_imps.get_imp_by_name("BOX_DOT_COM")
             ),
             defaults=dict(
-                display_name="my-box-dot-com",
+                name="my-box-dot-com",
                 oauth2_client_config=_oauth2_config,
                 api_base_url="https://api.box.com/2.0/",
                 int_credentials_format=CredentialsFormats.OAUTH2.value,
@@ -124,6 +116,21 @@ class Command(BaseCommand):
             f"{self.style.SUCCESS('connected! to invoke, run again with:')} do_box_test invoke {_configured_addon.pk}"
         )
 
+    @async_to_sync
+    async def _do_invokes__blocking(self, kwargs):
+        await self._do_invoke(kwargs["addon_id"], "BOX_DOT_COM:get_root_items", {})
+        await self._do_invoke(
+            kwargs["addon_id"],
+            "BOX_DOT_COM:get_child_items",
+            {"item_id": "2:0"},
+        )
+        await self._do_invoke(
+            kwargs["addon_id"],
+            "BOX_DOT_COM:get_item",
+            {"item_id": "1:1484968395678"},  # update with an actual item_id
+        )
+
+    @sync_to_async
     def _do_invoke(self, addon_id, op_id, op_kwargs):
         _configured_addon = db.ConfiguredStorageAddon.objects.get(pk=addon_id)
         _invocation = db.AddonOperationInvocation.objects.create(
