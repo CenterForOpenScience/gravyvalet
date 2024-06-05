@@ -9,7 +9,7 @@ from addon_toolkit.interfaces.storage import (
 class MyBlargStorage(StorageAddonImp):
     """blarg?"""
 
-    def get_item(self, item_id: str) -> ItemResult:
+    def get_item_info(self, item_id: str) -> ItemResult:
         """blarg blarg blarg"""
         return ItemResult(
             item_id=item_id, item_name=f"item{item_id}!", item_type=ItemType.FILE

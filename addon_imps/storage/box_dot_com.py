@@ -14,11 +14,11 @@ class BoxDotComStorageImp(storage.StorageAddonImp):
 
     async def get_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
         return storage.ItemSampleResult(
-            items=[await self.get_item(_box_root_id())],
+            items=[await self.get_item_info(_box_root_id())],
             total_count=1,
         )
 
-    async def get_item(self, item_id: str) -> storage.ItemResult:
+    async def get_item_info(self, item_id: str) -> storage.ItemResult:
         async with self.network.GET(
             _box_item_url(item_id),
             query={"fields": "id,type,name,path"},

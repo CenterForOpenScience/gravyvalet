@@ -126,7 +126,7 @@ class Command(BaseCommand):
         )
         await self._do_invoke(
             kwargs["addon_id"],
-            "BOX_DOT_COM:get_item",
+            "BOX_DOT_COM:get_item_info",
             {"item_id": "1:1484968395678"},  # update with an actual item_id
         )
 
