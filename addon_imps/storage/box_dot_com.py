@@ -119,8 +119,6 @@ class _BoxDotComParsedJson:
         item_type: storage.ItemType | None = None,
     ) -> typing.Iterator[storage.ItemResult]:
         # https://developer.box.com/reference/resources/items/
-        if "entries" not in self.response_json:
-            breakpoint()
         for _item in self.response_json["entries"]:
             if (item_type is None) or self._item_has_type(_item, item_type):
                 yield self._parse_item(_item)

@@ -96,12 +96,6 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
         _thru_account = validated_data.get("thru_account")
         if _thru_addon is None and _thru_account is None:
             raise ValidationError("must include either 'thru_addon' or 'thru_account'")
-        if (
-            _thru_addon
-            and _thru_account
-            and (_thru_addon.base_account != _thru_account)
-        ):
-            raise ValidationError("mismatched 'thru_addon' and 'thru_account'")
         if _thru_account is None:
             _thru_account = _thru_addon.base_account
         _operation_name: str = validated_data["operation_name"]
