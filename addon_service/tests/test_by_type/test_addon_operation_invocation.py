@@ -29,7 +29,7 @@ class _InvocationCase:
 class TestAddonOperationInvocationCreate(APITestCase):
     _INVOKE_SUCCESS_CASES = (
         _InvocationCase(
-            "get_root_items",
+            "list_root_items",
             {},
             expected_result={
                 "items": [
@@ -45,7 +45,7 @@ class TestAddonOperationInvocationCreate(APITestCase):
     )
     _INVOKE_PROBLEM_CASES = (
         _InvocationCase(
-            "get_root_items",
+            "list_root_items",
             {"blarg": 2},
             expected_http_status=HTTPStatus.BAD_REQUEST,
         ),

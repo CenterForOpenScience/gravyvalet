@@ -12,7 +12,7 @@ class BoxDotComStorageImp(storage.StorageAddonImp):
     see https://developer.box.com/reference/
     """
 
-    async def get_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
+    async def list_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
         return storage.ItemSampleResult(
             items=[await self.get_item_info(_box_root_id())],
             total_count=1,
@@ -27,7 +27,7 @@ class BoxDotComStorageImp(storage.StorageAddonImp):
                 await _response.json_content()
             ).single_item_result()
 
-    async def get_child_items(
+    async def list_child_items(
         self,
         item_id: str,
         page_cursor: str = "",

@@ -118,10 +118,10 @@ class Command(BaseCommand):
 
     @async_to_sync
     async def _do_invokes__blocking(self, kwargs):
-        await self._do_invoke(kwargs["addon_id"], "BOX_DOT_COM:get_root_items", {})
+        await self._do_invoke(kwargs["addon_id"], "BOX_DOT_COM:list_root_items", {})
         await self._do_invoke(
             kwargs["addon_id"],
-            "BOX_DOT_COM:get_child_items",
+            "BOX_DOT_COM:list_child_items",
             {"item_id": "2:0"},
         )
         await self._do_invoke(

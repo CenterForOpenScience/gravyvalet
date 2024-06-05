@@ -15,7 +15,7 @@ class MyBlargStorage(StorageAddonImp):
             item_id=item_id, item_name=f"item{item_id}!", item_type=ItemType.FILE
         )
 
-    async def get_root_items(self, page_cursor: str = "") -> ItemSampleResult:
+    async def list_root_items(self, page_cursor: str = "") -> ItemSampleResult:
         return ItemSampleResult(
             items=[
                 ItemResult(

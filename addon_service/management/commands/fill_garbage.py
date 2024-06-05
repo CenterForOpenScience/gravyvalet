@@ -45,7 +45,7 @@ class Command(LabelCommand):
             connected_capabilities=[AddonCapabilities.ACCESS],
         )
         _invocation = db.AddonOperationInvocation.objects.create(
-            operation_identifier="BLARG:get_root_items",
+            operation_identifier="BLARG:list_root_items",
             operation_kwargs={"item": {"item_id": "foo"}, "page": {}},
             thru_addon=_addon,
             by_user=_userref,

@@ -106,10 +106,10 @@ class StorageAddonInterface(AddonInterface, typing.Protocol):
     # tree-read operations:
 
     @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_root_items(self, page_cursor: str = "") -> ItemSampleResult: ...
+    async def list_root_items(self, page_cursor: str = "") -> ItemSampleResult: ...
 
     @immediate_operation(capability=AddonCapabilities.ACCESS)
-    async def get_child_items(
+    async def list_child_items(
         self,
         item_id: str,
         page_cursor: str = "",
