@@ -8,15 +8,16 @@ Welcome to the Open Science Framework's base server for addon integration with o
 
 1. Start your PostgreSQL and Django containers with `docker compose up -d`.
 2. Enter the Django container: `docker compose exec addon_service /bin/bash`.
-3. Migrate the existing models: `python3 manage.py migrate`.
-4. Visit [http://0.0.0.0:8004/](http://0.0.0.0:8004/).
+3. Make migrations `python manage.py makemigrations`.
+4. Migrate the existing models: `python manage.py migrate`.
+5. Visit [http://0.0.0.0:8004/](http://0.0.0.0:8004/).
 
 ## Running Tests
 
 To run tests, use the following command:
 
 ```bash
-python3 manage.py test
+python manage.py test
 ```
 
 Development Tips
