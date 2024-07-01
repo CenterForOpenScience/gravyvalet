@@ -56,7 +56,7 @@ CORS_ALLOWED_ORIGINS = tuple(
 # 2. call `.rotate_encryption()` on every `ExternalCredentials` (perhaps via
 #    celery tasks in `addon_service.tasks.key_rotation`)
 # 3. remove the old secret from GRAVYVALET_ENCRYPT_SECRET_PRIORS
-GRAVYVALET_ENCRYPT_SECRET = os.environ.get("GRAVYVALET_ENCRYPT_SECRET")
+GRAVYVALET_ENCRYPT_SECRET: str | None = os.environ.get("GRAVYVALET_ENCRYPT_SECRET")
 GRAVYVALET_ENCRYPT_SECRET_PRIORS = tuple(
     filter(bool, os.environ.get("GRAVYVALET_ENCRYPT_SECRET_PRIORS", "").split(","))
 )

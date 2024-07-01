@@ -66,6 +66,7 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
         related_link_view_name=view_names.related_view(RESOURCE_TYPE),
     )
     credentials = CredentialsField(write_only=True, required=False)
+    initiate_oauth = serializers.BooleanField(write_only=True, required=False)
 
     included_serializers = {
         "account_owner": "addon_service.serializers.UserReferenceSerializer",
@@ -91,12 +92,16 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
         except ModelValidationError as e:
             raise serializers.ValidationError(e)
 
-        if external_service.credentials_format is CredentialsFormats.OAUTH2:
+        if (
+            validated_data.get("initiate_oauth", False)
+            and external_service.credentials_format is CredentialsFormats.OAUTH2
+        ):
             authorized_account.initiate_oauth2_flow(
                 validated_data.get("authorized_scopes")
             )
-        else:
+        elif validated_data.get("credentials"):
             authorized_account.credentials = validated_data["credentials"]
+
         try:
             authorized_account.save()
         except ModelValidationError as e:
@@ -120,4 +125,6 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
             "credentials",
             "default_root_folder",
             "external_storage_service",
+            "initiate_oauth",
+            "credentials_available",
         ]

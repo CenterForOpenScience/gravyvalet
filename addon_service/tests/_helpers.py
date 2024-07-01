@@ -187,13 +187,16 @@ def get_test_request(user=None, method="get", path="", cookies=None):
     return _request
 
 
+@contextlib.contextmanager
 def patch_encryption_key_derivation():
-    # expect to call scrypt with all the following params:
-    def _mock_scrypt(secret, salt, n, r, p, dklen, maxmem):
-        # some random derived key
-        return b"\xdd\xd1\xdfN9\n\xbb\xa5\x9a|\xc6\x1f\xd6b\xf2\xfc>\x1e\xfe\xfd\x14\xc6n\xd7\x18\xbf'\x04qk\x8c\xfb"
+    _fake_secret = b"this is fine"
+    _some_random_key = b"\xdd\xd1\xdfN9\n\xbb\xa5\x9a|\xc6\x1f\xd6b\xf2\xfc>\x1e\xfe\xfd\x14\xc6n\xd7\x18\xbf'\x04qk\x8c\xfb"
 
-    return patch(
+    with patch(
+        "addon_service.credentials.encryption.settings.GRAVYVALET_ENCRYPT_SECRET",
+        _fake_secret,
+    ), patch(
         "addon_service.credentials.encryption.hashlib.scrypt",
-        side_effect=_mock_scrypt,
-    )
+        return_value=_some_random_key,
+    ):
+        yield

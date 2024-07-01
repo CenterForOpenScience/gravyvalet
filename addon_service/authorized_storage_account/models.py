@@ -189,6 +189,10 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
     def imp_cls(self) -> type[AddonImp]:
         return self.external_service.addon_imp.imp_cls
 
+    @property
+    def credentials_available(self) -> bool:
+        return self._credentials is not None
+
     @transaction.atomic
     def initiate_oauth2_flow(self, authorized_scopes=None):
         if self.credentials_format is not CredentialsFormats.OAUTH2:

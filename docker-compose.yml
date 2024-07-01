@@ -6,7 +6,7 @@ services:
     build: .
     restart: unless-stopped
     command: python manage.py runserver 0.0.0.0:8004
-    environment:
+    environment: &gv_environment
       DEBUG: 1
       DJANGO_SETTINGS_MODULE: app.settings
       PYTHONUNBUFFERED: 1
@@ -20,6 +20,7 @@ services:
       OSF_BASE_URL: "http://192.168.168.167:5000"
       OSF_API_BASE_URL: "http://192.168.168.167:8000"
       AMQP_BROKER_URL: "amqp://guest:guest@rabbitmq:5672"
+      GRAVYVALET_ENCRYPT_SECRET: "this is fine"
     ports:
       - 8004:8004
     stdin_open: true
@@ -38,16 +39,7 @@ services:
       - postgres
     volumes:
       - ./:/code:cached
-    environment:
-      DEBUG: 1
-      DJANGO_SETTINGS_MODULE: app.settings
-      POSTGRES_HOST: postgres
-      POSTGRES_DB: gravyvalet
-      POSTGRES_USER: postgres
-      SECRET_KEY: so-secret
-      OSF_BASE_URL: "http://192.168.168.167:5000"
-      OSF_API_BASE_URL: "http://192.168.168.167:8000"
-      AMQP_BROKER_URL: "amqp://guest:guest@rabbitmq:5672"
+    environment: *gv_environment
     stdin_open: true
 
   postgres:
