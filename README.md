@@ -1,8 +1,10 @@
 ![Center for Open Science Logo](https://mfr.osf.io/export?url=https://osf.io/download/24697/?direct=%26mode=render&format=2400x2400.jpeg)
 
-# OSF Addon Service (GravyValet)
+# gravyvalet
 
-Welcome to the Open Science Framework's base server for addon integration with our RESTful API (osf.io). This server acts as a gateway between the OSF and external APIs. Authenticated users or machines can access various resources through common file storage and citation management APIs via the OSF. Institutional members can also add their own integrations, tailoring addon usage to their specific communities.
+gravyvalet fetches, serves, and holds small ladlefuls of precious bytes (in contrast to [waterbutler](), which fetches and serves whole streams of bytes but holds nothing)
+
+currently, those bytes are shaped to support [osf addons](), whereby you can share controlled access to external accounts (e.g. online storage) with your collaborators on osf.
 
 ## Setting up GravyValet Locally
 
