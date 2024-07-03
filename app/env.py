@@ -11,6 +11,7 @@ CORS_ALLOWED_ORIGINS = tuple(
     filter(bool, os.environ.get("CORS_ALLOWED_ORIGINS", "").split(","))
 )
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
+SECURE_PROXY_SSL_HEADER = os.environ.get("SECURE_PROXY_SSL_HEADER")
 
 ###
 # databases
