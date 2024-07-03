@@ -3,7 +3,7 @@
 from http import HTTPStatus
 
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import JsonResponse
 
 from addon_service.addon_imp.views import AddonImpViewSet
 from addon_service.addon_operation.views import AddonOperationViewSet
@@ -25,7 +25,15 @@ async def status(request):
     """
     Handles status checks for the GV
     """
-    return HttpResponse(status=HTTPStatus.OK)
+    try:
+        _host = request.get_host()
+    except Exception:
+        _host = None
+    return JsonResponse(
+        {"host": _host, "s": request.is_secure()},
+        json_dumps_params={"indent": 2},
+        status=HTTPStatus.OK,
+    )
 
 
 __all__ = (
