@@ -13,6 +13,10 @@ from addon_service import views
 
 
 class _AddonServiceRouter(SimpleRouter):
+    def __init__(self):
+        super().__init__()
+        self.trailing_slash = "/?"  # allow slash or no slash (override value set by SimpleRouter.__init__)
+
     routes = [
         *SimpleRouter.routes,
         # add route for all relationship "related" links
@@ -31,7 +35,7 @@ class _AddonServiceRouter(SimpleRouter):
     ]
 
 
-_router = _AddonServiceRouter(trailing_slash=False)
+_router = _AddonServiceRouter()
 
 
 def _register_viewset(viewset):
