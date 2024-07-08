@@ -39,6 +39,7 @@ OSF_HMAC_KEY = os.environ.get("OSF_HMAC_KEY")
 OSF_HMAC_EXPIRATION_SECONDS = int(os.environ.get("OSF_HMAC_EXPIRATION_SECONDS", 110))
 OSF_BASE_URL = os.environ.get("OSF_BASE_URL", "https://osf.example")
 OSF_API_BASE_URL = os.environ.get("OSF_API_BASE_URL", "https://api.osf.example")
+OSF_AUTH_COOKIE_NAME = os.environ.get("OSF_AUTH_COOKIE_NAME", "osf_staging")
 
 ###
 # amqp/celery

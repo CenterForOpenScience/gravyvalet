@@ -45,7 +45,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.DEBUG
 
-USER_REFERENCE_COOKIE = "osf"
+USER_REFERENCE_COOKIE = env.OSF_AUTH_COOKIE_NAME
 OSF_BASE_URL = env.OSF_BASE_URL.rstrip("/")
 OSF_API_BASE_URL = env.OSF_API_BASE_URL.rstrip("/")
 ALLOWED_RESOURCE_URI_PREFIXES = {OSF_BASE_URL}
