@@ -467,7 +467,9 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
 
     def test_get_related__empty(self):
         _resp = self._related_view(
-            get_test_request(cookies={"osf": self._user.user_uri}),
+            get_test_request(
+                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
+            ),
             pk=self._asa.pk,
             related_field="configured_storage_addons",
         )
@@ -480,7 +482,9 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
             base_account=self._asa,
         )
         _resp = self._related_view(
-            get_test_request(cookies={"osf": self._user.user_uri}),
+            get_test_request(
+                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
+            ),
             pk=self._asa.pk,
             related_field="configured_storage_addons",
         )

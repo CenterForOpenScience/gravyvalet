@@ -146,7 +146,9 @@ class TestResourceReferenceViewSet(TestCase):
 
     def test_get(self):
         _resp = self._view(
-            get_test_request(cookies={"osf": self._user.user_uri}),
+            get_test_request(
+                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
+            ),
             pk=self._resource.pk,
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
@@ -224,7 +226,9 @@ class TestResourceReferenceRelatedView(TestCase):
         self._csa.delete()
 
         _resp = self._related_view(
-            get_test_request(cookies={"osf": self._user.user_uri}),
+            get_test_request(
+                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
+            ),
             pk=self._resource.pk,
             related_field="configured_storage_addons",
         )
@@ -237,7 +241,9 @@ class TestResourceReferenceRelatedView(TestCase):
             authorized_resource=self._resource,
         ) + [self._csa]
         _resp = self._related_view(
-            get_test_request(cookies={"osf": self._user.user_uri}),
+            get_test_request(
+                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
+            ),
             pk=self._resource.pk,
             related_field="configured_storage_addons",
         )
