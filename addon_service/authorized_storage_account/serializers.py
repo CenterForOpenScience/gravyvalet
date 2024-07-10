@@ -38,6 +38,9 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
     url = serializers.HyperlinkedIdentityField(
         view_name=view_names.detail_view(RESOURCE_TYPE), required=False
     )
+    display_name = serializers.CharField(
+        allow_blank=True, required=False, max_length=256
+    )
     authorized_capabilities = EnumNameMultipleChoiceField(enum_cls=AddonCapabilities)
     authorized_operation_names = serializers.ListField(
         child=serializers.CharField(),

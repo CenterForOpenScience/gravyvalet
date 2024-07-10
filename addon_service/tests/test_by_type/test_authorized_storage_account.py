@@ -47,13 +47,19 @@ MOCK_CREDENTIALS = {
 
 
 def _make_post_payload(
-    *, external_service, capabilities=None, credentials=None, api_root=""
+    *,
+    external_service,
+    capabilities=None,
+    credentials=None,
+    api_root="",
+    display_name="MY ACCOUNT MINE",
 ):
     capabilities = capabilities or [AddonCapabilities.ACCESS.name]
     payload = {
         "data": {
             "type": "authorized-storage-accounts",
             "attributes": {
+                "display_name": display_name,
                 "authorized_capabilities": capabilities,
                 "api_base_url": api_root,
                 "initiate_oauth": True,
@@ -120,16 +126,15 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
 
         _resp = self.client.post(
             reverse("authorized-storage-accounts-list"),
-            _make_post_payload(external_service=external_service),
+            _make_post_payload(
+                external_service=external_service, display_name="disploo"
+            ),
             format="vnd.api+json",
         )
         self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
 
-        self.assertTrue(
-            external_service.authorized_storage_accounts.filter(
-                id=_resp.data["id"]
-            ).exists()
-        )
+        _from_db = external_service.authorized_storage_accounts.get(id=_resp.data["id"])
+        self.assertEqual(_from_db.display_name, "disploo")
 
     def test_post__sets_credentials(self):
         for creds_format in NON_OAUTH_FORMATS:
