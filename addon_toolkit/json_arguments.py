@@ -58,7 +58,24 @@ def jsonschema_for_dataclass(dataclass: type) -> dict:
 
 
 def jsonschema_for_annotation(annotation: type) -> dict:
-    """build jsonschema for a python type annotation"""
+    """build jsonschema for a python type annotation
+
+    >>> jsonschema_for_annotation(str)
+    {'type': 'string'}
+    >>> jsonschema_for_annotation(int)
+    {'type': 'number'}
+
+    support generic collections (as json arrays)
+    >>> jsonschema_for_annotation(list[int])
+    {'type': 'array', 'items': {'type': 'number'}}
+    >>> jsonschema_for_annotation(tuple[str])
+    {'type': 'array', 'items': {'type': 'string'}}
+
+    support enums (using enum name as string)
+    >>> from http import HTTPMethod
+    >>> jsonschema_for_annotation(HTTPMethod)
+    {'enum': ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'TRACE']}
+    """
     # ignore optional-ness here (handled by jsonschema "required")
     _type, _contained_type, _ = _unwrap_type(annotation)
     if dataclasses.is_dataclass(_type):
@@ -72,7 +89,7 @@ def jsonschema_for_annotation(annotation: type) -> dict:
     if issubclass(_type, abc.Collection):
         _array_jsonschema: dict[str, typing.Any] = {"type": "array"}
         if _contained_type is not None:
-            _array_jsonschema["items"] = jsonschema_for_annotation(annotation)
+            _array_jsonschema["items"] = jsonschema_for_annotation(_contained_type)
         return _array_jsonschema
     raise exceptions.TypeNotJsonable(_type)
 
