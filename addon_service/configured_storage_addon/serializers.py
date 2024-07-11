@@ -22,7 +22,7 @@ class ConfiguredStorageAddonSerializer(serializers.HyperlinkedModelSerializer):
         view_name=view_names.detail_view(RESOURCE_TYPE)
     )
     display_name = serializers.CharField(
-        allow_blank=True, required=False, max_length=256
+        allow_blank=True, allow_null=True, required=False, max_length=256
     )
     connected_capabilities = EnumNameMultipleChoiceField(enum_cls=AddonCapabilities)
     connected_operation_names = serializers.ListField(
