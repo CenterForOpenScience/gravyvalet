@@ -112,6 +112,26 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
 
         return authorized_account
 
+    def update(self, instance, validated_data):
+        # only these fields may be PATCHed:
+        if "display_name" in validated_data:
+            instance.display_name = validated_data["display_name"]
+        if "authorized_capabilities" in validated_data:
+            instance.authorized_capabilities = validated_data["authorized_capabilities"]
+        if "api_base_url" in validated_data:
+            instance.api_base_url = validated_data["api_base_url"]
+        if "default_root_folder" in validated_data:
+            instance.default_root_folder = validated_data["default_root_folder"]
+        if validated_data.get("credentials"):
+            instance.credentials = validated_data["credentials"]
+        instance.save()  # may raise ValidationError
+        if (
+            validated_data.get("initiate_oauth", False)
+            and instance.credentials_format is CredentialsFormats.OAUTH2
+        ):
+            instance.initiate_oauth2_flow(validated_data.get("authorized_scopes"))
+        return instance
+
     class Meta:
         model = AuthorizedStorageAccount
         fields = [
