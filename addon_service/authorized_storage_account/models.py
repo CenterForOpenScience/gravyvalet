@@ -111,7 +111,7 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
         creds_type = type(credentials_data)
         if creds_type is not self.credentials_format.dataclass:
             raise ValidationError(
-                f"Expectd credentials of type type {self.credentials_format.dataclass}."
+                f"Expected credentials of type {self.credentials_format.dataclass}."
                 f"Got credentials of type {creds_type}."
             )
         if not self._credentials:

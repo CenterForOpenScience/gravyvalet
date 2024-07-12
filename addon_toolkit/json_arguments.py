@@ -184,11 +184,14 @@ def kwargs_from_json(
             )
             for (_param_name, _arg_value) in args_from_json.items()
         }
-        # use inspect.Signature.bind() (with dummy `self` value) to validate all required kwargs present
-        _bound_kwargs = signature.bind(self=..., **_kwargs)
+        # use inspect.Signature.bind() to validate all required kwargs present
+        if "self" in signature.parameters:
+            _bound_kwargs = signature.bind(self=..., **_kwargs)
+            _bound_kwargs.arguments.pop("self", None)
+        else:
+            _bound_kwargs = signature.bind(**_kwargs)
     except (TypeError, KeyError):
         raise exceptions.InvalidJsonArgsForSignature(args_from_json, signature)
-    _bound_kwargs.arguments.pop("self")
     return _bound_kwargs.arguments
 
 

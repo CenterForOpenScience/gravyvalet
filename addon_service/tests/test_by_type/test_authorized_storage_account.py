@@ -19,7 +19,10 @@ from addon_service.tests._helpers import (
     get_test_request,
     patch_encryption_key_derivation,
 )
-from addon_toolkit import AddonCapabilities
+from addon_toolkit import (
+    AddonCapabilities,
+    json_arguments,
+)
 from addon_toolkit.credentials import (
     AccessKeySecretKeyCredentials,
     AccessTokenCredentials,
@@ -76,7 +79,9 @@ def _make_post_payload(
     }
     credentials = credentials or MOCK_CREDENTIALS[external_service.credentials_format]
     if credentials:
-        payload["data"]["attributes"]["credentials"] = credentials.asdict()
+        payload["data"]["attributes"]["credentials"] = (
+            json_arguments.json_for_dataclass(credentials)
+        )
     return payload
 
 

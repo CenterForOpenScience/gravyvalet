@@ -4,6 +4,8 @@ from rest_framework.serializers import (
 )
 
 from addon_service.common.credentials_formats import CredentialsFormats
+from addon_toolkit.exceptions import JsonArgumentsError
+from addon_toolkit.json_arguments import dataclass_from_json
 
 
 SUPPORTED_CREDENTIALS_FORMATS = set(CredentialsFormats) - {
@@ -22,7 +24,7 @@ class CredentialsField(JSONField):
         # No access to the credentials format here, so just try all of them
         for creds_format in SUPPORTED_CREDENTIALS_FORMATS:
             try:
-                return creds_format.dataclass(**data)
-            except TypeError:
+                return dataclass_from_json(creds_format.dataclass, data)
+            except JsonArgumentsError:
                 pass
         raise ValidationError("Provided credentials do not match any known format")

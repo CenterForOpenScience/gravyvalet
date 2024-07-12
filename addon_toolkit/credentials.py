@@ -1,14 +1,9 @@
 import dataclasses
 import typing
 
-from addon_toolkit.json_arguments import json_for_dataclass
-
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class Credentials(typing.Protocol):
-    def asdict(self):
-        return json_for_dataclass(self)
-
     def iter_headers(self) -> typing.Iterator[tuple[str, str]]:
         yield from ()
 
