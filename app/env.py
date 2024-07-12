@@ -81,3 +81,11 @@ GRAVYVALET_DERIVED_KEY_CACHE_SIZE = int(
 )
 # END credentials encryption secrets and parameters
 ###
+
+
+###
+# OAuth Client Settings
+BOX_OAUTH2_CLIENT_ID: str | None = os.environ.get("BOX_CLIENT_ID", "box")
+BOX_OAUTH2_CLIENT_SECRET: str | None = os.environ.get("BOX_SECRET", "box_secret")
+# END OAuth Client Settings
+###

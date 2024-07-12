@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from asgiref.sync import sync_to_async
+from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import (
@@ -28,7 +29,6 @@ class OAuth2ClientConfig(AddonsServiceBaseModel):
     token_endpoint_url = models.URLField(null=False)
     # The registered ID of the OAuth client
     client_id = models.CharField(null=True)
-    client_secret = models.CharField(null=True)
 
     class Meta:
         verbose_name = "OAuth2 Client Config"
@@ -37,6 +37,10 @@ class OAuth2ClientConfig(AddonsServiceBaseModel):
 
     def __repr__(self):
         return f'<{self.__class__.__qualname__}(pk="{self.pk}", auth_uri="{self.auth_uri}", client_id="{self.client_id}")>'
+
+    @property
+    def client_secret(self):
+        return settings.OAUTH_SECRETS.get(self.client_id)
 
     __str__ = __repr__
 

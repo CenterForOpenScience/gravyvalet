@@ -217,3 +217,9 @@ OSF_SENSITIVE_DATA_SALT = env.OSF_SENSITIVE_DATA_SALT
 AMQP_BROKER_URL = env.AMQP_BROKER_URL
 OSF_BACKCHANNEL_QUEUE_NAME = env.OSF_BACKCHANNEL_QUEUE_NAME
 GV_QUEUE_NAME_PREFIX = env.GV_QUEUE_NAME_PREFIX
+
+
+###
+# Mapping from OAuth Client IDs to Secrets
+# DB should store the Client IDs to serve as a shared lookup, but secrets should live in ENVVARS
+OAUTH_SECRETS = {env.BOX_OAUTH2_CLIENT_ID: env.BOX_OAUTH2_CLIENT_SECRET}

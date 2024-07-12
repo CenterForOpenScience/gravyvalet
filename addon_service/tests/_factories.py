@@ -33,7 +33,6 @@ class OAuth2ClientConfigFactory(DjangoModelFactory):
     auth_callback_url = "https://osf.example/auth/callback"
     token_endpoint_url = "https://api.example.com/oauth/token"
     client_id = factory.Faker("word")
-    client_secret = factory.Faker("word")
 
 
 class AddonOperationInvocationFactory(DjangoModelFactory):
