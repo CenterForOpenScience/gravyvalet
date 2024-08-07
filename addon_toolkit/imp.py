@@ -79,7 +79,7 @@ class AddonImp:
         return _operation
 
     @classmethod
-    def validate_credentials(cls, crendentials):
+    def confirm_credentials(cls, crendentials):
         pass
 
     ###

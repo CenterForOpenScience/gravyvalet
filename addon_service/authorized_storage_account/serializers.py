@@ -105,7 +105,7 @@ class AuthorizedStorageAccountSerializer(serializers.HyperlinkedModelSerializer)
             )
         else:
             authorized_account.credentials = validated_data["credentials"]
-            authorized_account.imp_cls.validate_credentials(
+            authorized_account.imp_cls.confirm_credentials(
                 authorized_account.credentials
             )
         try:

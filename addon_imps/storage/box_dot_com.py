@@ -6,7 +6,7 @@ from addon_toolkit.cursor import OffsetCursor
 from addon_toolkit.interfaces import storage
 
 
-class BoxDotComStorageImp(storage.StorageAddonImp):
+class BoxDotComStorageImp(storage.StorageAddonHttpRequestorImp):
     """storage on box.com
 
     see https://developer.box.com/reference/

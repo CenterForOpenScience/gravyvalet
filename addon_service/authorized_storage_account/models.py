@@ -340,3 +340,9 @@ class AuthorizedStorageAccount(AddonsServiceBaseModel):
             self.external_service.oauth2_client_config,
             self.oauth2_token_metadata,
         )
+
+    @sync_to_async
+    def get_credentials__async(self):
+        if self._credentials:
+            return self._credentials.decrypted_credentials
+        return None
