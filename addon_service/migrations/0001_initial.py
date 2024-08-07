@@ -51,6 +51,80 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name="ConfiguredCitationAddon",
+            fields=[
+                (
+                    "id",
+                    addon_service.common.str_uuid_field.StrUUIDField(
+                        default=addon_service.common.str_uuid_field.str_uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created", models.DateTimeField(editable=False)),
+                ("modified", models.DateTimeField()),
+                ("_display_name", models.CharField(blank=True, default="")),
+                (
+                    "int_connected_capabilities",
+                    models.IntegerField(
+                        validators=[
+                            addon_service.common.validators.validate_addon_capability
+                        ]
+                    ),
+                ),
+            ],
+            options={
+                "abstract": False,
+            },
+        ),
+        migrations.CreateModel(
+            name="ExternalCitationService",
+            fields=[
+                (
+                    "id",
+                    addon_service.common.str_uuid_field.StrUUIDField(
+                        default=addon_service.common.str_uuid_field.str_uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created", models.DateTimeField(editable=False)),
+                ("modified", models.DateTimeField()),
+                ("display_name", models.CharField()),
+                (
+                    "int_credentials_format",
+                    models.IntegerField(
+                        validators=[
+                            addon_service.common.validators.validate_credentials_format
+                        ],
+                        verbose_name="Credentials format",
+                    ),
+                ),
+                (
+                    "int_service_type",
+                    models.IntegerField(
+                        default=1,
+                        validators=[
+                            addon_service.common.validators.validate_service_type
+                        ],
+                        verbose_name="Service type",
+                    ),
+                ),
+                (
+                    "supported_scopes",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(), blank=True, null=True, size=None
+                    ),
+                ),
+                ("api_base_url", models.URLField(blank=True, default="")),
+            ],
+            options={
+                "abstract": False,
+            },
+        ),
+        migrations.CreateModel(
             name="OAuth1ClientConfig",
             fields=[
                 (
@@ -384,6 +458,84 @@ class Migration(migrations.Migration):
                 related_name="authorized_storage_accounts",
                 to="addon_service.oauth2tokenmetadata",
             ),
+        ),
+        migrations.CreateModel(
+            name="AuthorizedCitationAccount",
+            fields=[
+                (
+                    "id",
+                    addon_service.common.str_uuid_field.StrUUIDField(
+                        default=addon_service.common.str_uuid_field.str_uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created", models.DateTimeField(editable=False)),
+                ("modified", models.DateTimeField()),
+                ("_display_name", models.CharField(blank=True, default="")),
+                ("external_account_id", models.CharField(blank=True, default="")),
+                (
+                    "int_authorized_capabilities",
+                    models.IntegerField(
+                        validators=[
+                            addon_service.common.validators.validate_addon_capability
+                        ]
+                    ),
+                ),
+                ("_api_base_url", models.URLField(blank=True)),
+                ("default_root_folder", models.CharField(blank=True)),
+                (
+                    "_credentials",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="authorized_citation_account",
+                        to="addon_service.externalcredentials",
+                    ),
+                ),
+                (
+                    "_temporary_oauth1_credentials",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="temporary_authorized_citation_account",
+                        to="addon_service.externalcredentials",
+                    ),
+                ),
+                (
+                    "account_owner",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="authorized_citation_accounts",
+                        to="addon_service.userreference",
+                    ),
+                ),
+                (
+                    "external_citation_service",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="authorized_citation_accounts",
+                        to="addon_service.externalcitationservice",
+                    ),
+                ),
+                (
+                    "oauth2_token_metadata",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="authorized_citation_accounts",
+                        to="addon_service.oauth2tokenmetadata",
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "Authorized Citation Account",
+                "verbose_name_plural": "Authorized Citation Accounts",
+            },
         ),
         migrations.CreateModel(
             name="AddonOperationInvocation",
