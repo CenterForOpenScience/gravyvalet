@@ -90,6 +90,9 @@ class AuthorizedAccountSerializer(serializers.HyperlinkedModelSerializer):
                 )
         elif validated_data.get("credentials"):
             authorized_account.credentials = validated_data["credentials"]
+            authorized_account.imp_cls.confirm_credentials(
+                authorized_account.credentials
+            )
 
         try:
             authorized_account.save()

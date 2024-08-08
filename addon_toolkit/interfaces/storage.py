@@ -8,6 +8,7 @@ from collections import abc
 from addon_toolkit.addon_operation_declaration import immediate_operation
 from addon_toolkit.capabilities import AddonCapabilities
 from addon_toolkit.constrained_network.http import HttpRequestor
+from addon_toolkit.credentials import Credentials
 from addon_toolkit.cursor import Cursor
 from addon_toolkit.imp import AddonImp
 
@@ -142,11 +143,32 @@ class StorageAddonInterface(BaseAddonInterface, typing.Protocol):
 #    async def pls_restore_version(self, item_id: str, version_id: str): ...
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class StorageAddonImp(AddonImp):
     """base class for storage addon implementations"""
 
     ADDON_INTERFACE = StorageAddonInterface
 
     config: StorageConfig
+
+
+@dataclasses.dataclass
+class StorageAddonHttpRequestorImp(StorageAddonImp):
+    """base class for storage addon implementations using GV network"""
+
     network: HttpRequestor
+
+
+@dataclasses.dataclass
+class StorageAddonClientRequestorImp(StorageAddonImp):
+    """base class for storage addon with custom clients"""
+
+    client: typing.Any = dataclasses.field(init=False)
+    credentials: dataclasses.InitVar[Credentials]
+
+    def __post_init__(self, credentials):
+        self.client = self.create_client(credentials)
+
+    @staticmethod
+    def create_client(credentials):
+        raise NotImplementedError

@@ -72,6 +72,9 @@ class AddonImp:
             raise exceptions.OperationNotImplemented(cls, _operation)
         return _operation
 
+    @classmethod
+    def confirm_credentials(cls, crendentials): ...
+
     ###
     # instance methods
 

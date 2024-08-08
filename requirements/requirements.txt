@@ -10,3 +10,6 @@ jsonschema==4.21.1
 aiohttp==3.9.3
 pyjwe==1.0.0
 cryptography==42.0.7
+
+# For Amazon S3
+boto3==1.34
