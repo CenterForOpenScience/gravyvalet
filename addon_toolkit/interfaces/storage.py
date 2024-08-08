@@ -3,7 +3,6 @@
 import dataclasses
 import enum
 import typing
-from abc import abstractmethod
 from collections import abc
 
 from addon_toolkit.addon_operation_declaration import immediate_operation
@@ -171,6 +170,6 @@ class StorageAddonClientRequestorImp(StorageAddonImp):
     def __post_init__(self, credentials):
         self.client = self.create_client(credentials)
 
-    @abstractmethod
-    def create_client(self, credentials):
+    @staticmethod
+    def create_client(credentials):
         raise NotImplementedError

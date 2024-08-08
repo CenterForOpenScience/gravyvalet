@@ -21,7 +21,8 @@ class S3StorageImp(storage.StorageAddonClientRequestorImp):
         except BotoExceptions.ClientError:
             raise ValidationError("Fail to validate access key and secret key")
 
-    def create_client(self, credentials):
+    @staticmethod
+    def create_client(credentials):
         access_key = credentials.access_key
         secret_key = credentials.secret_key
         return boto3.client(
