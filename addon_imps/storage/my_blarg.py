@@ -2,11 +2,11 @@ from addon_toolkit.interfaces.storage import (
     ItemResult,
     ItemSampleResult,
     ItemType,
-    StorageAddonImp,
+    StorageAddonHttpRequestorImp,
 )
 
 
-class MyBlargStorage(StorageAddonImp):
+class MyBlargStorage(StorageAddonHttpRequestorImp):
     """blarg?"""
 
     def get_item_info(self, item_id: str) -> ItemResult:
