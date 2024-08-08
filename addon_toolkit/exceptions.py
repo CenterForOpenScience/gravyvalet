@@ -2,7 +2,7 @@
 
 
 class AddonToolkitException(Exception):
-    pass
+    """base class for addon_toolkit exceptions"""
 
 
 ###
@@ -10,23 +10,11 @@ class AddonToolkitException(Exception):
 
 
 class NotAnImp(AddonToolkitException):
-    pass
+    """expected an AddonImp, but this is not"""
 
 
-class ImpNotValid(AddonToolkitException):
-    pass
-
-
-class ImpTooAbstract(ImpNotValid):
-    pass
-
-
-class ImpHasTooManyJobs(ImpNotValid):
-    pass
-
-
-class ImpHasNoInterface(ImpNotValid):
-    pass
+class ImpHasNoInterface(AddonToolkitException):
+    """missing required ADDON_INTERFACE class attribute"""
 
 
 ###
@@ -34,15 +22,15 @@ class ImpHasNoInterface(ImpNotValid):
 
 
 class NotAnOperation(AddonToolkitException):
-    pass
+    """not an operation"""
 
 
 class OperationNotValid(AddonToolkitException):
-    pass
+    """invalid operation declaration"""
 
 
 class OperationNotImplemented(AddonToolkitException):
-    pass
+    """operation is declared but not implemented (this may be fine)"""
 
 
 ###
@@ -50,20 +38,20 @@ class OperationNotImplemented(AddonToolkitException):
 
 
 class JsonArgumentsError(AddonToolkitException):
-    pass
+    """base exception for addon_toolkit.json_arguments"""
 
 
 class TypeNotJsonable(JsonArgumentsError):
-    pass
+    """tried using a type annotation that is not easily json-able"""
 
 
 class ValueNotJsonableWithType(JsonArgumentsError):
-    pass
+    """got a python value mismatched with the expected type annotation"""
 
 
 class InvalidJsonArgsForSignature(JsonArgumentsError):
-    pass
+    """tried using json kwargs with a mismatched call signature"""
 
 
 class JsonValueInvalidForType(JsonArgumentsError):
-    pass
+    """got a json value mismatched with a given python type annotation"""

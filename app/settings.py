@@ -1,20 +1,30 @@
+import logging
 from pathlib import Path
 
 from app import env
 
 
+_logger = logging.getLogger(__name__)
+
+
+if env.SENTRY_DSN:
+    try:
+        import sentry_sdk
+    except ImportError:
+        _logger.warning("SENTRY_DSN defined but sentry_sdk not installed!")
+    else:
+        sentry_sdk.init(
+            dsn=env.SENTRY_DSN,
+            environment=env.OSF_BASE_URL,
+        )
+
+
 SECRET_KEY = env.SECRET_KEY
-OSF_HMAC_KEY = env.OSF_HMAC_KEY or "lmaoooooo"
+OSF_HMAC_KEY = env.OSF_HMAC_KEY or "changeme"
 OSF_HMAC_EXPIRATION_SECONDS = env.OSF_HMAC_EXPIRATION_SECONDS
 
-if not env.DEBUG and not env.GRAVYVALET_ENCRYPT_SECRET:
-    raise RuntimeError(
-        "pls set `GRAVYVALET_ENCRYPT_SECRET` environment variable to something safely random"
-    )
-GRAVYVALET_ENCRYPT_SECRET: bytes = (
-    env.GRAVYVALET_ENCRYPT_SECRET.encode()
-    if env.GRAVYVALET_ENCRYPT_SECRET
-    else b"this is fine"
+GRAVYVALET_ENCRYPT_SECRET: bytes | None = (
+    env.GRAVYVALET_ENCRYPT_SECRET.encode() if env.GRAVYVALET_ENCRYPT_SECRET else None
 )
 GRAVYVALET_ENCRYPT_SECRET_PRIORS: tuple[bytes, ...] = tuple(
     _prior.encode() for _prior in env.GRAVYVALET_ENCRYPT_SECRET_PRIORS
@@ -35,7 +45,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.DEBUG
 
-USER_REFERENCE_COOKIE = "osf"
+USER_REFERENCE_COOKIE = env.OSF_AUTH_COOKIE_NAME
 OSF_BASE_URL = env.OSF_BASE_URL.rstrip("/")
 OSF_API_BASE_URL = env.OSF_API_BASE_URL.rstrip("/")
 ALLOWED_RESOURCE_URI_PREFIXES = {OSF_BASE_URL}
@@ -51,6 +61,8 @@ if DEBUG:
 ALLOWED_HOSTS = env.ALLOWED_HOSTS
 CORS_ALLOWED_ORIGINS = env.CORS_ALLOWED_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
+if env.SECURE_PROXY_SSL_HEADER:
+    SECURE_PROXY_SSL_HEADER = env.SECURE_PROXY_SSL_HEADER.split(":")
 
 # Application definition
 
@@ -192,6 +204,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
+STATIC_ROOT = BASE_DIR / "static"
 STATIC_URL = "/static/"
 
 OSF_SENSITIVE_DATA_SECRET = env.OSF_SENSITIVE_DATA_SECRET

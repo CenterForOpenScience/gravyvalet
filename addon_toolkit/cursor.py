@@ -19,6 +19,8 @@ def decode_cursor_dataclass(cursor: str, dataclass_class):
 
 
 class Cursor(Protocol):
+    """an abstract protocol for pagination cursors"""
+
     @classmethod
     def from_str(cls, cursor: str):
         return decode_cursor_dataclass(cursor, cls)

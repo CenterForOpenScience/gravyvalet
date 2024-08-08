@@ -1,3 +1,8 @@
+"""reusable validators for static vocabularies
+
+each raises `django.core.exceptions.ValidationError` for invalid values
+"""
+
 import enum
 
 from django.core.exceptions import ValidationError
@@ -16,24 +21,29 @@ from .service_types import ServiceTypes
 
 
 def validate_addon_capability(value):
+    """validator for `AddonCapabilities` names"""
     _validate_enum_value(AddonCapabilities, value)
 
 
 def validate_invocation_status(value):
+    """validator for `InvocationStatus` names"""
     _validate_enum_value(InvocationStatus, value)
 
 
 def validate_service_type(value):
+    """validator for `ServiceTypes` names"""
     _validate_enum_value(ServiceTypes, value)
 
 
 def validate_credentials_format(value):
+    """validator for `CredentialsFormats` names"""
     _validate_enum_value(
         CredentialsFormats, value, excluded_members={CredentialsFormats.UNSPECIFIED}
     )
 
 
 def validate_storage_imp_number(value):
+    """validator for `AddonImpNumbers` integer values"""
     try:
         _imp_cls = known_imps.get_imp_by_number(value)
     except KeyError:

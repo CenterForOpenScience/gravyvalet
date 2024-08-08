@@ -7,12 +7,12 @@ from collections import abc
 
 from addon_toolkit.addon_operation_declaration import immediate_operation
 from addon_toolkit.capabilities import AddonCapabilities
-from addon_toolkit.constrained_network import HttpRequestor
+from addon_toolkit.constrained_network.http import HttpRequestor
 from addon_toolkit.credentials import Credentials
 from addon_toolkit.cursor import Cursor
 from addon_toolkit.imp import AddonImp
 
-from ._base import AddonInterface
+from ._base import BaseAddonInterface
 
 
 __all__ = (
@@ -66,22 +66,21 @@ class ItemSampleResult:
     prev_sample_cursor: str | None = None
     first_sample_cursor: str = ""
 
-    # optional init var:
-    cursor: dataclasses.InitVar[Cursor | None] = None
-
-    def __post_init__(self, cursor: Cursor | None) -> None:
-        if cursor is not None:
-            self.this_sample_cursor = cursor.this_cursor_str
-            self.next_sample_cursor = cursor.next_cursor_str
-            self.prev_sample_cursor = cursor.prev_cursor_str
-            self.first_sample_cursor = cursor.first_cursor_str
+    def with_cursor(self, cursor: Cursor) -> typing.Self:
+        return dataclasses.replace(
+            self,
+            this_sample_cursor=cursor.this_cursor_str,
+            next_sample_cursor=cursor.next_cursor_str,
+            prev_sample_cursor=cursor.prev_cursor_str,
+            first_sample_cursor=cursor.first_cursor_str,
+        )
 
 
 ###
 # declaration of all storage addon operations
 
 
-class StorageAddonInterface(AddonInterface, typing.Protocol):
+class StorageAddonInterface(BaseAddonInterface, typing.Protocol):
 
     ###
     # single-item operations:

@@ -1,16 +1,4 @@
-from .http import (
-    HttpRequestInfo,
-    HttpRequestor,
-    HttpResponseInfo,
-)
+from . import http
 
 
-# TODO: from .simple_aiohttp import SimpleAiohttpRequestor
-
-
-__all__ = (
-    "HttpRequestInfo",
-    "HttpRequestor",
-    "HttpResponseInfo",
-    # "SimpleAiohttpRequestor",
-)
+__all__ = ("http",)

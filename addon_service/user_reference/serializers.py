@@ -14,6 +14,8 @@ RESOURCE_TYPE = get_resource_type_from_model(UserReference)
 
 
 class UserReferenceSerializer(serializers.HyperlinkedModelSerializer):
+    """api serializer for the `UserReference` model"""
+
     url = serializers.HyperlinkedIdentityField(
         view_name=view_names.detail_view(RESOURCE_TYPE)
     )

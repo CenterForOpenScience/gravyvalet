@@ -13,7 +13,7 @@ class BoxDotComStorageImp(storage.StorageAddonHttpRequestorImp):
     """
 
     async def get_external_account_id(self, auth_result_extras: dict[str, str]) -> str:
-        async with self.network.GET("/users/me") as _response:
+        async with self.network.GET("users/me") as _response:
             _json = await _response.json_content()
             return str(_json["id"])
 
@@ -48,8 +48,7 @@ class BoxDotComStorageImp(storage.StorageAddonHttpRequestorImp):
             _parsed = _BoxDotComParsedJson(await _response.json_content())
             return storage.ItemSampleResult(
                 items=list(_parsed.item_results(item_type=item_type)),
-                cursor=_parsed.cursor(),
-            )
+            ).with_cursor(_parsed.cursor())
 
     def _params_from_cursor(self, cursor: str = "") -> dict[str, str]:
         # https://developer.box.com/guides/api-calls/pagination/offset-based/

@@ -1,3 +1,8 @@
+"""build and validate json kwargs from python type annotations
+"""
+
+from __future__ import annotations
+
 import dataclasses
 import enum
 import inspect
@@ -9,13 +14,12 @@ from . import exceptions
 
 
 __all__ = (
+    "JsonschemaDocBuilder",
+    "JsonschemaObjectBuilder",
     "dataclass_from_json",
     "json_for_dataclass",
-    "json_for_annotations_kwargs",
+    "json_for_kwargs",
     "json_for_typed_value",
-    "jsonschema_for_annotation",
-    "jsonschema_for_dataclass",
-    "jsonschema_for_signature_params",
     "kwargs_from_json",
     "typed_value_from_json",
 )
@@ -25,56 +29,155 @@ __all__ = (
 # building jsonschema
 
 
-def jsonschema_for_signature_params(signature: inspect.Signature) -> dict:
-    """build jsonschema corresponding to parameters from a function signature
+@dataclasses.dataclass
+class JsonschemaDocBuilder:
+    """a dataclass for use while building a jsonschema document from python type annotations
+
+    e.g. from a function signature
 
     >>> def _foo(a: str, b: int = 7): ...
-    >>> jsonschema_for_signature_params(inspect.signature(_foo))
+    >>> JsonschemaDocBuilder(_foo).build()
     {'type': 'object',
      'additionalProperties': False,
      'properties': {'a': {'type': 'string'}, 'b': {'type': 'number'}},
      'required': ['a']}
+
+    e.g. from dataclasses
+
+    >>> @dataclasses.dataclass
+    ... class _Foo:
+    ...     a: str
+    ...     b: int = 17
+    ...
+    >>> JsonschemaDocBuilder(_Foo).build()
+    {'$ref': '#/$defs/addon_toolkit.json_arguments._Foo',
+     '$defs': {'addon_toolkit.json_arguments._Foo':
+        {'type': 'object',
+        'additionalProperties': False,
+        'properties': {'a': {'type': 'string'}, 'b': {'type': 'number'}},
+        'required': ['a']}}}
     """
-    return {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {
-            _param_name: jsonschema_for_annotation(_param.annotation)
-            for (_param_name, _param) in signature.parameters.items()
-            if _param_name != "self"
-        },
-        "required": [
-            _param_name
-            for (_param_name, _param) in signature.parameters.items()
-            if (_param_name != "self") and (_param.default is inspect.Parameter.empty)
-        ],
-    }
+
+    annotated: typing.Any
+    used_dataclasses: set[type] = dataclasses.field(default_factory=set)
+    used_enums: set[type[enum.Enum]] = dataclasses.field(default_factory=set)
+
+    def build(self) -> dict[str, typing.Any]:
+        """get the built jsonschema as a json-serializable dictionary"""
+        _built: dict[str, typing.Any] = {}
+        if dataclasses.is_dataclass(self.annotated):
+            _built["$ref"] = self.ref_for_dataclass(self.annotated)
+        elif callable(self.annotated):
+            _builder = JsonschemaObjectBuilder.for_kwargs(self.annotated, self)
+            _built.update(_builder.build())
+        _defs = self.build_defs()
+        if _defs:
+            _built["$defs"] = _defs
+        return _built
+
+    def build_defs(self) -> dict[str, dict]:
+        _defs = {}
+        # awkward loop because building one def may use additional dataclasses
+        _todo = set(self.used_dataclasses)
+        _done = set()
+        while _todo:
+            _dataclass = _todo.pop()
+            if _dataclass not in _done:
+                _builder = JsonschemaObjectBuilder.for_dataclass(_dataclass, self)
+                _defs[self.def_key_for_type(_dataclass)] = _builder.build()
+                _done.add(_dataclass)
+                _todo.update(self.used_dataclasses - _done)
+        for _enum in self.used_enums:
+            _defs[self.def_key_for_type(_enum)] = {
+                "enum": [_item.name for _item in _enum]
+            }
+        return _defs
+
+    def def_key_for_type(self, some_type: type):
+        return f"{some_type.__module__}.{some_type.__qualname__}"
+
+    def ref_for_dataclass(self, dataclass: type) -> str:
+        self.used_dataclasses.add(dataclass)
+        return f"#/$defs/{self.def_key_for_type(dataclass)}"
+
+    def ref_for_enum(self, enum: type) -> str:
+        self.used_enums.add(enum)
+        return f"#/$defs/{self.def_key_for_type(enum)}"
 
 
-def jsonschema_for_dataclass(dataclass: type) -> dict:
-    """build jsonschema corresponding to the constructor signature of a dataclass"""
-    assert dataclasses.is_dataclass(dataclass) and isinstance(dataclass, type)
-    return jsonschema_for_signature_params(inspect.signature(dataclass))
+@dataclasses.dataclass
+class JsonschemaObjectBuilder:
+    """a dataclass for use while building a jsonschema (of type 'object') from python type annotations"""
 
+    doc: JsonschemaDocBuilder | None
+    property_annotations: dict[str, typing.Any] = dataclasses.field(
+        default_factory=dict
+    )
+    required_property_names: set[str] = dataclasses.field(default_factory=set)
+    self_type: type | None = None
 
-def jsonschema_for_annotation(annotation: type) -> dict:
-    """build jsonschema for a python type annotation"""
-    # ignore optional-ness here (handled by jsonschema "required")
-    _type, _contained_type, _ = _unwrap_type(annotation)
-    if dataclasses.is_dataclass(_type):
-        return jsonschema_for_dataclass(_type)
-    if issubclass(_type, enum.Enum):
-        return {"enum": [_item.name for _item in _type]}
-    if _type is str:
-        return {"type": "string"}
-    if _type in (int, float):
-        return {"type": "number"}
-    if issubclass(_type, abc.Collection):
-        _array_jsonschema: dict[str, typing.Any] = {"type": "array"}
+    @classmethod
+    def for_kwargs(
+        cls, annotated_callable: typing.Any, doc: JsonschemaDocBuilder
+    ) -> typing.Self:
+        _signature = inspect.signature(annotated_callable)
+        _annotations = inspect.get_annotations(annotated_callable, eval_str=True)
+        return cls(
+            doc=doc,
+            property_annotations={
+                _name: _annotation
+                for (_name, _annotation) in _annotations.items()
+                if _name not in ("self", "return")
+            },
+            required_property_names={
+                _name
+                for (_name, _param) in _signature.parameters.items()
+                if _name != "self" and _param.default is inspect.Parameter.empty
+            },
+        )
+
+    @classmethod
+    def for_dataclass(cls, dataclass: type, doc: JsonschemaDocBuilder) -> typing.Self:
+        """get a `JsonschemaObjectBuilder` for the constructor signature of a dataclass"""
+        assert dataclasses.is_dataclass(dataclass) and isinstance(dataclass, type)
+        _builder = cls.for_kwargs(dataclass, doc)
+        _builder.self_type = dataclass
+        return _builder
+
+    def build(self) -> dict[str, typing.Any]:
+        """get the built jsonschema as a json-serializable dictionary"""
+        return {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": self.build_properties(),
+            "required": list(self.required_property_names),
+        }
+
+    def build_properties(self) -> dict[str, typing.Any]:
+        return {
+            _property_name: self._build_for_annotation(_annotation)
+            for _property_name, _annotation in self.property_annotations.items()
+        }
+
+    def _build_for_annotation(self, annotation: type) -> dict:
+        # ignore optional-ness here (handled by jsonschema "required")
+        _type, _contained_type, _ = _unwrap_type(annotation, self_type=self.self_type)
         if _contained_type is not None:
-            _array_jsonschema["items"] = jsonschema_for_annotation(annotation)
-        return _array_jsonschema
-    raise exceptions.TypeNotJsonable(_type)
+            return {
+                "type": "array",
+                "items": self._build_for_annotation(_contained_type),
+            }
+        if dataclasses.is_dataclass(_type):
+            assert self.doc is not None
+            return {"$ref": self.doc.ref_for_dataclass(_type)}
+        if isinstance(_type, type) and issubclass(_type, enum.Enum):
+            assert self.doc is not None
+            return {"$ref": self.doc.ref_for_enum(_type)}
+        if _type is str:
+            return {"type": "string"}
+        if _type in (int, float):
+            return {"type": "number"}
+        raise exceptions.TypeNotJsonable(_type)
 
 
 ###
@@ -83,7 +186,10 @@ def jsonschema_for_annotation(annotation: type) -> dict:
 
 # TODO generic type: def json_for_typed_value[_ValueType: object](type_annotation: type[_ValueType], value: _ValueType):
 def json_for_typed_value(
-    type_annotation: typing.Any, value: typing.Any, *, self_type: typing.Any = None
+    type_annotation: typing.Any,
+    value: typing.Any,
+    *,
+    self_type: typing.Any = None,
 ):
     """return json-serializable representation of field value
 
@@ -94,16 +200,16 @@ def json_for_typed_value(
     >>> json_for_typed_value(list[int], [2,3,'7'])
     [2, 3, 7]
     """
-    _type, _contained_type, _is_optional = _unwrap_type(type_annotation)
-    if (self_type is not None) and (_contained_type is typing.Self):
-        _contained_type = self_type
+    _type, _contained_type, _is_optional = _unwrap_type(
+        type_annotation, self_type=self_type
+    )
     if value is None:
         if not _is_optional:
             raise exceptions.ValueNotJsonableWithType(value, type_annotation)
         return None
     if dataclasses.is_dataclass(_type):
         if isinstance(value, dict):
-            return json_for_annotations_kwargs(_type, value)
+            return json_for_kwargs(_type, value)
         if isinstance(value, _type):
             return json_for_dataclass(value)
         raise exceptions.ValueNotJsonableWithType(value, _type)
@@ -127,14 +233,14 @@ def json_for_typed_value(
     raise exceptions.ValueNotJsonableWithType(value, _type)
 
 
-def json_for_annotations_kwargs(annotations_subject: typing.Any, kwargs: dict) -> dict:
+def json_for_kwargs(annotated_callable: abc.Callable, kwargs: dict) -> dict:
     """return json-serializable representation of the kwargs for the given signature"""
-    _annotations = inspect.get_annotations(annotations_subject)
+    _annotations = inspect.get_annotations(annotated_callable, eval_str=True)
     return {
         _keyword: json_for_typed_value(
             _annotation,
             kwargs[_keyword],
-            self_type=annotations_subject,
+            self_type=annotated_callable,
         )
         for (_keyword, _annotation) in _annotations.items()
         if _keyword in kwargs
@@ -149,7 +255,7 @@ def json_for_dataclass(dataclass_instance) -> dict:
         _field_value = getattr(dataclass_instance, _field.name)
         if _field_value != _field.default:
             _kwargs[_field.name] = _field_value
-    return json_for_annotations_kwargs(_dataclass, _kwargs)
+    return json_for_kwargs(_dataclass, _kwargs)
 
 
 ###
@@ -157,26 +263,43 @@ def json_for_dataclass(dataclass_instance) -> dict:
 
 
 def kwargs_from_json(
-    signature: inspect.Signature,
+    annotated_callable: typing.Any,
     args_from_json: dict,
 ) -> dict:
+    """parse json into python kwargs"""
+    _signature = inspect.signature(annotated_callable)
+    _annotations = inspect.get_annotations(annotated_callable)
     try:
         _kwargs = {
-            _param_name: typed_value_from_json(
-                signature.parameters[_param_name].annotation, _arg_value
+            _name: typed_value_from_json(
+                _annotations[_name], _value, self_type=annotated_callable
             )
-            for (_param_name, _arg_value) in args_from_json.items()
+            for (_name, _value) in args_from_json.items()
         }
-        # use inspect.Signature.bind() (with dummy `self` value) to validate all required kwargs present
-        _bound_kwargs = signature.bind(self=..., **_kwargs)
+        # use inspect.Signature.bind() to validate all required kwargs present
+        if "self" in _signature.parameters:
+            _bound_kwargs = _signature.bind(self=..., **_kwargs)
+            _bound_kwargs.arguments.pop("self", None)
+        else:
+            _bound_kwargs = _signature.bind(**_kwargs)
     except (TypeError, KeyError):
-        raise exceptions.InvalidJsonArgsForSignature(args_from_json, signature)
-    _bound_kwargs.arguments.pop("self")
+        raise exceptions.InvalidJsonArgsForSignature(args_from_json, _signature)
     return _bound_kwargs.arguments
 
 
-def typed_value_from_json(type_annotation: type, json_value: typing.Any) -> typing.Any:
-    _type, _contained_type, _is_optional = _unwrap_type(type_annotation)
+def dataclass_from_json(dataclass: type, dataclass_json: dict):
+    """parse json into an instance of the given dataclass"""
+    _kwargs = kwargs_from_json(dataclass, dataclass_json)
+    return dataclass(**_kwargs)
+
+
+def typed_value_from_json(
+    type_annotation: type, json_value: typing.Any, self_type: type | None = None
+) -> typing.Any:
+    """parse json into a python value of the given type"""
+    _type, _contained_type, _is_optional = _unwrap_type(
+        type_annotation, self_type=self_type
+    )
     if json_value is None:
         if not _is_optional:
             raise exceptions.JsonValueInvalidForType(json_value, type_annotation)
@@ -185,7 +308,7 @@ def typed_value_from_json(type_annotation: type, json_value: typing.Any) -> typi
         if not isinstance(json_value, dict):
             raise exceptions.JsonValueInvalidForType(json_value, _type)
         return dataclass_from_json(_type, json_value)
-    if issubclass(_type, enum.Enum):
+    if isinstance(_type, type) and issubclass(_type, enum.Enum):
         return _type(json_value)
     if _type in (str, int, float):
         if not isinstance(json_value, _type):
@@ -194,22 +317,21 @@ def typed_value_from_json(type_annotation: type, json_value: typing.Any) -> typi
     if _contained_type is not None and issubclass(_type, abc.Collection):
         _container_type = _type if issubclass(_type, (tuple, set, frozenset)) else list
         return _container_type(
-            typed_value_from_json(_contained_type, _contained_value)
+            typed_value_from_json(
+                _contained_type, _contained_value, self_type=self_type
+            )
             for _contained_value in json_value
         )
     raise exceptions.TypeNotJsonable(_type)
-
-
-def dataclass_from_json(dataclass: type, dataclass_json: dict):
-    _kwargs = kwargs_from_json(inspect.signature(dataclass), dataclass_json)
-    return dataclass(**_kwargs)
 
 
 ###
 # local helpers
 
 
-def _unwrap_type(type_annotation: typing.Any) -> tuple[type, typing.Any, bool]:
+def _unwrap_type(
+    type_annotation: typing.Any, self_type: type | None = None
+) -> tuple[type, typing.Any, bool]:
     """given a type annotation, unwrap into `(nongeneric_type, contained_type, is_optional)`
 
     >>> _unwrap_type(list[int])
@@ -220,9 +342,13 @@ def _unwrap_type(type_annotation: typing.Any) -> tuple[type, typing.Any, bool]:
     (<class 'str'>, None, False)
     >>> _unwrap_type(float | None)
     (<class 'float'>, None, True)
+    >>> _unwrap_type(list[typing.Self], self_type=int)
+    (<class 'list'>, <class 'int'>, False)
     """
     _is_optional, _nonnone_type = _unwrap_optional_type(type_annotation)
     _nongeneric_type, _inner_item_type = _unwrap_generic_type(_nonnone_type)
+    if _inner_item_type is typing.Self:
+        _inner_item_type = self_type
     return (_nongeneric_type, _inner_item_type, _is_optional)
 
 
@@ -254,7 +380,7 @@ def _unwrap_optional_type(type_annotation: typing.Any) -> tuple[bool, typing.Any
     return (_allows_none, _base_type)
 
 
-def _unwrap_generic_type(type_annotation: typing.Any) -> tuple[type, type | None]:
+def _unwrap_generic_type(type_annotation: typing.Any) -> tuple[type, typing.Any]:
     """given a type annotation, detect whether it's a generic collection
     and split the collection type from the item type
 

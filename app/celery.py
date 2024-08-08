@@ -68,4 +68,4 @@ class OsfBackchannelConsumerStep(bootsteps.ConsumerStep):
         ]
 
 
-app.steps["consumer"].add(OsfBackchannelConsumerStep)
+# app.steps["consumer"].add(OsfBackchannelConsumerStep)

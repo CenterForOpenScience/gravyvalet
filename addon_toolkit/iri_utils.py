@@ -18,6 +18,7 @@ __all__ = (
 
 
 KeyValuePairs = Iterable[tuple[str, str]] | Mapping[str, str]
+"""a type alias allowing multiple ways to convey key-value pairs"""
 
 
 class Multidict(Headers):

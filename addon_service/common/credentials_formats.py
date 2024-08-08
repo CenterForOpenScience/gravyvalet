@@ -8,6 +8,8 @@ from addon_toolkit import credentials
 
 @unique
 class CredentialsFormats(Enum):
+    """all available credentials formats"""
+
     UNSPECIFIED = 0
     OAUTH2 = 1
     ACCESS_KEY_SECRET_KEY = 2
@@ -17,6 +19,7 @@ class CredentialsFormats(Enum):
 
     @property
     def dataclass(self):
+        """get an `addon_toolkit.credentials.Credentials` subclass for this `CredentialsFormat`"""
         match self:
             case CredentialsFormats.OAUTH2:
                 return credentials.AccessTokenCredentials
@@ -31,7 +34,11 @@ class CredentialsFormats(Enum):
         raise ValueError(f"No dataclass support for credentials type {self.name}")
 
     @property
-    def is_direct_from_user(self):
+    def is_direct_from_user(self) -> bool:
+        """return True if credentials of this format are provided directly by the user
+
+        (or False if credentials established via oauth or similar)
+        """
         return self in {
             CredentialsFormats.ACCESS_KEY_SECRET_KEY,
             CredentialsFormats.USERNAME_PASSWORD,

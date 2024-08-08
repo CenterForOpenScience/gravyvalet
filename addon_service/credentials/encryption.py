@@ -132,6 +132,12 @@ def _derive_multifernet_key(
     key_params: KeyParameters,
     /,  # positional-only params for cache-friendliness
 ) -> fernet.MultiFernet:
+    if not settings.GRAVYVALET_ENCRYPT_SECRET:
+        raise RuntimeError(
+            "gravyvalet can not keep your secrets without a GRAVYVALET_ENCRYPT_SECRET"
+            " -- ideally chosen by strong randomness, with maybe ~128 bits of entropy"
+            " (e.g. 32 hex digits; 30 d20 rolls; 10 words of a 10000-word vocabulary)"
+        )
     # https://cryptography.io/en/latest/fernet/#cryptography.fernet.MultiFernet
     return fernet.MultiFernet(
         [

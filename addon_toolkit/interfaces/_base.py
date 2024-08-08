@@ -5,7 +5,9 @@ from addon_toolkit import exceptions
 from addon_toolkit.addon_operation_declaration import AddonOperationDeclaration
 
 
-class AddonInterface(typing.Protocol):
+class BaseAddonInterface(typing.Protocol):
+    """a base class for declaring addon interfaces with sets of addon operation declarations"""
+
     ###
     # class methods
 

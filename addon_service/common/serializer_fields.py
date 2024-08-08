@@ -11,10 +11,14 @@ from rest_framework_json_api.relations import (
 class ReadOnlyResourceRelatedField(
     json_api_serializers.ResourceRelatedField, drf_serializers.ReadOnlyField
 ):
+    """read-only version of `rest_framework_json_api.serializers.ResourceRelatedField`"""
+
     pass
 
 
 class DataclassRelatedLinkField(SkipDataMixin, ResourceRelatedField):
+    """related field for use with to-many `StaticDataclassModel` relations"""
+
     def __init__(self, /, dataclass_model, read_only=True, **kwargs):
         assert dataclasses.is_dataclass(dataclass_model)
         return super().__init__(
@@ -25,6 +29,8 @@ class DataclassRelatedLinkField(SkipDataMixin, ResourceRelatedField):
 
 
 class DataclassRelatedDataField(ResourceRelatedField):
+    """related field for use with to-one `StaticDataclassModel` relations"""
+
     def __init__(self, /, dataclass_model, **kwargs):
         assert dataclasses.is_dataclass(dataclass_model)
         return super().__init__(

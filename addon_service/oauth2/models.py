@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from asgiref.sync import sync_to_async
 from django.contrib.postgres.fields import ArrayField
@@ -13,6 +16,10 @@ from addon_service.common.base_model import AddonsServiceBaseModel
 from addon_toolkit.credentials import AccessTokenCredentials
 
 from .utils import FreshTokenResult
+
+
+if TYPE_CHECKING:
+    from addon_service.abstract.authorized_account.models import AuthorizedAccount
 
 
 class OAuth2ClientConfig(AddonsServiceBaseModel):
@@ -110,7 +117,7 @@ class OAuth2TokenMetadata(AddonsServiceBaseModel):
     @transaction.atomic
     def update_with_fresh_token(
         self, fresh_token_result: FreshTokenResult
-    ):  # -> tuple[AuthorizedStorageAccount, ...]
+    ) -> tuple[AuthorizedAccount]:
         # update this record's fields
         self.state_nonce = None  # one-time-use, now used
         self.refresh_token = fresh_token_result.refresh_token

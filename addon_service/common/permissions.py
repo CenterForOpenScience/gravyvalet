@@ -9,11 +9,15 @@ from addon_service.common import osf
 
 
 class IsAuthenticated(permissions.BasePermission):
+    """allow any logged-in user"""
+
     def has_permission(self, request, view):
         return request.session.get("user_reference_uri") is not None
 
 
 class SessionUserIsOwner(permissions.BasePermission):
+    """for object permissions on objects with `owner_uri`"""
+
     def has_object_permission(self, request, view, obj):
         session_user_uri = request.session.get("user_reference_uri")
         if session_user_uri:
@@ -33,6 +37,8 @@ class SessionUserCanViewReferencedResource(permissions.BasePermission):
 
 
 class SessionUserMayConnectAddon(permissions.BasePermission):
+    """for object permissions on objects with `owner_uri` and `resource_uri`"""
+
     def has_object_permission(self, request, view, obj):
         _user_uri = request.session.get("user_reference_uri")
         return (
@@ -48,6 +54,8 @@ class SessionUserMayConnectAddon(permissions.BasePermission):
 
 
 class SessionUserMayAccessInvocation(permissions.BasePermission):
+    """for object permissions on `addon_service.models.AddonOperationInvocation`"""
+
     def has_object_permission(self, request, view, obj):
         _user_uri = request.session.get("user_reference_uri")
         return bool(
@@ -65,6 +73,8 @@ class SessionUserMayAccessInvocation(permissions.BasePermission):
 
 
 class SessionUserMayPerformInvocation(permissions.BasePermission):
+    """for object permissions on `addon_service.models.AddonOperationInvocation`"""
+
     def has_object_permission(self, request, view, obj):
         _user_uri = request.session.get("user_reference_uri")
         _thru_addon = obj.thru_addon
@@ -86,6 +96,8 @@ class SessionUserMayPerformInvocation(permissions.BasePermission):
 
 
 class IsValidHMACSignedRequest(permissions.BasePermission):
+    """allow only requests signed with the known osf hmac key"""
+
     def has_permission(self, request, view):
         try:
             hmac_utils.validate_signed_request(

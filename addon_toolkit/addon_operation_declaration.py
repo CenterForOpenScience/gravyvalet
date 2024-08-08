@@ -2,8 +2,8 @@ import dataclasses
 import enum
 import inspect
 from typing import (
+    Any,
     Callable,
-    Iterator,
 )
 
 from . import exceptions
@@ -23,14 +23,19 @@ __all__ = (
 
 
 class AddonOperationType(enum.Enum):
-    REDIRECT = "redirect"  # gravyvalet refers you somewhere helpful
-    IMMEDIATE = "immediate"  # gravyvalet does a simple act, waiting to respond until done (success or problem)
-    EVENTUAL = "eventual"  # gravyvalet starts a potentially long-running act, responding immediately with status
+    """each addon operation has one of these behaviors"""
+
+    REDIRECT = "redirect"
+    """gravyvalet refers you somewhere helpful"""
+    IMMEDIATE = "immediate"
+    """gravyvalet does a simple act, waiting to respond until done (success or problem)"""
+    EVENTUAL = "eventual"
+    """gravyvalet starts a potentially long-running act, responding immediately with status"""
 
 
 @dataclasses.dataclass(frozen=True)
 class AddonOperationDeclaration:
-    """dataclass for a declared operation method on an interface
+    """dataclass for a declared operation method on a `addon_toolkit.AddonInterface`
 
     created by decorating a method with one of the "operation" decorators:
     `@redirect_operation`, `@immediate_operation`, `@eventual_operation`
@@ -54,7 +59,7 @@ class AddonOperationDeclaration:
     def __post_init__(self):
         if len(self.capability) != 1:
             raise exceptions.OperationNotValid
-        _return_type = self.call_signature.return_annotation
+        _return_type = self.return_annotation
         if self.result_dataclass is type(None):
             # no result_dataclass declared; infer from type annotation
             assert dataclasses.is_dataclass(
@@ -84,22 +89,14 @@ class AddonOperationDeclaration:
         return self.operation_fn.__doc__ or ""
 
     @property
-    def call_signature(self) -> inspect.Signature:
-        return inspect.signature(self.operation_fn)
-
-    def param_dataclasses(self) -> Iterator[type]:
-        for _param_name, _param in self.call_signature.parameters.items():
-            if not dataclasses.is_dataclass(_param.annotation):
-                raise exceptions.OperationNotValid(
-                    f"operation parameters must have dataclass annotations (TODO: decorator to infer dataclass from annotated kwargs), got `{_param_name}: {_param.annotation}`"
-                )
-            yield _param.annotation
+    def return_annotation(self) -> Any:
+        return inspect.get_annotations(self.operation_fn)["return"]
 
 
 # declarator for all types of operations -- use operation_type-specific decorators below
 addon_operation = Declarator(
     declaration_dataclass=AddonOperationDeclaration,
-    field_for_target="operation_fn",
+    field_for_subject="operation_fn",
 )
 
 # decorator for operations that may be performed by a client request (e.g. redirect to waterbutler)

@@ -1,0 +1,27 @@
+{# gravyvalet_code_docs top-level index.html #}
+
+{% extends "default/index.html.jinja2" %}
+
+{% block content %}
+    {# replaces `content` block in pdoc's default index.html.jinja2 template: https://github.com/mitmproxy/pdoc/blob/main/pdoc/templates/default/index.html.jinja2 #}
+    <header class="pdoc">
+        {% if search %}
+            <input type="search" placeholder="Search API Documentation..." aria-label="search box">
+        {% endif %}
+    </header>
+    <main class="pdoc">
+        {{ gravyvalet_readme | to_html | safe }}
+    </main>
+    {% if search %}
+        {% include "search.html.jinja2" %}
+    {% endif %}
+{% endblock %}
+
+{% block nav %}
+    {% set index = gravyvalet_readme | to_html | attr("toc_html") %}
+    {% if index %}
+        <h2>Contents</h2>
+        {{ index | safe }}
+    {% endif %}
+    {{ super() }}
+{% endblock %}

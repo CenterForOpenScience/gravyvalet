@@ -5,9 +5,9 @@ from http import HTTPMethod
 from addon_toolkit import (
     AddonCapabilities,
     AddonImp,
-    AddonInterface,
     AddonOperationDeclaration,
     AddonOperationType,
+    BaseAddonInterface,
     RedirectResult,
     exceptions,
     immediate_operation,
@@ -20,7 +20,9 @@ class TestAddonImp(unittest.TestCase):
 
     ###
     # shared test env (on `self`)
-    _MyInterface: type[AddonInterface]  # AddonInterface with operation declarations
+    _MyInterface: type[
+        BaseAddonInterface
+    ]  # BaseAddonInterface with operation declarations
     _MyImp: type[AddonImp]  # concrete AddonImp subclass
     _expected_get_op: AddonOperationDeclaration
     _expected_put_op: AddonOperationDeclaration
@@ -36,7 +38,7 @@ class TestAddonImp(unittest.TestCase):
             url: str
             flibbly: int
 
-        class _MyInterface(AddonInterface):
+        class _MyInterface(BaseAddonInterface):
             """this _MyInterface docstring should find its way to browsable docs somewhere"""
 
             @redirect_operation(capability=AddonCapabilities.ACCESS)

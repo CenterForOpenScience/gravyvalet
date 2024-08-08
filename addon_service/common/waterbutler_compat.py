@@ -1,8 +1,9 @@
-import dataclasses
-
 from rest_framework_json_api import serializers
 
-from addon_toolkit import credentials
+from addon_toolkit import (
+    credentials,
+    json_arguments,
+)
 
 
 class WaterButlerCredentialsSerializer(serializers.Serializer):
@@ -27,6 +28,6 @@ class WaterButlerCredentialsSerializer(serializers.Serializer):
                 | credentials.UsernamePasswordCredentials
             ):
                 # field names line up with waterbutler's expectations
-                return dataclasses.asdict(_creds_data)
+                return json_arguments.json_for_dataclass(_creds_data)
             case _:
                 raise ValueError(f"unknown credentials type: {_creds_data}")

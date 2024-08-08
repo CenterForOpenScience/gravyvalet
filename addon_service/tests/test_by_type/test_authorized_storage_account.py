@@ -19,7 +19,10 @@ from addon_service.tests._helpers import (
     get_test_request,
     patch_encryption_key_derivation,
 )
-from addon_toolkit import AddonCapabilities
+from addon_toolkit import (
+    AddonCapabilities,
+    json_arguments,
+)
 from addon_toolkit.credentials import (
     AccessKeySecretKeyCredentials,
     AccessTokenCredentials,
@@ -50,15 +53,23 @@ MOCK_CREDENTIALS = {
 
 
 def _make_post_payload(
-    *, external_service, capabilities=None, credentials=None, api_root=""
+    *,
+    external_service,
+    capabilities=None,
+    credentials=None,
+    api_root="",
+    display_name="MY ACCOUNT MINE",
+    initiate_oauth=True,
 ):
     capabilities = capabilities or [AddonCapabilities.ACCESS.name]
     payload = {
         "data": {
             "type": "authorized-storage-accounts",
             "attributes": {
+                "display_name": display_name,
                 "authorized_capabilities": capabilities,
                 "api_base_url": api_root,
+                "initiate_oauth": initiate_oauth,
             },
             "relationships": {
                 "external_storage_service": {
@@ -72,7 +83,9 @@ def _make_post_payload(
     }
     credentials = credentials or MOCK_CREDENTIALS[external_service.credentials_format]
     if credentials:
-        payload["data"]["attributes"]["credentials"] = credentials.asdict()
+        payload["data"]["attributes"]["credentials"] = (
+            json_arguments.json_for_dataclass(credentials)
+        )
     return payload
 
 
@@ -122,26 +135,27 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
 
         _resp = self.client.post(
             reverse("authorized-storage-accounts-list"),
-            _make_post_payload(external_service=external_service),
+            _make_post_payload(
+                external_service=external_service, display_name="disploo"
+            ),
             format="vnd.api+json",
         )
         self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
 
-        self.assertTrue(
-            external_service.authorized_storage_accounts.filter(
-                id=_resp.data["id"]
-            ).exists()
-        )
+        _from_db = external_service.authorized_storage_accounts.get(id=_resp.data["id"])
+        self.assertEqual(_from_db.display_name, "disploo")
 
     def test_post__sets_credentials(self):
         for creds_format in NON_OAUTH_FORMATS:
-            external_service = _factories.ExternalStorageOAuth2ServiceFactory()
+            external_service = _factories.ExternalStorageServiceFactory()
             external_service.int_credentials_format = creds_format.value
             external_service.save()
 
             _resp = self.client.post(
                 reverse("authorized-storage-accounts-list"),
-                _make_post_payload(external_service=external_service),
+                _make_post_payload(
+                    external_service=external_service, initiate_oauth=False
+                ),
                 format="vnd.api+json",
             )
             self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
@@ -469,7 +483,9 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
 
     def test_get_related__empty(self):
         _resp = self._related_view(
-            get_test_request(cookies={"osf": self._user.user_uri}),
+            get_test_request(
+                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
+            ),
             pk=self._asa.pk,
             related_field="configured_storage_addons",
         )
@@ -482,7 +498,9 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
             base_account=self._asa,
         )
         _resp = self._related_view(
-            get_test_request(cookies={"osf": self._user.user_uri}),
+            get_test_request(
+                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
+            ),
             pk=self._asa.pk,
             related_field="configured_storage_addons",
         )

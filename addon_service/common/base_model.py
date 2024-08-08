@@ -8,6 +8,8 @@ from addon_service.common.str_uuid_field import (
 
 
 class AddonsServiceBaseModel(models.Model):
+    """common base class for all addon_service models"""
+
     id = StrUUIDField(primary_key=True, default=str_uuid4, editable=False)
     created = models.DateTimeField(editable=False)
     modified = models.DateTimeField()

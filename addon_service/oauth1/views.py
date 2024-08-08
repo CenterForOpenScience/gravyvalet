@@ -3,7 +3,6 @@ from http import HTTPStatus
 from asgiref.sync import async_to_sync
 from django.http import HttpResponse
 
-from addon_service.authorized_storage_account.callbacks import after_successful_auth
 from addon_service.authorized_storage_account.models import AuthorizedStorageAccount
 from addon_service.oauth1.utils import get_access_token
 from addon_service.osf_models.fields import decrypt_string
@@ -29,5 +28,5 @@ def oauth1_callback_view(request):
     )
     account.credentials = final_credentials
     account.save()
-    async_to_sync(after_successful_auth)(account, other_info)
+    async_to_sync(account.execute_post_auth_hook)(other_info)
     return HttpResponse(status=HTTPStatus.OK)  # TODO: redirect

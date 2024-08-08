@@ -5,7 +5,6 @@ from asgiref.sync import sync_to_async
 from django.db import transaction
 from django.http import HttpResponse
 
-from addon_service.authorized_storage_account.callbacks import after_successful_auth
 from addon_service.models import (
     OAuth2ClientConfig,
     OAuth2TokenMetadata,
@@ -33,7 +32,7 @@ async def oauth2_callback_view(request):
         client_secret=_oauth_client_config.client_secret,
     )
     _accounts = await _token_metadata.update_with_fresh_token(_fresh_token_result)
-    await asyncio.gather(*[after_successful_auth(_account) for _account in _accounts])
+    await asyncio.gather(*[_account.execute_post_auth_hook() for _account in _accounts])
     return HttpResponse(status=HTTPStatus.OK)  # TODO: redirect
 
 

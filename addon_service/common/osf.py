@@ -29,6 +29,8 @@ _OSF_HMAC_PERMISSIONS_DELIMITER = ";"  # see https://github.com/CenterForOpenSci
 
 
 class OSFPermission(enum.StrEnum):
+    """permission values used by the osf api"""
+
     READ = "read"
     WRITE = "write"
     ADMIN = "admin"
@@ -44,6 +46,7 @@ class OSFPermission(enum.StrEnum):
 
 @async_to_sync
 async def get_osf_user_uri(request: django_http.HttpRequest) -> str | None:
+    """get a uri identifying the user making this request"""
     try:
         return _get_hmac_verified_user_iri(request)
     except hmac_utils.RejectedHmac as e:
@@ -69,6 +72,7 @@ async def has_osf_permission_on_resource(
     resource_uri: str,
     required_permission: OSFPermission,
 ) -> bool:
+    """check for a permission on a resource via the osf api"""
     try:
         return _has_hmac_verified_osf_permission(
             request, resource_uri, required_permission

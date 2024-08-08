@@ -2,3 +2,5 @@
 db.sqlite3
 __pycache__
 .venv
+
+addon_service/static/gravyvalet_code_docs/

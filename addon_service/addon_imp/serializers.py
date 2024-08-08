@@ -12,6 +12,8 @@ RESOURCE_TYPE = get_resource_type_from_model(AddonImpModel)
 
 
 class AddonImpSerializer(serializers.Serializer):
+    """api serializer for the `AddonImpModel` model"""
+
     url = serializers.HyperlinkedIdentityField(
         view_name=view_names.detail_view(RESOURCE_TYPE)
     )

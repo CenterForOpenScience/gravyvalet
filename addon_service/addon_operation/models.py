@@ -1,25 +1,22 @@
 import dataclasses
+import typing
 from functools import cached_property
 
-from addon_service.common import known_imps
 from addon_service.common.static_dataclass_model import StaticDataclassModel
 from addon_toolkit import (
     AddonCapabilities,
-    AddonImp,
     AddonOperationDeclaration,
     AddonOperationType,
+    interfaces,
 )
-from addon_toolkit.json_arguments import (
-    jsonschema_for_dataclass,
-    jsonschema_for_signature_params,
-)
+from addon_toolkit.json_arguments import JsonschemaDocBuilder
 
 
 # dataclass wrapper for an operation implemented on a concrete AddonImp subclass
 # meets rest_framework_json_api expectations on a model class
 @dataclasses.dataclass(frozen=True)
 class AddonOperationModel(StaticDataclassModel):
-    imp_cls: type[AddonImp]
+    interface_cls: type[interfaces.BaseAddonInterface]
     declaration: AddonOperationDeclaration
 
     ###
@@ -27,13 +24,21 @@ class AddonOperationModel(StaticDataclassModel):
 
     @classmethod
     def init_args_from_static_key(cls, static_key: str) -> tuple:
-        (_imp_name, _operation_name) = static_key.split(":")
-        _imp_cls = known_imps.get_imp_by_name(_imp_name)
-        return (_imp_cls, _imp_cls.get_operation_declaration(_operation_name))
+        (_interface_name, _operation_name) = static_key.split(":")
+        _interface_cls = interfaces.AllAddonInterfaces[_interface_name].value
+        return (_interface_cls, _interface_cls.get_operation_by_name(_operation_name))
+
+    @classmethod
+    def iter_all(cls) -> typing.Iterator[typing.Self]:
+        """yield all available static instances of this class (if any)"""
+        for _interface in interfaces.AllAddonInterfaces:
+            _interface_cls = _interface.value
+            for _operation_declaration in _interface_cls.iter_declared_operations():
+                yield cls(_interface_cls, _operation_declaration)
 
     @property
     def static_key(self) -> str:
-        return ":".join((known_imps.get_imp_name(self.imp_cls), self.declaration.name))
+        return ":".join((self.interface_name, self.name))
 
     ###
     # fields for api
@@ -41,6 +46,10 @@ class AddonOperationModel(StaticDataclassModel):
     @cached_property
     def name(self) -> str:
         return self.declaration.name
+
+    @cached_property
+    def interface_name(self) -> str:
+        return interfaces.AllAddonInterfaces(self.interface_cls).name
 
     @cached_property
     def operation_type(self) -> AddonOperationType:
@@ -51,20 +60,16 @@ class AddonOperationModel(StaticDataclassModel):
         return self.declaration.docstring
 
     @cached_property
-    def implementation_docstring(self) -> str:
-        return self.imp_cls.get_imp_function(self.declaration).__doc__ or ""
-
-    @cached_property
     def capability(self) -> AddonCapabilities:
         return self.declaration.capability
 
     @cached_property
-    def params_jsonschema(self) -> dict:
-        return jsonschema_for_signature_params(self.declaration.call_signature)
+    def kwargs_jsonschema(self) -> dict:
+        return JsonschemaDocBuilder(self.declaration.operation_fn).build()
 
     @cached_property
     def result_jsonschema(self) -> dict:
-        return jsonschema_for_dataclass(self.declaration.result_dataclass)
+        return JsonschemaDocBuilder(self.declaration.result_dataclass).build()
 
     @cached_property
     def implemented_by(self):
@@ -72,7 +77,11 @@ class AddonOperationModel(StaticDataclassModel):
         # (AddonOperationModel and AddonImpModel need to be mutually aware of each other in order to populate their respective relationship fields)
         from addon_service.addon_imp.models import AddonImpModel
 
-        return AddonImpModel(self.imp_cls)
+        _imps = set()
+        for _imp_model in AddonImpModel.iter_all():
+            if self.declaration in _imp_model.imp_cls.all_implemented_operations():
+                _imps.add(_imp_model)
+        return tuple(_imps)
 
     class JSONAPIMeta:
-        resource_name = "addon-operation-imps"
+        resource_name = "addon-operations"

@@ -137,6 +137,7 @@ class ConfiguredStorageAddonPOSTTests(BaseAPITest):
             "data": {
                 "type": "configured-storage-addons",
                 "attributes": {
+                    "display_name": "this display name",
                     "connected_capabilities": ["ACCESS"],
                     "authorized_resource_uri": resource_uri,
                 },
@@ -170,6 +171,7 @@ class ConfiguredStorageAddonPOSTTests(BaseAPITest):
         self.assertEqual(response.status_code, HTTPStatus.CREATED)
         _created = ConfiguredStorageAddon.objects.get(pk=response.data["id"])
         self.assertEqual(_created.resource_uri, new_resource_uri)
+        self.assertEqual(_created.display_name, "this display name")
 
 
 class TestWBConfigRetrieval(APITestCase):

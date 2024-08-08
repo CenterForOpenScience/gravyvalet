@@ -57,6 +57,8 @@ class _MethodRequestMethod(typing.Protocol):
 
 
 class HttpRequestor(typing.Protocol):
+    """an abstract protocol for sending http requests (allowing different implementations)"""
+
     @property
     def response_info_cls(self) -> type[HttpResponseInfo]: ...
 

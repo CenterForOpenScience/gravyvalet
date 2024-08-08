@@ -81,6 +81,8 @@ class RetrieveWriteViewSet(
     drf_mixins.UpdateModelMixin,
     GenericViewSet,
 ):
+    """viewset allowing create, retrieve, update"""
+
     http_method_names = ["get", "post", "patch", "head", "options"]
 
 
@@ -92,11 +94,16 @@ class RetrieveWriteDeleteViewSet(
     drf_mixins.DestroyModelMixin,
     GenericViewSet,
 ):
+    """viewset allowing create, retrieve, update, delete"""
+
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
 
 
 class StaticDataclassViewset(ViewSet, RelatedMixin):
+    """viewset for read-only access to any `StaticDataclassModel`"""
+
     http_method_names = ["get", "head", "options"]
+    authentication_classes = ()  # as public as the code they're generated from
 
     # subclasses must have a `serializer_class` that has
     # a dataclass at `serializer_class.Meta.model`
@@ -114,6 +121,15 @@ class StaticDataclassViewset(ViewSet, RelatedMixin):
         _obj = self.dataclass_model.get_by_pk(pk)
         _serializer = self.get_serializer_class()(
             _obj, context=self.get_serializer_context()
+        )
+        return Response(_serializer.data)
+
+    def list(self, request):
+        _obj_list = list(self.dataclass_model.iter_all())
+        _serializer = self.get_serializer_class()(
+            _obj_list,
+            context=self.get_serializer_context(),
+            many=True,
         )
         return Response(_serializer.data)
 

@@ -4,6 +4,18 @@
 import os
 
 
+DEBUG = bool(os.environ.get("DEBUG"))  # any non-empty value enables debug mode
+SECRET_KEY = os.environ.get("SECRET_KEY")  # used by django for cryptographic signing
+ALLOWED_HOSTS = list(filter(bool, os.environ.get("ALLOWED_HOSTS", "").split(",")))
+CORS_ALLOWED_ORIGINS = tuple(
+    filter(bool, os.environ.get("CORS_ALLOWED_ORIGINS", "").split(","))
+)
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+SECURE_PROXY_SSL_HEADER = os.environ.get("SECURE_PROXY_SSL_HEADER")
+
+###
+# databases
+
 POSTGRES_DB = os.environ.get("POSTGRES_DB")
 POSTGRES_USER = os.environ.get("POSTGRES_USER")
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
@@ -17,32 +29,27 @@ OSFDB_HOST = os.environ.get("OSFDB_HOST")
 OSFDB_PORT = os.environ.get("OSFDB_PORT", "5432")
 OSFDB_CONN_MAX_AGE = os.environ.get("OSFDB_CONN_MAX_AGE", 0)
 OSFDB_SSLMODE = os.environ.get("OSFDB_SSLMODE", "prefer")
+
+###
+# for interacting with osf
+
 OSF_SENSITIVE_DATA_SECRET = os.environ.get("OSF_SENSITIVE_DATA_SECRET", "")
 OSF_SENSITIVE_DATA_SALT = os.environ.get("OSF_SENSITIVE_DATA_SALT", "")
-
-SECRET_KEY = os.environ.get("SECRET_KEY")
 OSF_HMAC_KEY = os.environ.get("OSF_HMAC_KEY")
 OSF_HMAC_EXPIRATION_SECONDS = int(os.environ.get("OSF_HMAC_EXPIRATION_SECONDS", 110))
-
 OSF_BASE_URL = os.environ.get("OSF_BASE_URL", "https://osf.example")
 OSF_API_BASE_URL = os.environ.get("OSF_API_BASE_URL", "https://api.osf.example")
+OSF_AUTH_COOKIE_NAME = os.environ.get("OSF_AUTH_COOKIE_NAME", "osf_staging")
 
+###
 # amqp/celery
+
 AMQP_BROKER_URL = os.environ.get(
     "AMQP_BROKER_URL", "amqp://guest:guest@192.168.168.167:5672"
 )
 GV_QUEUE_NAME_PREFIX = os.environ.get("GV_QUEUE_NAME_PREFIX", "gravyvalet_tasks")
 OSF_BACKCHANNEL_QUEUE_NAME = os.environ.get(
     "OSF_BACKCHANNEL_QUEUE_NAME", "account_status_changes"
-)
-
-# any non-empty value enables debug mode:
-DEBUG = bool(os.environ.get("DEBUG"))
-
-# comma-separated list:
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
-CORS_ALLOWED_ORIGINS = tuple(
-    filter(bool, os.environ.get("CORS_ALLOWED_ORIGINS", "").split(","))
 )
 
 ###
@@ -56,7 +63,7 @@ CORS_ALLOWED_ORIGINS = tuple(
 # 2. call `.rotate_encryption()` on every `ExternalCredentials` (perhaps via
 #    celery tasks in `addon_service.tasks.key_rotation`)
 # 3. remove the old secret from GRAVYVALET_ENCRYPT_SECRET_PRIORS
-GRAVYVALET_ENCRYPT_SECRET = os.environ.get("GRAVYVALET_ENCRYPT_SECRET")
+GRAVYVALET_ENCRYPT_SECRET: str | None = os.environ.get("GRAVYVALET_ENCRYPT_SECRET")
 GRAVYVALET_ENCRYPT_SECRET_PRIORS = tuple(
     filter(bool, os.environ.get("GRAVYVALET_ENCRYPT_SECRET_PRIORS", "").split(","))
 )

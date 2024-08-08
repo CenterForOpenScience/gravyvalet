@@ -52,7 +52,7 @@ class AddonOperationInvocationFactory(DjangoModelFactory):
     class Meta:
         model = db.AddonOperationInvocation
 
-    operation_identifier = "BLARG:get_item_info"
+    operation_identifier = "STORAGE:get_item_info"
     operation_kwargs = {"item_id": "foo"}
     thru_account = factory.SubFactory(
         "addon_service.tests._factories.AuthorizedStorageAccountFactory"
@@ -82,7 +82,7 @@ class ExternalStorageServiceFactory(DjangoModelFactory):
     def _create(
         cls,
         model_class,
-        credentials_format=CredentialsFormats.OAUTH2,
+        credentials_format=CredentialsFormats.PERSONAL_ACCESS_TOKEN,
         service_type=ServiceTypes.PUBLIC,
         *args,
         **kwargs,

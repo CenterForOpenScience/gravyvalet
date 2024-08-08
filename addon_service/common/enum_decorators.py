@@ -13,6 +13,8 @@ _ThisEnum = typing.TypeVar("_ThisEnum", bound=type[enum.Enum])
 def enum_names_same_as(
     other_enum: type[enum.Enum],
 ) -> typing.Callable[[_ThisEnum], _ThisEnum]:
+    """decorate an enum to guarantee it has the same names as another enum"""
+
     def _enum_decorator(this_enum: _ThisEnum) -> _ThisEnum:
         _other_names = enum_names(other_enum)
         _these_names = enum_names(this_enum)

@@ -24,6 +24,7 @@ def _make_post_payload(*, external_service, capabilities=None, credentials=None)
             "type": "authorized-storage-accounts",
             "attributes": {
                 "authorized_capabilities": [AddonCapabilities.ACCESS.name],
+                "initiate_oauth": True,
             },
             "relationships": {
                 "external_storage_service": {

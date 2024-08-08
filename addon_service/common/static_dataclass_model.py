@@ -30,6 +30,11 @@ class StaticDataclassModel(metaclass=PermacacheMetaclass):
     # class methods
 
     @classmethod
+    def iter_all(cls) -> typing.Iterator[typing.Self]:
+        """yield all available static instances of this class (if any)"""
+        yield from ()  # optional override; default none
+
+    @classmethod
     def get_by_pk(cls, pk: str) -> typing.Self:
         _static_key = unmake_opaque(pk)
         return cls.get_by_static_key(_static_key)
