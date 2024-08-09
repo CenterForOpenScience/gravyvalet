@@ -139,7 +139,6 @@ class TestExternalStorageServiceViewSet(TestCase):
                 key for key, value in _resp.data.items() if isinstance(value, dict)
             }
             self.assertEqual(relationship_fields, {"addon_imp"})
-            self.assertEqual
 
     def test_unauthorized(self):
         """Is public resource Unauth is OK!"""

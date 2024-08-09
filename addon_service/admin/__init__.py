@@ -25,6 +25,22 @@ class ExternalStorageServiceAdmin(GravyvaletModelAdmin):
     }
 
 
+@admin.register(models.ExternalCitationService)
+class ExternalCitationServiceAdmin(GravyvaletModelAdmin):
+    list_display = ("display_name", "created", "modified")
+    readonly_fields = (
+        "id",
+        "created",
+        "modified",
+    )
+    raw_id_fields = ("oauth2_client_config",)
+    enum_choice_fields = {
+        "int_addon_imp": known_imps.AddonImpNumbers,
+        "int_credentials_format": CredentialsFormats,
+        "int_service_type": ServiceTypes,
+    }
+
+
 @admin.register(models.OAuth2ClientConfig)
 @linked_many_field("external_storage_services")
 class OAuth2ClientConfigAdmin(GravyvaletModelAdmin):

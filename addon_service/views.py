@@ -10,10 +10,15 @@ from addon_service.addon_operation.views import AddonOperationViewSet
 from addon_service.addon_operation_invocation.views import (
     AddonOperationInvocationViewSet,
 )
+from addon_service.authorized_citation_account.views import (
+    AuthorizedCitationAccountViewSet,
+)
 from addon_service.authorized_storage_account.views import (
     AuthorizedStorageAccountViewSet,
 )
+from addon_service.configured_citation_addon.views import ConfiguredCitationAddonViewSet
 from addon_service.configured_storage_addon.views import ConfiguredStorageAddonViewSet
+from addon_service.external_citation_service.views import ExternalCitationServiceViewSet
 from addon_service.external_storage_service.views import ExternalStorageServiceViewSet
 from addon_service.oauth1.views import oauth1_callback_view
 from addon_service.oauth2.views import oauth2_callback_view
@@ -41,6 +46,9 @@ __all__ = (
     "AddonImpViewSet",
     "AddonOperationInvocationViewSet",
     "AddonOperationViewSet",
+    "AuthorizedCitationAccountViewSet",
+    "ConfiguredCitationAddonViewSet",
+    "ExternalCitationServiceViewSet",
     "AuthorizedStorageAccountViewSet",
     "ConfiguredStorageAddonViewSet",
     "ExternalStorageServiceViewSet",

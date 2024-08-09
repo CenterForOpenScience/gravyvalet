@@ -5,11 +5,20 @@ from addon_service.addon_operation.serializers import AddonOperationSerializer
 from addon_service.addon_operation_invocation.serializers import (
     AddonOperationInvocationSerializer,
 )
+from addon_service.authorized_citation_account.serializers import (
+    AuthorizedCitationAccountSerializer,
+)
 from addon_service.authorized_storage_account.serializers import (
     AuthorizedStorageAccountSerializer,
 )
+from addon_service.configured_citation_addon.serializers import (
+    ConfiguredCitationAddonSerializer,
+)
 from addon_service.configured_storage_addon.serializers import (
     ConfiguredStorageAddonSerializer,
+)
+from addon_service.external_citation_service.serializers import (
+    ExternalCitationServiceSerializer,
 )
 from addon_service.external_storage_service.serializers import (
     ExternalStorageServiceSerializer,
@@ -22,6 +31,9 @@ __all__ = (
     "AuthorizedStorageAccountSerializer",
     "ConfiguredStorageAddonSerializer",
     "ExternalStorageServiceSerializer",
+    "ConfiguredCitationAddonSerializer",
+    "ExternalCitationServiceSerializer",
+    "AuthorizedCitationAccountSerializer",
     "ResourceReferenceSerializer",
     "AddonImpSerializer",
     "AddonOperationInvocationSerializer",

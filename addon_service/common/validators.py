@@ -8,6 +8,7 @@ import enum
 from django.core.exceptions import ValidationError
 
 from addon_toolkit import AddonCapabilities
+from addon_toolkit.interfaces.citation import CitationAddonImp
 from addon_toolkit.interfaces.storage import StorageAddonImp
 
 from . import known_imps
@@ -42,14 +43,23 @@ def validate_credentials_format(value):
     )
 
 
-def validate_storage_imp_number(value):
+def _validate_imp_number(value, cls):
     """validator for `AddonImpNumbers` integer values"""
     try:
         _imp_cls = known_imps.get_imp_by_number(value)
     except KeyError:
         raise ValidationError(f"invalid imp number: {value}")
-    if not issubclass(_imp_cls, StorageAddonImp):
-        raise ValidationError(f"expected storage imp (got {_imp_cls})")
+
+    if not issubclass(_imp_cls, cls):
+        raise ValidationError(f"expected {cls.__name__} subclass (got {_imp_cls})")
+
+
+def validate_storage_imp_number(value):
+    _validate_imp_number(value, StorageAddonImp)
+
+
+def validate_citation_imp_number(value):
+    _validate_imp_number(value, CitationAddonImp)
 
 
 ###
