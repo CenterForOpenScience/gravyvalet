@@ -4,6 +4,7 @@ from addon_service import models
 from addon_service.common import known_imps
 from addon_service.common.credentials_formats import CredentialsFormats
 from addon_service.common.service_types import ServiceTypes
+from addon_service.external_storage_service.models import SupportedFeatures
 
 from ._base import GravyvaletModelAdmin
 from .decorators import linked_many_field
@@ -22,6 +23,10 @@ class ExternalStorageServiceAdmin(GravyvaletModelAdmin):
         "int_addon_imp": known_imps.AddonImpNumbers,
         "int_credentials_format": CredentialsFormats,
         "int_service_type": ServiceTypes,
+    }
+
+    enum_multiple_choice_fields = {
+        "int_supported_features": SupportedFeatures,
     }
 
 

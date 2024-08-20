@@ -1,7 +1,32 @@
+from enum import (
+    Flag,
+    auto,
+)
+
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from addon_service.abstract.external_storage.models import ExternalService
-from addon_service.common.validators import validate_storage_imp_number
+from addon_service.common.validators import (
+    _validate_enum_value,
+    validate_storage_imp_number,
+)
+
+
+class SupportedFeatures(Flag):
+    ADD_UPDATE_FILES = auto()
+    ADD_UPDATE_FILES_PARTIAL = auto()
+    DELETE_FILES = auto()
+    DELETE_FILES_PARTIAL = auto()
+    FORKING = auto()
+    LOGS = auto()
+    PERMISSIONS = auto()
+    REGISTERING = auto()
+    FILE_VERSIONS = auto()
+
+
+def validate_supported_features(value):
+    _validate_enum_value(SupportedFeatures, value)
 
 
 class ExternalStorageService(ExternalService):
@@ -28,6 +53,16 @@ class ExternalStorageService(ExternalService):
         null=True,
         blank=True,
     )
+    int_supported_features = ArrayField(
+        models.IntegerField(validators=[validate_supported_features]),
+        null=True,
+        blank=True,
+    )
+
+    @property
+    def supported_features(self) -> list[SupportedFeatures]:
+        """get the enum representation of int_supported_features"""
+        return [SupportedFeatures(item) for item in self.int_supported_features]
 
     class Meta:
         verbose_name = "External Storage Service"

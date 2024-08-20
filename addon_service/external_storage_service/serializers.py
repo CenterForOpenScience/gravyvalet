@@ -6,7 +6,9 @@ from addon_service.abstract.external_storage.serializers import (
 )
 from addon_service.addon_imp.models import AddonImpModel
 from addon_service.common import view_names
+from addon_service.common.enum_serializers import EnumNameMultipleChoiceField
 from addon_service.common.serializer_fields import DataclassRelatedDataField
+from addon_service.external_storage_service.models import SupportedFeatures
 from addon_service.models import ExternalStorageService
 
 
@@ -24,6 +26,10 @@ class ExternalStorageServiceSerializer(ExternalServiceSerializer):
         related_link_view_name=view_names.related_view(RESOURCE_TYPE),
     )
 
+    supported_features = EnumNameMultipleChoiceField(
+        enum_cls=SupportedFeatures, read_only=True
+    )
+
     class Meta:
         model = ExternalStorageService
         fields = [
@@ -37,4 +43,5 @@ class ExternalStorageServiceSerializer(ExternalServiceSerializer):
             "url",
             "wb_key",
             "configurable_api_root",
+            "supported_features",
         ]
