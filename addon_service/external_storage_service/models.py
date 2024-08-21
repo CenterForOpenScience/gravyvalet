@@ -62,7 +62,7 @@ class ExternalStorageService(ExternalService):
         return SupportedFeatures(self.int_supported_features)
 
     @supported_features.setter
-    def authorized_capabilities(self, new_supported_features: SupportedFeatures):
+    def supported_features(self, new_supported_features: SupportedFeatures):
         """set int_authorized_capabilities without caring its int"""
         self.int_supported_features = new_supported_features.value
 
