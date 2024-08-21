@@ -6,6 +6,7 @@ from addon_service import models as db
 from addon_service.common import known_imps
 from addon_service.common.credentials_formats import CredentialsFormats
 from addon_service.common.service_types import ServiceTypes
+from addon_service.external_storage_service.models import SupportedFeatures
 from addon_toolkit import AddonCapabilities
 
 from ._helpers import patch_encryption_key_derivation
@@ -84,6 +85,7 @@ class ExternalStorageServiceFactory(DjangoModelFactory):
         model_class,
         credentials_format=CredentialsFormats.PERSONAL_ACCESS_TOKEN,
         service_type=ServiceTypes.PUBLIC,
+        supported_features=SupportedFeatures.ADD_UPDATE_FILES,
         *args,
         **kwargs,
     ):
@@ -94,6 +96,7 @@ class ExternalStorageServiceFactory(DjangoModelFactory):
             model_class=model_class,
             int_credentials_format=credentials_format.value,
             int_service_type=service_type.value,
+            int_supported_features=supported_features.value,
             api_base_url=api_base_url,
             *args,
             **kwargs,
