@@ -49,7 +49,7 @@ class ConfiguredAddon(AddonsServiceBaseModel):
 
     @display_name.setter
     def display_name(self, value: str):
-        value = value if value is not None else ''
+        value = value if value is not None else ""
         self._display_name = value
 
     @property
