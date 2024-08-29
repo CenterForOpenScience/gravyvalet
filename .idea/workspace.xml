@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="723287e0-f862-4f09-99a6-3aa896037952" name="Changes" comment="Fix errors in DropboxStorageImp">
+      <change beforePath="$PROJECT_DIR$/addon_service/admin/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/addon_service/admin/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DjangoConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)">
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="2kKmf5No5MwdqyNPiZf18aWLzqY" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Django Server.gravyvalet_fork.executor": "Run",
+    "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "dropbox",
+    "last_opened_file_path": "/Users/user/PycharmProjects/gravyvalet_fork/addon_service",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "project.scopes",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/addon_service" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-PY-241.18034.82" />
+        <option value="bundled-python-sdk-975db3bf15a3-2767605e8bc2-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.18034.82" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="723287e0-f862-4f09-99a6-3aa896037952" name="Changes" comment="" />
+      <created>1723040743015</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1723040743015</updated>
+      <workItem from="1723040744199" duration="9163000" />
+      <workItem from="1723576250387" duration="1832000" />
+      <workItem from="1725877672939" duration="52293000" />
+    </task>
+    <task id="LOCAL-00001" summary="ExternalCitationService implementation">
+      <option name="closed" value="true" />
+      <created>1723040973499</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1723040973499</updated>
+    </task>
+    <task id="LOCAL-00002" summary="ExternalCitationService implementation">
+      <option name="closed" value="true" />
+      <created>1723042699565</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1723042699565</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Remove max_concurrent_downloads and max_upload_mb field from ExternalCitationService">
+      <option name="closed" value="true" />
+      <created>1723110646837</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1723110646837</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Remove max_concurrent_downloads and max_upload_mb field from ExternalCitationServiceSerializer">
+      <option name="closed" value="true" />
+      <created>1723111148739</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1723111148739</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Add comment about wb_key field">
+      <option name="closed" value="true" />
+      <created>1723112061499</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1723112061499</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Add json body for POST method">
+      <option name="closed" value="true" />
+      <created>1726139572188</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1726139572188</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Create DropboxStorageImp">
+      <option name="closed" value="true" />
+      <created>1726139675471</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1726139675471</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Add DropboxStorageImp to know imps">
+      <option name="closed" value="true" />
+      <created>1726139701237</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1726139701237</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Remove recursive behaviour for get_item_info">
+      <option name="closed" value="true" />
+      <created>1726488127446</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1726488127446</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Add next_sample_cursor and total_count fields to DropBox list_root_items method">
+      <option name="closed" value="true" />
+      <created>1726488257327</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1726488257327</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Update get_item info for DropboxStorageImp">
+      <option name="closed" value="true" />
+      <created>1726577058589</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1726577058589</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Fix errors in DropboxStorageImp">
+      <option name="closed" value="true" />
+      <created>1726662051277</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1726662051277</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="ExternalCitationService implementation" />
+    <MESSAGE value="Remove max_concurrent_downloads and max_upload_mb field from ExternalCitationService" />
+    <MESSAGE value="Remove max_concurrent_downloads and max_upload_mb field from ExternalCitationServiceSerializer" />
+    <MESSAGE value="Add comment about wb_key field" />
+    <MESSAGE value="Add json body for POST method" />
+    <MESSAGE value="Create DropboxStorageImp" />
+    <MESSAGE value="Add DropboxStorageImp to know imps" />
+    <MESSAGE value="Remove recursive behaviour for get_item_info" />
+    <MESSAGE value="Add next_sample_cursor and total_count fields to DropBox list_root_items method" />
+    <MESSAGE value="Update get_item info for DropboxStorageImp" />
+    <MESSAGE value="Fix errors in DropboxStorageImp" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix errors in DropboxStorageImp" />
+  </component>
+</project>
