@@ -17,6 +17,7 @@ from addon_imps.storage import (
     gitlab,
     google_drive,
     onedrive,
+    dropbox,
     s3,
 )
 from addon_service.common.enum_decorators import enum_names_same_as
@@ -76,6 +77,7 @@ class KnownAddonImps(enum.Enum):
 
     GIT_HUB = github.GitHubStorageImp
     GITLAB = gitlab.GitlabStorageImp
+    DROPBOX = dropbox.DropboxStorageImp
 
     if __debug__:
         BLARG = my_blarg.MyBlargStorage
