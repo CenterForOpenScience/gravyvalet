@@ -224,6 +224,11 @@ def json_for_typed_value(
             raise exceptions.ValueNotJsonableWithType(value, _type)
         assert issubclass(_type, (str, int, float))  # assertion for type-checker
         return _type(value)
+    if _type is dict:
+        if isinstance(value, dict):
+            return {k: json_for_typed_value(type(v), v) for k, v in value.items()}
+        else:
+            raise exceptions.ValueNotJsonableWithType(value, _type)
     if (
         isinstance(_type, type)
         and issubclass(_type, abc.Collection)

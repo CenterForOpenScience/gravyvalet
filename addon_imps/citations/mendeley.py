@@ -63,7 +63,7 @@ class MendeleyCitationImp(CitationAddonImp):
                         item_id=item_id,
                         item_name=item_name,
                         item_type=ItemType.DOCUMENT,
-                        item_path=None,
+                        item_path=item_details.get("path", []),
                         csl=item_details.get("csl", {}),
                     )
                 )
