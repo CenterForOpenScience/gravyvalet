@@ -32,16 +32,7 @@ class MendeleyCitationImp(CitationAddonImp):
         async with self.network.GET(
             f"folders/{collection_id}/documents",
         ) as response:
-            import pydevd_pycharm
-
-            pydevd_pycharm.settrace(
-                "host.docker.internal",
-                port=12346,
-                stdoutToServer=True,
-                stderrToServer=True,
-            )
             document_ids = await response.json_content()
-
             items = await self._fetch_documents_details(document_ids, filter_items)
 
             return ItemSampleResult(items=items, total_count=len(items))
@@ -51,27 +42,31 @@ class MendeleyCitationImp(CitationAddonImp):
     ) -> list[ItemResult]:
         items = []
 
-        async def fetch_item_details(item_id):
-            async with self.network.GET(f"documents/{item_id}") as item_response:
-                item_details = await item_response.json_content()
-                item_name = item_details.get("title", f"Untitled Document {item_id}")
-                item_type = item_details.get("type", "unknown")
-
-                if filter_items is None or filter_items == item_type:
-                    items.append(
-                        ItemResult(
-                            item_id=item_id,
-                            item_name=item_name,
-                            item_type=item_type,
-                            item_path=None,
-                            csl=item_details.get("csl", {}),
-                        )
-                    )
-
-        tasks = [fetch_item_details(doc["id"]) for doc in document_ids]
+        tasks = [
+            self.fetch_item_details(doc["id"], filter_items, items)
+            for doc in document_ids
+        ]
         await asyncio.gather(*tasks)
 
         return items
+
+    async def fetch_item_details(
+        self, item_id: str, filter_items: ItemType | None, items: list[ItemResult]
+    ):
+        async with self.network.GET(f"documents/{item_id}") as item_response:
+            item_details = await item_response.json_content()
+            item_name = item_details.get("title", f"Untitled Document {item_id}")
+
+            if filter_items is None:
+                items.append(
+                    ItemResult(
+                        item_id=item_id,
+                        item_name=item_name,
+                        item_type=ItemType.DOCUMENT,
+                        item_path=None,
+                        csl=item_details.get("csl", {}),
+                    )
+                )
 
     def _parse_collection_response(self, response_json: dict) -> ItemSampleResult:
         print(response_json, flush=True)
@@ -79,7 +74,7 @@ class MendeleyCitationImp(CitationAddonImp):
             ItemResult(
                 item_id=collection["id"],
                 item_name=collection["name"],
-                item_type="COLLECTION",
+                item_type=ItemType.COLLECTION,
                 item_path=None,
                 csl=None,
             )

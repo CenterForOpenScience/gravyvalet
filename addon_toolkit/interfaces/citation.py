@@ -40,7 +40,7 @@ class ItemType(StrEnum):
 class ItemResult:
     item_id: str
     item_name: str
-    item_type: str
+    item_type: ItemType
     item_path: list[str] | None = None
     csl: dict | None = None
 
