@@ -64,8 +64,18 @@ class TestMendeleyCitationImp(unittest.TestCase):
 
     def test_list_collection_items(self):
         mock_document_ids = [{"id": "doc1"}, {"id": "doc2"}]
-        mock_doc1_details = {"id": "doc1", "title": "Doc Title 1", "type": "document"}
-        mock_doc2_details = {"id": "doc2", "title": "Doc Title 2", "type": "document"}
+        mock_doc1_details = {
+            "id": "doc1",
+            "title": "Doc Title 1",
+            "type": "document",
+            "path": [],
+        }
+        mock_doc2_details = {
+            "id": "doc2",
+            "title": "Doc Title 2",
+            "type": "document",
+            "path": [],
+        }
 
         self.mendeley_imp.network.GET.side_effect = [
             AsyncMock(
@@ -98,12 +108,14 @@ class TestMendeleyCitationImp(unittest.TestCase):
                 item_id="doc1",
                 item_name="Doc Title 1",
                 item_type=ItemType.DOCUMENT,
+                item_path=[],
                 csl={},
             ),
             ItemResult(
                 item_id="doc2",
                 item_name="Doc Title 2",
                 item_type=ItemType.DOCUMENT,
+                item_path=[],
                 csl={},
             ),
         ]
