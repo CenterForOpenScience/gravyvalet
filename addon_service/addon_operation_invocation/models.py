@@ -12,6 +12,7 @@ from addon_service.configured_addon.utils import get_config_for_addon
 from addon_service.models import AddonOperationModel
 from addon_toolkit import AddonImp
 from addon_toolkit.interfaces.citation import CitationConfig
+from addon_toolkit.interfaces.computing import ComputingConfig
 from addon_toolkit.interfaces.storage import StorageConfig
 
 
@@ -70,7 +71,7 @@ class AddonOperationInvocation(AddonsServiceBaseModel):
         return self.thru_account.imp_cls
 
     @property
-    def config(self) -> StorageConfig | CitationConfig:
+    def config(self) -> StorageConfig | CitationConfig | ComputingConfig:
         if self.thru_addon:
             return get_config_for_addon(self.thru_addon)
         return get_config_for_account(self.thru_account)

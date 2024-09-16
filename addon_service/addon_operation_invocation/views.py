@@ -16,9 +16,13 @@ from addon_toolkit import AddonOperationType
 from ..authorized_account.citation.serializers import (
     AuthorizedCitationAccountSerializer,
 )
+from ..authorized_account.computing.serializers import (
+    AuthorizedComputingAccountSerializer,
+)
 from ..authorized_account.models import AuthorizedAccount
 from ..authorized_account.storage.serializers import AuthorizedStorageAccountSerializer
 from ..configured_addon.citation.serializers import ConfiguredCitationAddonSerializer
+from ..configured_addon.computing.serializers import ConfiguredComputingAddonSerializer
 from ..configured_addon.models import ConfiguredAddon
 from ..configured_addon.storage.serializers import ConfiguredStorageAddonSerializer
 from .models import AddonOperationInvocation
@@ -51,19 +55,31 @@ class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
                 serializer = AuthorizedStorageAccountSerializer(
                     instance, context={"request": request}
                 )
-            else:
+            elif hasattr(instance, "authorizedcitationaccount"):
                 serializer = AuthorizedCitationAccountSerializer(
                     instance, context={"request": request}
                 )
+            elif hasattr(instance, "authorizedcomputingaccount"):
+                serializer = AuthorizedComputingAccountSerializer(
+                    instance, context={"request": request}
+                )
+            else:
+                raise ValueError("unknown authorized account type")
         elif isinstance(instance, ConfiguredAddon):
             if hasattr(instance, "configuredstorageaddon"):
                 serializer = ConfiguredStorageAddonSerializer(
                     instance, context={"request": request}
                 )
-            else:
+            elif hasattr(instance, "configuredcitationaddon"):
                 serializer = ConfiguredCitationAddonSerializer(
                     instance, context={"request": request}
                 )
+            elif hasattr(instance, "configuredcomputingaddon"):
+                serializer = ConfiguredComputingAddonSerializer(
+                    instance, context={"request": request}
+                )
+            else:
+                raise ValueError("unknown configured addon type")
         else:
             serializer = self.get_related_serializer(instance)
         return Response(serializer.data)
