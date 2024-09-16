@@ -29,7 +29,11 @@ class OneDriveStorageImp(storage.StorageAddonHttpRequestorImp):
             return storage.ItemResult(
                 item_id=_json.get("id"),
                 item_name=_json.get("name"),
-                item_type="folder" if "folder" in _json else "file",
+                item_type=(
+                    storage.ItemType.FOLDER
+                    if "folder" in _json
+                    else storage.ItemType.FILE
+                ),
             )
 
     async def list_child_items(
@@ -50,7 +54,11 @@ class OneDriveStorageImp(storage.StorageAddonHttpRequestorImp):
                 storage.ItemResult(
                     item_id=item.get("id"),
                     item_name=item.get("name"),
-                    item_type="folder" if "folder" in item else "file",
+                    item_type=(
+                        storage.ItemType.FOLDER
+                        if "folder" in item
+                        else storage.ItemType.FILE
+                    ),
                 )
                 for item in _json.get("value", [])
             ]
