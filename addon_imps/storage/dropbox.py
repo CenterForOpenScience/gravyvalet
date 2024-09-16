@@ -21,6 +21,8 @@ class DropboxStorageImp(storage.StorageAddonHttpRequestorImp):
                 _parsed = _DropboxParsedJson(await _response.json_content())
                 return storage.ItemSampleResult(
                     items=list(_parsed.item_results()),
+                    total_count=len(_parsed.response_json["entries"]),
+                    next_sample_cursor=_parsed.response_json["cursor"],
                 )
 
         return await self.get_item_info("")
