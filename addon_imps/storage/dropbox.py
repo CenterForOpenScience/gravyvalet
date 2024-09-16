@@ -32,7 +32,7 @@ class DropboxStorageImp(storage.StorageAddonHttpRequestorImp):
                 {
                     "include_non_downloadable_files": True,
                     "path": "/",
-                    "recursive": True,
+                    "recursive": False,
                 },
             ) as _response:
                 _parsed = _DropboxParsedJson(await _response.json_content())
