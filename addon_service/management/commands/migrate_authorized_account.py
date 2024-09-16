@@ -4,15 +4,19 @@ from django.core.management import BaseCommand
 from django.db import transaction
 
 from addon_service.authorized_account.citation.models import AuthorizedCitationAccount
+from addon_service.authorized_account.computing.models import AuthorizedComputingAccount
 from addon_service.authorized_account.storage.models import AuthorizedStorageAccount
 from addon_service.common.credentials_formats import CredentialsFormats
 from addon_service.configured_addon.citation.models import ConfiguredCitationAddon
+from addon_service.configured_addon.computing.models import ConfiguredComputingAddon
 from addon_service.configured_addon.storage.models import ConfiguredStorageAddon
 from addon_service.external_service.models import ExternalService
 from addon_service.oauth2 import OAuth2TokenMetadata
 from addon_service.osf_models.models import (
     BitbucketNodeSettings,
     BitbucketUserSettings,
+    BoaNodeSettings,
+    BoaUserSettings,
     BoxNodeSettings,
     BoxUserSettings,
     DataverseNodeSettings,
@@ -78,6 +82,7 @@ services = [
     ["storage", "s3", S3UserSettings, S3NodeSettings],
     ["citations", "mendeley", MendeleyUserSettings, MendeleyNodeSettings],
     ["citations", "zotero", ZoteroUserSettings, ZoteroNodeSettings],
+    ["computing", "boa", BoaUserSettings, BoaNodeSettings],
 ]
 
 
@@ -112,6 +117,8 @@ def get_root_folder_for_provider(node_settings, service_name):
             return f"{node_settings.library_id}/{node_settings.list_id}"
         case "mendeley":
             return node_settings.list_id
+        case "boa":
+            return None
 
 
 class Command(BaseCommand):
@@ -144,6 +151,9 @@ class Command(BaseCommand):
         elif integration_type == "citations":
             AuthorizedAccount = AuthorizedCitationAccount
             ConfiguredAddon = ConfiguredCitationAddon
+        elif integration_type == "computing":
+            AuthorizedAccount = AuthorizedComputingAccount
+            ConfiguredAddon = ConfiguredComputingAddon
         else:
             raise
 

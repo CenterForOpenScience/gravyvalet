@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 
 from addon_toolkit import AddonCapabilities
 from addon_toolkit.interfaces.citation import CitationAddonImp
+from addon_toolkit.interfaces.computing import ComputingAddonImp
 from addon_toolkit.interfaces.storage import StorageAddonImp
 
 from . import known_imps
@@ -60,6 +61,10 @@ def validate_storage_imp_number(value):
 
 def validate_citation_imp_number(value):
     _validate_imp_number(value, CitationAddonImp)
+
+
+def validate_computing_imp_number(value):
+    _validate_imp_number(value, ComputingAddonImp)
 
 
 ###

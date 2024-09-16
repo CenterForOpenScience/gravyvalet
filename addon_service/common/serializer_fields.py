@@ -56,10 +56,14 @@ class CustomPolymorphicResourceRelatedField(PolymorphicResourceRelatedField):
         data = super().to_representation(value)
         if hasattr(value, "authorizedcitationaccount"):
             data["type"] = "authorized-citation-accounts"
+        elif hasattr(value, "authorizedcomputingaccount"):
+            data["type"] = "authorized-computing-accounts"
         elif hasattr(value, "authorizedstorageaccount"):
             data["type"] = "authorized-storage-accounts"
         elif hasattr(value, "configuredcitationaddon"):
             data["type"] = "configured-citation-addons"
+        elif hasattr(value, "configuredcomputingaddon"):
+            data["type"] = "configured-computing-addons"
         elif hasattr(value, "configuredstorageaccount"):
             data["type"] = "configured-storage-addons"
         return data
