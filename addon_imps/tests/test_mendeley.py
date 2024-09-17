@@ -133,7 +133,3 @@ class TestMendeleyCitationImp(unittest.TestCase):
             sorted(result.items, key=lambda x: x.item_id),
             sorted(expected_items, key=lambda x: x.item_id),
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
