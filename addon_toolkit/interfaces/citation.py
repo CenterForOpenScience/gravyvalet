@@ -48,7 +48,7 @@ class ItemResult:
 @dataclasses.dataclass(slots=True)
 class ItemSampleResult:
     items: list[ItemResult]
-    total_count: int = None
+    total_count: int | None = None
     next_sample_cursor: str | None = None
     prev_sample_cursor: str | None = None
 

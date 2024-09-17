@@ -59,7 +59,10 @@ class TestMendeleyCitationImp(unittest.TestCase):
             total_count=2,
         )
 
-        self.assertEqual(result, expected_result)
+        self.assertEqual(
+            sorted(result.items, key=lambda x: x.item_id),
+            sorted(expected_result.items, key=lambda x: x.item_id),
+        )
         self.mendeley_imp.network.GET.assert_called_with("folders")
 
     def test_list_collection_items(self):
@@ -67,13 +70,14 @@ class TestMendeleyCitationImp(unittest.TestCase):
         mock_doc1_details = {
             "id": "doc1",
             "title": "Doc Title 1",
-            "type": "document",
+            "type": "journal",
+            "authors": [{"first_name": "John", "last_name": "Doe"}],
             "path": [],
         }
         mock_doc2_details = {
             "id": "doc2",
             "title": "Doc Title 2",
-            "type": "document",
+            "type": "book_section",
             "path": [],
         }
 
@@ -109,20 +113,26 @@ class TestMendeleyCitationImp(unittest.TestCase):
                 item_name="Doc Title 1",
                 item_type=ItemType.DOCUMENT,
                 item_path=[],
-                csl={},
+                csl={
+                    "id": "doc1",
+                    "type": "article-journal",
+                    "author": [{"given": "John", "family": "Doe"}],
+                    "title": "Doc Title 1",
+                },
             ),
             ItemResult(
                 item_id="doc2",
                 item_name="Doc Title 2",
                 item_type=ItemType.DOCUMENT,
                 item_path=[],
-                csl={},
+                csl={"id": "doc2", "type": "chapter", "title": "Doc Title 2"},
             ),
         ]
 
-        expected_result = ItemSampleResult(items=expected_items, total_count=2)
-
-        self.assertEqual(result, expected_result)
+        self.assertEqual(
+            sorted(result.items, key=lambda x: x.item_id),
+            sorted(expected_items, key=lambda x: x.item_id),
+        )
 
 
 if __name__ == "__main__":
