@@ -2,6 +2,7 @@ import dataclasses
 import typing
 
 from addon_toolkit.interfaces import storage
+from addon_toolkit.interfaces.storage import ItemType
 
 
 class DropboxStorageImp(storage.StorageAddonHttpRequestorImp):
@@ -15,7 +16,7 @@ class DropboxStorageImp(storage.StorageAddonHttpRequestorImp):
     async def list_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
         if page_cursor:
             async with self.network.POST(
-                "/files/list_folder/continue",
+                "files/list_folder/continue",
                 json={"cursor": page_cursor},
             ) as _response:
                 _parsed = _DropboxParsedJson(await _response.json_content())
@@ -24,35 +25,26 @@ class DropboxStorageImp(storage.StorageAddonHttpRequestorImp):
                     total_count=len(_parsed.response_json["entries"]),
                     next_sample_cursor=_parsed.response_json["cursor"],
                 )
+        result = await self.list_child_items("")
+        return result
 
-        return await self.get_item_info("")
-
-    async def get_item_info(
-        self, item_id: str
-    ) -> storage.ItemSampleResult or storage.ItemResult:
+    async def get_item_info(self, item_id: str) -> storage.ItemResult:
         if not item_id:
-            async with self.network.POST(
-                "files/list_folder",
-                json={
-                    "include_non_downloadable_files": True,
-                    "path": "/",
-                    "recursive": False,
-                },
-            ) as _response:
-                _parsed = _DropboxParsedJson(await _response.json_content())
-                return storage.ItemSampleResult(
-                    items=list(_parsed.item_results()),
-                    total_count=len(_parsed.response_json["entries"]),
-                    next_sample_cursor=_parsed.response_json["cursor"],
-                )
+
+            return storage.ItemResult(
+                item_id="",
+                item_name="root folder",
+                item_type=ItemType.FOLDER,
+            )
         else:
             async with self.network.POST(
-                "get_metadata",
+                "files/get_metadata",
                 json={
                     "path": _make_item_id(item_id),
                 },
             ) as _response:
                 _parsed = _DropboxParsedJson(await _response.json_content())
+
                 return _parsed.single_item_result()
 
     async def list_child_items(
@@ -63,7 +55,7 @@ class DropboxStorageImp(storage.StorageAddonHttpRequestorImp):
     ) -> storage.ItemSampleResult:
         if page_cursor:
             async with self.network.POST(
-                "/files/list_folder/continue",
+                "files/list_folder/continue",
                 json={"cursor": page_cursor},
             ) as _response:
                 _parsed = _DropboxParsedJson(await _response.json_content())
@@ -73,23 +65,25 @@ class DropboxStorageImp(storage.StorageAddonHttpRequestorImp):
                     next_sample_cursor=_parsed.response_json["cursor"],
                 )
         async with self.network.POST(
-            "/files/list_folder",
-            json={"path": _make_item_id(item_id)},
+            "files/list_folder",
+            json={"path": item_id},
         ) as _response:
             _parsed = _DropboxParsedJson(await _response.json_content())
+            items = list(_parsed.item_results(item_type=item_type))
             return storage.ItemSampleResult(
-                items=list(_parsed.item_results(item_type=item_type)),
-                total_count=len(_parsed.response_json["entries"]),
+                items=items,
+                total_count=len(items),
                 next_sample_cursor=_parsed.response_json["cursor"],
             )
 
 
 def _make_item_id(item_id: str) -> str:
-    return f"id:{item_id}"
+    return f"id:{item_id}" if item_id else ""
 
 
 @dataclasses.dataclass
 class _DropboxParsedJson:
+
     response_json: dict[str, typing.Any]
 
     ITEM_TYPE = {
@@ -101,12 +95,11 @@ class _DropboxParsedJson:
         return self._parse_item(self.response_json)
 
     def _parse_item(self, item_json: dict[str, typing.Any]) -> storage.ItemResult:
-        _item_type = self.ITEM_TYPE[self.response_json[".tag"]]
+        _item_type = self.ITEM_TYPE[item_json[".tag"]]
         _item_result = storage.ItemResult(
             item_id=item_json["id"],
             item_name=item_json["name"],
             item_type=_item_type,
-            item_path=item_json["path_display"],
         )
         return _item_result
 
@@ -115,7 +108,7 @@ class _DropboxParsedJson:
         item_json: dict[str, typing.Any],
         item_type: storage.ItemType,
     ) -> bool:
-        return self.ITEM_TYPE[item_json["type"]] == item_type
+        return self.ITEM_TYPE[item_json[".tag"]] == item_type
 
     def item_results(
         self,
