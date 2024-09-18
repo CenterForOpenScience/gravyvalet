@@ -14,14 +14,10 @@ class DropboxStorageImp(storage.StorageAddonHttpRequestorImp):
         return ""
 
     async def list_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
-        if page_cursor:
-            return await self.list_child_items(item_id="", page_cursor=page_cursor)
-        result = await self.list_child_items("")
-        return result
+        return await self.list_child_items(item_id="", page_cursor=page_cursor)
 
     async def get_item_info(self, item_id: str) -> storage.ItemResult:
         if not item_id:
-
             return storage.ItemResult(
                 item_id="",
                 item_name="root folder",
