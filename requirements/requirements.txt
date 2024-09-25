@@ -2,7 +2,7 @@ Django==4.2.7
 daphne==4.1.2
 psycopg>=3.1.8
 djangorestframework==3.14.0
-djangorestframework-jsonapi==6.1.0
+djangorestframework-jsonapi==7.0.2
 django-cors-headers==4.3.1
 django-filter
 celery==5.4.0
