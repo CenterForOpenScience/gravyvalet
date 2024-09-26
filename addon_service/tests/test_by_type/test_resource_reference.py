@@ -161,7 +161,7 @@ class TestResourceReferenceViewSet(TestCase):
         with self.subTest("Confirm expected relationships"):
             self.assertEqual(
                 json.loads(_resp.rendered_content)["data"]["relationships"].keys(),
-                {"configured_storage_addons"},
+                {"configured_storage_addons", "configured_citation_addons"},
             )
 
     def test_unauthorized__private_resource(self):
