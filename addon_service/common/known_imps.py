@@ -11,6 +11,7 @@ from addon_imps.citations import (
 )
 from addon_imps.storage import (
     box_dot_com,
+    dropbox,
     figshare,
     google_drive,
     s3,
@@ -21,7 +22,6 @@ from addon_toolkit import AddonImp
 
 if __debug__:
     from addon_imps.storage import my_blarg
-
 
 __all__ = (
     "AddonImpNumbers",
@@ -67,6 +67,7 @@ class KnownAddonImps(enum.Enum):
     ZOTERO_ORG = zotero_org.ZoteroOrgCitationImp
     GOOGLE_DRIVE = google_drive.GoogleDriveStorageImp
     FIGSHARE = figshare.FigshareStorageImp
+    DROPBOX = dropbox.DropboxStorageImp
     MENDELEY = mendeley.MendeleyCitationImp
 
     if __debug__:
@@ -83,6 +84,7 @@ class AddonImpNumbers(enum.Enum):
     S3 = 1003
     MENDELEY = 1004
     GOOGLE_DRIVE = 1005
+    DROPBOX = 1006
     FIGSHARE = 1007
 
     if __debug__:
