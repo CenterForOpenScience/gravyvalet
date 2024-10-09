@@ -38,6 +38,7 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
             "created",
             "modified",
             "operation_name",
+            "external_service_name",
         ]
 
     url = serializers.HyperlinkedIdentityField(
@@ -49,6 +50,7 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
     operation_name = serializers.CharField(required=True)
+    external_service_name = serializers.CharField(read_only=True)
 
     thru_account = ResourceRelatedField(
         many=False,

@@ -76,3 +76,6 @@ async def get_citation_addon_instance(
             account=account,
         ),
     )
+
+
+get_citation_addon_instance__blocking = async_to_sync(get_citation_addon_instance)

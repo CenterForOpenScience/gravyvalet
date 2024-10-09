@@ -6,6 +6,7 @@ from django.db import models
 
 from addon_service.common.base_model import AddonsServiceBaseModel
 from addon_service.common.invocation_status import InvocationStatus
+from addon_service.common.known_imps import AddonImpNumbers
 from addon_service.common.validators import validate_invocation_status
 from addon_service.models import AddonOperationModel
 from addon_toolkit import AddonImp
@@ -59,6 +60,11 @@ class CitationOperationInvocation(AddonsServiceBaseModel):
     @property
     def operation_name(self) -> str:
         return self.operation.name
+
+    @property
+    def external_service_name(self):
+        number = self.thru_addon.base_account.external_service.int_addon_imp
+        return AddonImpNumbers(number).name.lower()
 
     @property
     def owner_uri(self) -> str:

@@ -1,11 +1,11 @@
 from django.db import models
 
 from addon_service.abstract.configured_addon.models import ConfiguredAddon
+from addon_service.common.known_imps import AddonImpNumbers
 from addon_toolkit.interfaces.citation import CitationConfig
 
 
 class ConfiguredCitationAddon(ConfiguredAddon):
-
     root_folder = models.CharField(blank=True)
 
     base_account = models.ForeignKey(
@@ -30,3 +30,8 @@ class ConfiguredCitationAddon(ConfiguredAddon):
     @property
     def citation_imp_config(self) -> CitationConfig:
         return self.base_account.citation_imp_config
+
+    @property
+    def external_service_name(self):
+        number = self.base_account.external_service.int_addon_imp
+        return AddonImpNumbers(number).name.lower()
