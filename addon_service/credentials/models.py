@@ -17,7 +17,7 @@ class ExternalCredentials(AddonsServiceBaseModel):
     _scrypt_parallelization = models.IntegerField()
 
     # Attributes inherited from back-references:
-    # authorized_storage_account (AuthorizedStorageAccount._credentials, One2One)
+    # storage (AuthorizedStorageAccount._credentials, One2One)
 
     class Meta:
         verbose_name = "External Credentials"
@@ -98,17 +98,12 @@ class ExternalCredentials(AddonsServiceBaseModel):
                 *filter(
                     bool,
                     [
-                        getattr(self, "authorized_storage_account", None),
-                        getattr(self, "authorized_citation_account", None),
-                        getattr(self, "temporary_authorized_storage_account", None),
-                        getattr(self, "temporary_authorized_citation_account", None),
+                        getattr(self, "authorized_account", None),
+                        getattr(self, "temporary_authorized_account", None),
                     ],
                 )
             ]
-        except (
-            ExternalCredentials.authorized_storage_account.RelatedObjectDoesNotExist
-            or ExternalCredentials.authorized_citation_account.RelatedObjectDoesNotExist
-        ):
+        except ExternalCredentials.authorized_storage_account.RelatedObjectDoesNotExist:
             return None
 
     @property

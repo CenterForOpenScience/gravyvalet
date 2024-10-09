@@ -19,7 +19,7 @@ from .utils import FreshTokenResult
 
 
 if TYPE_CHECKING:
-    from addon_service.abstract.authorized_account.models import AuthorizedAccount
+    from addon_service.authorized_account.models import AuthorizedAccount
 
 
 class OAuth2ClientConfig(AddonsServiceBaseModel):
@@ -80,15 +80,8 @@ class OAuth2TokenMetadata(AddonsServiceBaseModel):
         return f"{self.pk}.{self.state_nonce}" if self.state_nonce else None
 
     @property
-    def linked_accounts(self):
-        return (
-            self.authorized_storage_accounts.all()
-            or self.authorized_citation_accounts.all()
-        )
-
-    @property
     def client_details(self):
-        return self.linked_accounts[0].external_service.oauth2_client_config
+        return self.authorized_accounts.first().external_service.oauth2_client_config
 
     def clean_fields(self, *args, **kwargs):
         super().clean_fields(*args, **kwargs)
@@ -109,7 +102,7 @@ class OAuth2TokenMetadata(AddonsServiceBaseModel):
     def validate_shared_client(self):
         client_configs = set(
             account.external_service.oauth2_client_config
-            for account in self.linked_accounts
+            for account in self.authorized_accounts.all()
         )
         if len(client_configs) != 1:
             raise ValidationError(
@@ -137,7 +130,7 @@ class OAuth2TokenMetadata(AddonsServiceBaseModel):
         _credentials = AccessTokenCredentials(
             access_token=fresh_token_result.access_token
         )
-        _accounts = tuple(self.linked_accounts)
+        _accounts = tuple(self.authorized_accounts.all())
         for _account in _accounts:
             _account.credentials = _credentials
             _account.save()

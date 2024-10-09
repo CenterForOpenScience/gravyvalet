@@ -3,15 +3,15 @@ from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.utils import get_resource_type_from_model
 
+from addon_service.authorized_account.models import AuthorizedAccount
 from addon_service.common import view_names
 from addon_service.common.enum_serializers import EnumNameChoiceField
 from addon_service.common.invocation_status import InvocationStatus
 from addon_service.common.serializer_fields import DataclassRelatedDataField
+from addon_service.configured_addon.models import ConfiguredAddon
 from addon_service.models import (
     AddonOperationInvocation,
     AddonOperationModel,
-    AuthorizedStorageAccount,
-    ConfiguredStorageAddon,
     UserReference,
 )
 
@@ -52,13 +52,13 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
     thru_account = ResourceRelatedField(
         many=False,
         required=False,
-        queryset=AuthorizedStorageAccount.objects.active(),
+        queryset=AuthorizedAccount.objects.active(),
         related_link_view_name=view_names.related_view(RESOURCE_TYPE),
     )
     thru_addon = ResourceRelatedField(
         many=False,
         required=False,
-        queryset=ConfiguredStorageAddon.objects.active(),
+        queryset=ConfiguredAddon.objects.active(),
         related_link_view_name=view_names.related_view(RESOURCE_TYPE),
     )
 

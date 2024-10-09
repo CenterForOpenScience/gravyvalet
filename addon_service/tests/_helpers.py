@@ -29,7 +29,7 @@ from addon_service.common.aiohttp_session import get_singleton_client_session
 
 
 if TYPE_CHECKING:
-    from addon_service.external_storage_service import ExternalStorageService
+    from addon_service.external_service.storage import ExternalStorageService
 
 
 class MockOSF:

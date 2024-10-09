@@ -4,11 +4,14 @@ import jsonschema
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from addon_service.authorized_account.utils import get_config_for_account
 from addon_service.common.base_model import AddonsServiceBaseModel
 from addon_service.common.invocation_status import InvocationStatus
 from addon_service.common.validators import validate_invocation_status
+from addon_service.configured_addon.utils import get_config_for_addon
 from addon_service.models import AddonOperationModel
 from addon_toolkit import AddonImp
+from addon_toolkit.interfaces.citation import CitationConfig
 from addon_toolkit.interfaces.storage import StorageConfig
 
 
@@ -20,11 +23,9 @@ class AddonOperationInvocation(AddonsServiceBaseModel):
     operation_identifier = models.TextField()  # TODO: validator
     operation_kwargs = models.JSONField(default=dict, blank=True)
     thru_addon = models.ForeignKey(
-        "ConfiguredStorageAddon", null=True, blank=True, on_delete=models.CASCADE
+        "ConfiguredAddon", null=True, blank=True, on_delete=models.CASCADE
     )
-    thru_account = models.ForeignKey(
-        "AuthorizedStorageAccount", on_delete=models.CASCADE
-    )
+    thru_account = models.ForeignKey("AuthorizedAccount", on_delete=models.CASCADE)
     by_user = models.ForeignKey("UserReference", on_delete=models.CASCADE)
     operation_result = models.JSONField(null=True, default=None, blank=True)
     exception_type = models.TextField(blank=True, default="")
@@ -69,10 +70,10 @@ class AddonOperationInvocation(AddonsServiceBaseModel):
         return self.thru_account.imp_cls
 
     @property
-    def storage_imp_config(self) -> StorageConfig:
+    def config(self) -> StorageConfig | CitationConfig:
         if self.thru_addon:
-            return self.thru_addon.storage_imp_config
-        return self.thru_account.storage_imp_config
+            return get_config_for_addon(self.thru_addon)
+        return get_config_for_account(self.thru_account)
 
     def clean_fields(self, *args, **kwargs):
         super().clean_fields(*args, **kwargs)

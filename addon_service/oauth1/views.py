@@ -3,8 +3,8 @@ from http import HTTPStatus
 from asgiref.sync import async_to_sync
 from django.http import HttpResponse
 
-from addon_service.authorized_citation_account.models import AuthorizedCitationAccount
-from addon_service.authorized_storage_account.models import AuthorizedStorageAccount
+from addon_service.authorized_account.citation.models import AuthorizedCitationAccount
+from addon_service.authorized_account.storage.models import AuthorizedStorageAccount
 from addon_service.oauth1.utils import get_access_token
 from addon_service.osf_models.fields import decrypt_string
 

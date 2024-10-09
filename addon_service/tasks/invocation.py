@@ -1,7 +1,7 @@
 import celery
 from django.db import transaction
 
-from addon_service.addon_imp.instantiation import get_storage_addon_instance__blocking
+from addon_service.addon_imp.instantiation import get_addon_instance__blocking
 from addon_service.common.dibs import dibs
 from addon_service.common.invocation_status import InvocationStatus
 from addon_service.models import AddonOperationInvocation
@@ -19,10 +19,10 @@ def perform_invocation__blocking(invocation: AddonOperationInvocation) -> None:
     # implemented as a sync function for django transactions
     with dibs(invocation):  # TODO: handle dibs errors
         try:
-            _imp = get_storage_addon_instance__blocking(
+            _imp = get_addon_instance__blocking(
                 invocation.imp_cls,  # type: ignore[arg-type]  #(TODO: generic impstantiation)
                 invocation.thru_account,
-                invocation.storage_imp_config,
+                invocation.config,
             )
             _operation = invocation.operation
             # inner transaction to contain database errors,

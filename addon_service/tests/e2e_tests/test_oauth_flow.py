@@ -79,7 +79,6 @@ class TestOAuth2Flow(APITestCase):
             self.assertIsNone(_account.credentials)
 
         self._mock_service.set_internal_client(self.client)
-
         async_to_sync(self._get)(_account)
 
         _account.refresh_from_db()

@@ -174,7 +174,7 @@ class TestHmacApiAuth(APITestCase):
         cls._service = _factories.ExternalStorageOAuth2ServiceFactory()
         cls._account = _factories.AuthorizedStorageAccountFactory(
             account_owner=cls._user,
-            external_storage_service=cls._service,
+            external_service=cls._service,
         )
         cls._addon = _factories.ConfiguredStorageAddonFactory(
             base_account=cls._account,
