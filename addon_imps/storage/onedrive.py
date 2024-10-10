@@ -1,5 +1,15 @@
-from addon_toolkit.cursor import OffsetCursor
+from urllib.parse import (
+    parse_qs,
+    urlparse,
+)
+
+from addon_toolkit.cursor import Cursor
 from addon_toolkit.interfaces import storage
+
+
+class NextLinkCursor(Cursor):
+    def __init__(self, next_link: str):
+        self.this_cursor_str = next_link
 
 
 class OneDriveStorageImp(storage.StorageAddonHttpRequestorImp):
@@ -63,14 +73,17 @@ class OneDriveStorageImp(storage.StorageAddonHttpRequestorImp):
                 for item in _json.get("value", [])
             ]
             next_link = _json.get("@odata.nextLink", "")
-            return storage.ItemSampleResult(
-                items=items,
-            ).with_cursor(next_link if next_link else "")
+            if next_link:
+                cursor = NextLinkCursor(next_link)
+                result = storage.ItemSampleResult(items=items).with_cursor(cursor)
+            else:
+                result = storage.ItemSampleResult(items=items)
+            return result
 
     def _params_from_cursor(self, cursor: str = "") -> dict[str, str]:
-        # OneDrive uses skip and top for pagination
-        try:
-            _cursor = OffsetCursor.from_str(cursor)
-            return {"$skip": _cursor.offset, "$top": _cursor.limit}
-        except ValueError:
+        if not cursor:
             return {}
+        parsed_url = urlparse(cursor)
+        query_params = parse_qs(parsed_url.query)
+        flat_query_params = {k: v[0] for k, v in query_params.items()}
+        return flat_query_params
