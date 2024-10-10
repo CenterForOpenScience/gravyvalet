@@ -6,6 +6,7 @@ from http import (
     HTTPMethod,
     HTTPStatus,
 )
+from typing import Callable
 
 from addon_toolkit.iri_utils import (
     KeyValuePairs,
@@ -61,6 +62,10 @@ class HttpRequestor(typing.Protocol):
 
     @property
     def response_info_cls(self) -> type[HttpResponseInfo]: ...
+
+    def add_header_transformation_callback(
+        self, callback: Callable[[dict], dict]
+    ) -> None: ...
 
     # abstract method for subclasses
     def _do_send(

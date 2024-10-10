@@ -29,8 +29,6 @@ if typing.TYPE_CHECKING:
 
 __all__ = ("GravyvaletHttpRequestor",)
 
-__all__ = ("GravyvaletHttpRequestor",)
-
 _logger = logging.getLogger(__name__)
 
 
@@ -70,6 +68,10 @@ class GravyvaletHttpRequestor(HttpRequestor):
         account: "db.AuthorizedStorageAccount",
     ):
         _PrivateNetworkInfo(client_session, prefix_url, account).assign(self)
+        self._headers_constructor = None
+
+    def add_header_transformation_callback(self, callback):
+        self._headers_constructor = callback
 
     # abstract method from HttpRequestor:
     @contextlib.asynccontextmanager
@@ -91,7 +93,7 @@ class GravyvaletHttpRequestor(HttpRequestor):
         async with _private.client_session.request(
             request.http_method,
             _url,
-            headers=await _private.get_headers(),
+            headers=await self._get_headers(_private),
             params=request.query,
             json=request.json,
             # TODO: content
@@ -104,6 +106,12 @@ class GravyvaletHttpRequestor(HttpRequestor):
                 # if not, will fail again after refresh (which is fine)
                 raise exceptions.ExpiredAccessToken
             yield _AiohttpResponseInfo(_response)
+
+    async def _get_headers(self, _private: _PrivateNetworkInfo) -> Multidict:
+        raw_headers = await _private.get_headers()
+        if self._headers_constructor:
+            return self._headers_constructor(raw_headers)
+        return raw_headers
 
 
 ###
