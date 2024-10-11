@@ -32,18 +32,11 @@ _BUILD_PROPFIND_ALLPROPS = """<?xml version="1.0" encoding="UTF-8"?>
 
 
 class OwnCloudStorageImp(storage.StorageAddonHttpRequestorImp):
-    """Storage implementation for ownCloud using WebDAV."""
-
-    username = "username"
-    password = "password"
-
     async def get_external_account_id(self, auth_result_extras: dict[str, str]) -> str:
         headers = {
             "Depth": "0",
-            "Authorization": _get_basic_auth_header(self.username, self.password),
         }
-        async with self.network.request(
-            http_method="PROPFIND",
+        async with self.network.PROPFIND(
             uri_path="",
             headers=headers,
             content=_BUILD_PROPFIND_CURRENT_USER_PRINCIPAL,
