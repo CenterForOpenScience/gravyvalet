@@ -126,7 +126,6 @@ class TestOneDriveStorageImp(unittest.TestCase):
 
             self.assertEqual(result.items, expected_items)
 
-            # Instead of comparing with the mock object, compare with the cursor string
             self.assertEqual(
                 result.this_sample_cursor, "https://graph.microsoft.com/nextPageLink"
             )
