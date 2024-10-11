@@ -13,6 +13,7 @@ from addon_imps.storage import (
     box_dot_com,
     figshare,
     google_drive,
+    owncloud,
     s3,
 )
 from addon_service.common.enum_decorators import enum_names_same_as
@@ -68,6 +69,7 @@ class KnownAddonImps(enum.Enum):
     GOOGLE_DRIVE = google_drive.GoogleDriveStorageImp
     FIGSHARE = figshare.FigshareStorageImp
     MENDELEY = mendeley.MendeleyCitationImp
+    OWNCLOUD = owncloud.OwnCloudStorageImp
 
     if __debug__:
         BLARG = my_blarg.MyBlargStorage
@@ -84,6 +86,7 @@ class AddonImpNumbers(enum.Enum):
     MENDELEY = 1004
     GOOGLE_DRIVE = 1005
     FIGSHARE = 1007
+    OWNCLOUD = 1009
 
     if __debug__:
         BLARG = -7
