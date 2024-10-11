@@ -40,6 +40,8 @@ class ExternalStorageService(ExternalService):
     @property
     def supported_features(self) -> list[SupportedFeatures]:
         """get the enum representation of int_supported_features"""
+        if self.int_supported_features is None:
+            return SupportedFeatures(0)
         return SupportedFeatures(self.int_supported_features)
 
     @supported_features.setter
