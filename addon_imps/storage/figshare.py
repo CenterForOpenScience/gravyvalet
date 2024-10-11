@@ -1,16 +1,8 @@
 from __future__ import annotations
 
-from abc import (
-    ABC,
-    abstractmethod,
-)
-from dataclasses import (
-    dataclass,
-    fields,
-)
+from dataclasses import dataclass
 
-from twisted.internet.protocol import Protocol
-
+from addon_imps.storage.utils import ItemResultable
 from addon_toolkit.async_utils import join
 from addon_toolkit.interfaces import storage
 from addon_toolkit.interfaces.storage import (
@@ -154,12 +146,6 @@ class FigshareStorageImp(storage.StorageAddonHttpRequestorImp):
 # module-local helpers
 
 
-class ItemResultable(ABC, Protocol):
-    @property
-    @abstractmethod
-    def item_result(self) -> ItemResult: ...
-
-
 @dataclass(frozen=True, slots=True)
 class File(ItemResultable):
     id: int
@@ -172,10 +158,6 @@ class File(ItemResultable):
             item_name=self.name,
             item_type=ItemType.FILE,
         )
-
-    @classmethod
-    def from_json(cls, json: dict):
-        return cls(**{key.name: json.get(key.name, key.default) for key in fields(cls)})
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,10 +172,6 @@ class Project(ItemResultable):
             item_name=self.title,
             item_type=ItemType.FOLDER,
         )
-
-    @classmethod
-    def from_json(cls, json: dict):
-        return cls(**{key.name: json.get(key.name, key.default) for key in fields(cls)})
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,4 +191,4 @@ class Article(ItemResultable):
     @classmethod
     def from_json(cls, json: dict, project_id: int = None):
         json["project_id"] = json.get("project_id", project_id)
-        return cls(**{key.name: json.get(key.name, key.default) for key in fields(cls)})
+        return super().from_json(json)
