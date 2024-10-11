@@ -55,6 +55,10 @@ class _AiohttpResponseInfo(HttpResponseInfo):
         _response = _PrivateResponse.get(self).aiohttp_response
         return await _response.json()
 
+    async def text_content(self) -> str:
+        _response = _PrivateResponse.get(self).aiohttp_response
+        return await _response.text()
+
 
 class GravyvaletHttpRequestor(HttpRequestor):
     """an `HttpRequestor` implementation using aiohttp"""
@@ -88,20 +92,25 @@ class GravyvaletHttpRequestor(HttpRequestor):
         _private = _PrivateNetworkInfo.get(self)
         _url = _private.get_full_url(request.uri_path)
         _logger.info(f"sending {request.http_method} to {_url}")
+
+        default_headers = await _private.get_headers()
+
+        combined_headers = Multidict(default_headers.items())
+        combined_headers.add_many(request.headers.items())
+
         async with _private.client_session.request(
             request.http_method,
             _url,
-            headers=await _private.get_headers(),
+            headers=combined_headers,
             params=request.query,
             json=request.json,
-            # TODO: content
+            data=request.content,
         ) as _response:
             if (
                 _response.status == HTTPStatus.UNAUTHORIZED
                 and _private.account.credentials_format == CredentialsFormats.OAUTH2
             ):
-                # assume unauthorized because of token expiration.
-                # if not, will fail again after refresh (which is fine)
+                # Assume unauthorized because of token expiration.
                 raise exceptions.ExpiredAccessToken
             yield _AiohttpResponseInfo(_response)
 

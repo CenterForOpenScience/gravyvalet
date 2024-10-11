@@ -27,6 +27,7 @@ class HttpRequestInfo:
     query: Multidict
     headers: Multidict
     json: dict
+    content: str | None = None
     # TODO: content (when needed)
 
 
@@ -38,6 +39,8 @@ class HttpResponseInfo(typing.Protocol):
     def headers(self) -> Multidict: ...
 
     async def json_content(self) -> typing.Any: ...
+
+    async def text_content(self) -> str: ...
 
     # TODO: streaming (when needed)
 
@@ -75,6 +78,7 @@ class HttpRequestor(typing.Protocol):
         query: Multidict | KeyValuePairs | None = None,
         headers: Multidict | KeyValuePairs | None = None,
         json: dict | None = None,
+        content: str | None = None,
     ):
         _request_info = HttpRequestInfo(
             http_method=http_method,
@@ -82,6 +86,7 @@ class HttpRequestor(typing.Protocol):
             query=query,
             headers=(headers if isinstance(headers, Multidict) else Multidict(headers)),
             json=json,
+            content=content,
         )
         async with self._do_send(_request_info) as _response:
             yield _response
