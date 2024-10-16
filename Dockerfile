@@ -55,8 +55,6 @@ FROM gv-base AS gv-deploy-deps
 RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.8.3
 RUN python -m venv .venv
 RUN poetry install --without dev
-# copy auto-generated static docs (without the dev dependencies that built them)
-COPY --from=gv-docs /code/addon_service/static/gravyvalet_code_docs/ /code/addon_service/static/gravyvalet_code_docs/
 # collect static files into a single directory:
 # ENF gv-deploy-deps
 
@@ -65,6 +63,8 @@ COPY --from=gv-docs /code/addon_service/static/gravyvalet_code_docs/ /code/addon
 FROM gv-runtime-base AS gv-deploy
 COPY --from=gv-deploy-deps /code/.venv/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY . /code/
+# copy auto-generated static docs (without the dev dependencies that built them)
+COPY --from=gv-docs /code/addon_service/static/gravyvalet_code_docs/ /code/addon_service/static/gravyvalet_code_docs/
 RUN python manage.py collectstatic --noinput
 # note: no CMD in gv-deploy -- depends on deployment
 # END gv-deploy
