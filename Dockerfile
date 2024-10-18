@@ -1,5 +1,5 @@
 # Use the official Python image AS the base image
-FROM python:3.12 AS gv-base
+FROM python:3.13 AS gv-base
 
 # System Dependencies:
 RUN apt-get update && apt-get install -y libpq-dev
@@ -12,7 +12,7 @@ ENV PATH="$PATH:/root/.local/bin"
 # END gv-base
 
 # BEGIN gv-runtime-base
-FROM python:3.12-slim AS gv-runtime-base
+FROM python:3.13-slim AS gv-runtime-base
 
 # System Dependencies:
 RUN apt-get update && apt-get install -y libpq-dev
