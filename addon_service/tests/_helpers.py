@@ -15,6 +15,7 @@ from unittest.mock import (
 )
 from urllib.parse import (
     parse_qs,
+    urlencode,
     urlparse,
 )
 
@@ -246,6 +247,9 @@ class _FakeAiohttpResponse:
 
     async def json(self):
         return self.data
+
+    async def text(self):
+        return urlencode(self.data)
 
 
 # TODO: use this more often in tests

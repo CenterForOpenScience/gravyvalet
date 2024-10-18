@@ -70,6 +70,7 @@ async def get_initial_access_token(
 
     see https://www.rfc-editor.org/rfc/rfc6749.html#section-4.1.3
     """
+
     return await _token_request(
         token_endpoint_url,
         {
@@ -113,8 +114,15 @@ async def get_refreshed_access_token(
 async def _token_request(
     token_endpoint_url: str, request_body: dict[str, str]
 ) -> FreshTokenResult:
+    import urllib.parse
+
     _client = await get_singleton_client_session()
     async with _client.post(token_endpoint_url, data=request_body) as _token_response:
+        response_text = await _token_response.text()
+        if "github.com" in token_endpoint_url:
+            response_data = dict(urllib.parse.parse_qsl(response_text))
+            response_data["expires_in"] = int(response_data["expires_in"])
+            return FreshTokenResult.from_token_response_json(response_data)
         if not HTTPStatus(_token_response.status).is_success:
             raise RuntimeError(await _token_response.json())
             # TODO: https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2

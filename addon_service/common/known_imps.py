@@ -12,6 +12,7 @@ from addon_imps.citations import (
 from addon_imps.storage import (
     box_dot_com,
     figshare,
+    github,
     google_drive,
     s3,
 )
@@ -69,6 +70,8 @@ class KnownAddonImps(enum.Enum):
     FIGSHARE = figshare.FigshareStorageImp
     MENDELEY = mendeley.MendeleyCitationImp
 
+    GIT_HUB = github.GitHubStorageImp
+
     if __debug__:
         BLARG = my_blarg.MyBlargStorage
 
@@ -85,5 +88,6 @@ class AddonImpNumbers(enum.Enum):
     GOOGLE_DRIVE = 1005
     FIGSHARE = 1007
 
+    GIT_HUB = 1013
     if __debug__:
         BLARG = -7
