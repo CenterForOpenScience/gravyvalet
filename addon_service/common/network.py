@@ -29,8 +29,6 @@ if typing.TYPE_CHECKING:
 
 __all__ = ("GravyvaletHttpRequestor",)
 
-__all__ = ("GravyvaletHttpRequestor",)
-
 _logger = logging.getLogger(__name__)
 
 
@@ -160,7 +158,11 @@ class _PrivateNetworkInfo(_PrivateInfo):
         _headers = Multidict()
         _credentials = self.account.credentials
         if _credentials:
-            _headers.add_many(self.account.credentials.iter_headers())
+            _headers.add_many(
+                self.account.external_service.credentials_format.iter_headers(
+                    _credentials
+                )
+            )
         return _headers
 
     def get_full_url(self, relative_url: str) -> str:

@@ -49,6 +49,9 @@ MOCK_CREDENTIALS = {
         username="me",
         password="unsafe",
     ),
+    CredentialsFormats.DATAVERSE_API_TOKEN: AccessTokenCredentials(
+        access_token="token"
+    ),
 }
 
 
@@ -289,6 +292,9 @@ class TestAuthorizedStorageAccountModel(TestCase):
             username="you",
             password="moresafe",
         ),
+        CredentialsFormats.DATAVERSE_API_TOKEN: AccessTokenCredentials(
+            access_token="new_token"
+        ),
     }
     INVALID_CREDENTIALS = {
         CredentialsFormats.PERSONAL_ACCESS_TOKEN: MOCK_CREDENTIALS[
@@ -298,6 +304,9 @@ class TestAuthorizedStorageAccountModel(TestCase):
             CredentialsFormats.PERSONAL_ACCESS_TOKEN
         ],
         CredentialsFormats.USERNAME_PASSWORD: MOCK_CREDENTIALS[
+            CredentialsFormats.ACCESS_KEY_SECRET_KEY
+        ],
+        CredentialsFormats.DATAVERSE_API_TOKEN: MOCK_CREDENTIALS[
             CredentialsFormats.ACCESS_KEY_SECRET_KEY
         ],
     }

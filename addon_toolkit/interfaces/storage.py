@@ -161,15 +161,15 @@ class StorageAddonHttpRequestorImp(StorageAddonImp):
 
 
 @dataclasses.dataclass
-class StorageAddonClientRequestorImp(StorageAddonImp):
+class StorageAddonClientRequestorImp[T](StorageAddonImp):
     """base class for storage addon with custom clients"""
 
-    client: typing.Any = dataclasses.field(init=False)
+    client: T = dataclasses.field(init=False)
     credentials: dataclasses.InitVar[Credentials]
 
     def __post_init__(self, credentials):
         self.client = self.create_client(credentials)
 
     @staticmethod
-    def create_client(credentials):
+    def create_client(credentials) -> T:
         raise NotImplementedError

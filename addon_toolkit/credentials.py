@@ -6,16 +6,10 @@ import typing
 class Credentials(typing.Protocol):
     """abstract base for dataclasses representing common shapes of credentials"""
 
-    def iter_headers(self) -> typing.Iterator[tuple[str, str]]:
-        yield from ()
-
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class AccessTokenCredentials(Credentials):
     access_token: str
-
-    def iter_headers(self):
-        yield "Authorization", f"Bearer {self.access_token}"
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -28,15 +22,6 @@ class AccessKeySecretKeyCredentials(Credentials):
 class OAuth1Credentials(Credentials):
     oauth_token: str
     oauth_token_secret: str
-
-    def iter_headers(self) -> typing.Iterator[tuple[str, str]]:
-        """
-        This is Zotero specific as other OAuth1.0a clients require request signing,
-        as per current architecture, we cannot it here.
-        """
-
-        yield "Authorization", f"Bearer {self.oauth_token_secret}"
-        # TODO: implement request signing for OAuth1.0a services that require it
 
     @classmethod
     def from_dict(cls, payload: dict) -> "tuple[OAuth1Credentials, dict]":
