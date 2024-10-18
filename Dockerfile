@@ -55,7 +55,6 @@ FROM gv-base AS gv-deploy-deps
 RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.8.3
 RUN python -m venv .venv
 RUN poetry install --without dev
-# collect static files into a single directory:
 # ENF gv-deploy-deps
 
 
