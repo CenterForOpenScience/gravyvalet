@@ -23,9 +23,6 @@ class ExternalStorageServiceAdmin(GravyvaletModelAdmin):
         "int_addon_imp": known_imps.AddonImpNumbers,
         "int_credentials_format": CredentialsFormats,
         "int_service_type": ServiceTypes,
-    }
-
-    enum_multiple_choice_fields = {
         "int_supported_features": SupportedFeatures,
     }
 

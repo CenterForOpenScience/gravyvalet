@@ -13,6 +13,7 @@ from addon_imps.storage import (
     box_dot_com,
     figshare,
     google_drive,
+    onedrive,
     s3,
 )
 from addon_service.common.enum_decorators import enum_names_same_as
@@ -64,6 +65,7 @@ class KnownAddonImps(enum.Enum):
 
     BOX_DOT_COM = box_dot_com.BoxDotComStorageImp
     S3 = s3.S3StorageImp
+    ONEDRIVE = onedrive.OneDriveStorageImp
     ZOTERO_ORG = zotero_org.ZoteroOrgCitationImp
     GOOGLE_DRIVE = google_drive.GoogleDriveStorageImp
     FIGSHARE = figshare.FigshareStorageImp
@@ -84,6 +86,7 @@ class AddonImpNumbers(enum.Enum):
     MENDELEY = 1004
     GOOGLE_DRIVE = 1005
     FIGSHARE = 1007
+    ONEDRIVE = 1008
 
     if __debug__:
         BLARG = -7
