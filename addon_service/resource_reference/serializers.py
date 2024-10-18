@@ -3,7 +3,7 @@ from rest_framework_json_api.relations import HyperlinkedRelatedField
 from rest_framework_json_api.utils import get_resource_type_from_model
 
 from addon_service.common import view_names
-from addon_service.configured_citation_addon.models import ConfiguredCitationAddon
+from addon_service.configured_addon.citation.models import ConfiguredCitationAddon
 from addon_service.models import (
     ConfiguredStorageAddon,
     ResourceReference,
