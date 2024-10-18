@@ -14,6 +14,7 @@ from addon_imps.storage import (
     dataverse,
     figshare,
     github,
+    gitlab,
     google_drive,
     onedrive,
     s3,
@@ -72,8 +73,8 @@ class KnownAddonImps(enum.Enum):
     FIGSHARE = figshare.FigshareStorageImp
     MENDELEY = mendeley.MendeleyCitationImp
     DATAVERSE = dataverse.DataverseStorageImp
-
     GIT_HUB = github.GitHubStorageImp
+    GITLAB = gitlab.GitlabStorageImp
 
     if __debug__:
         BLARG = my_blarg.MyBlargStorage
@@ -92,7 +93,7 @@ class AddonImpNumbers(enum.Enum):
     FIGSHARE = 1007
     ONEDRIVE = 1008
     DATAVERSE = 1010
-
+    GITLAB = 1011
     GIT_HUB = 1013
     if __debug__:
         BLARG = -7

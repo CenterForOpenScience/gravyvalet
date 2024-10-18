@@ -15,4 +15,6 @@ class ItemResultable(ABC):
 
     @classmethod
     def from_json(cls, json: dict) -> Self:
-        return cls(**{key.name: json.get(key.name, key.default) for key in fields(cls)})
+        return cls(
+            **{key.name: json[key.name] for key in fields(cls) if json.get(key.name)}
+        )

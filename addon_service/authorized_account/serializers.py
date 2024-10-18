@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from asgiref.sync import async_to_sync
 from django.core.exceptions import ValidationError as ModelValidationError
 from rest_framework_json_api import serializers
 
@@ -126,7 +127,7 @@ class AuthorizedAccountSerializer(serializers.HyperlinkedModelSerializer):
             raise serializers.ValidationError(e)
 
         if authorized_account.credentials_format.is_direct_from_user:
-            authorized_account.execute_post_auth_hook()
+            async_to_sync(authorized_account.execute_post_auth_hook)()
 
         return authorized_account
 
