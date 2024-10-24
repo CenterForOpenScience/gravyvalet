@@ -51,7 +51,10 @@ class GitHubStorageImp(storage.StorageAddonHttpRequestorImp):
             if response.http_status == 200:
                 json = await response.json_content()
                 if path != "":
-                    return self._parse_github_item(json, full_name=item_id)
+                    if isinstance(json, dict):
+                        return self._parse_github_item(json, full_name=item_id)
+                    else:
+                        return self._parse_github_item(json[0], full_name=item_id)
                 else:
                     return self._parse_github_repo(json)
             elif response.http_status == 404:
@@ -84,6 +87,7 @@ class GitHubStorageImp(storage.StorageAddonHttpRequestorImp):
                     items=items, total_count=len(items)
                 ).with_cursor(self._create_offset_cursor(len(items), page_cursor))
             elif response.http_status == 404:
+                print("##########  list_child_items 404", await response.json_content())
                 raise ItemNotFound
             else:
                 raise UnexpectedAddonError

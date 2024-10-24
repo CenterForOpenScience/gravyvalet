@@ -1,4 +1,5 @@
 import dataclasses
+import urllib.parse
 from http import HTTPStatus
 from secrets import token_urlsafe
 from typing import Iterable
@@ -114,8 +115,6 @@ async def get_refreshed_access_token(
 async def _token_request(
     token_endpoint_url: str, request_body: dict[str, str]
 ) -> FreshTokenResult:
-    import urllib.parse
-
     _client = await get_singleton_client_session()
     async with _client.post(token_endpoint_url, data=request_body) as _token_response:
         if _token_response.content_type == "application/x-www-form-urlencoded":
