@@ -10,6 +10,7 @@ from addon_imps.citations import (
     zotero_org,
 )
 from addon_imps.storage import (
+    bitbucket,
     box_dot_com,
     figshare,
     google_drive,
@@ -68,6 +69,7 @@ class KnownAddonImps(enum.Enum):
     GOOGLE_DRIVE = google_drive.GoogleDriveStorageImp
     FIGSHARE = figshare.FigshareStorageImp
     MENDELEY = mendeley.MendeleyCitationImp
+    BITBUCKET = bitbucket.BitbucketStorageImp
 
     if __debug__:
         BLARG = my_blarg.MyBlargStorage
@@ -84,6 +86,7 @@ class AddonImpNumbers(enum.Enum):
     MENDELEY = 1004
     GOOGLE_DRIVE = 1005
     FIGSHARE = 1007
+    BITBUCKET = 1009
 
     if __debug__:
         BLARG = -7
