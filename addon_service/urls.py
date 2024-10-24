@@ -6,6 +6,9 @@ from rest_framework.routers import (
 from rest_framework_json_api.utils import get_resource_type_from_serializer
 
 from addon_service import views
+from addon_service.citation_operation_invocation.views import (
+    CitationOperationInvocationViewSet as CitationViewset,
+)
 
 
 ###
@@ -62,6 +65,7 @@ _register_viewset(views.AddonOperationInvocationViewSet)
 _register_viewset(views.AddonOperationViewSet)
 _register_viewset(views.AddonImpViewSet)
 _register_viewset(views.UserReferenceViewSet)
+_register_viewset(CitationViewset)
 
 
 ###

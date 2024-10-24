@@ -33,6 +33,7 @@ class FigshareStorageImp(storage.StorageAddonHttpRequestorImp):
             self._fetch_projects(page_cursor),
             self._fetch_articles(page_cursor),
         )
+
         return ItemSampleResult(
             items=[entry.item_result for entry in items],
             next_sample_cursor=str(page_cursor + 1),
