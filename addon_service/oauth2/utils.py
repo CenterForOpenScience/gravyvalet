@@ -106,9 +106,6 @@ async def get_refreshed_access_token(
         _refresh_params["scope"] = _SCOPE_DELIMITER.join(scopes)
     result = await _token_request(token_endpoint_url, _refresh_params)
 
-    # If refresh token is not returned, use previous refresh token
-    if not result.refresh_token:
-        result.refresh_token = refresh_token
     return result
 
 
