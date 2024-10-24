@@ -8,6 +8,7 @@ from addon_service.common import view_names
 from addon_service.common.serializer_fields import DataclassRelatedLinkField
 from addon_service.configured_addon.citation.models import ConfiguredCitationAddon
 from addon_service.configured_addon.serializers import ConfiguredAddonSerializer
+from addon_service.external_service.citation.models import ExternalCitationService
 
 
 RESOURCE_TYPE = get_resource_type_from_model(ConfiguredCitationAddon)
@@ -31,6 +32,13 @@ class ConfiguredCitationAddonSerializer(ConfiguredAddonSerializer):
         source="base_account.authorizedcitationaccount",
         related_link_view_name=view_names.related_view(RESOURCE_TYPE),
     )
+    external_citation_service = ResourceRelatedField(
+        many=False,
+        read_only=True,
+        model=ExternalCitationService,
+        source="base_account.external_service.externalstorageservice",
+        related_link_view_name=view_names.related_view(RESOURCE_TYPE),
+    )
     authorized_resource = ResourceRelatedField(
         many=False,
         read_only=True,
@@ -41,6 +49,7 @@ class ConfiguredCitationAddonSerializer(ConfiguredAddonSerializer):
         "base_account": (
             "addon_service.serializers.AuthorizedCitationAccountSerializer"
         ),
+        "external_citation_service": "addon_service.serializers.ExternalCitationServiceSerializer",
         "authorized_resource": "addon_service.serializers.ResourceReferenceSerializer",
         "connected_operations": "addon_service.serializers.AddonOperationSerializer",
     }

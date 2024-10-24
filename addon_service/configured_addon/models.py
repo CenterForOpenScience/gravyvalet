@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -12,11 +10,6 @@ from addon_toolkit import (
     AddonCapabilities,
     AddonImp,
 )
-
-
-if TYPE_CHECKING:
-    from addon_service.authorized_account.models import AuthorizedAccount
-    from addon_service.resource_reference.models import ResourceReference
 
 
 class ConnectedAddonManager(models.Manager):
@@ -45,10 +38,6 @@ class ConfiguredAddon(AddonsServiceBaseModel):
         on_delete=models.CASCADE,
         related_name="configured_addons",
     )
-
-    if TYPE_CHECKING:
-        base_account: AuthorizedAccount
-        authorized_resource: ResourceReference
 
     @property
     def display_name(self):
