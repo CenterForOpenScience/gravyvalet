@@ -1,6 +1,7 @@
 from django.db import models
 
 from addon_service.common.base_model import AddonsServiceBaseModel
+from addon_service.configured_addon.citation.models import ConfiguredCitationAddon
 from addon_service.configured_addon.storage.models import ConfiguredStorageAddon
 
 
@@ -10,6 +11,10 @@ class ResourceReference(AddonsServiceBaseModel):
     @property
     def configured_storage_addons(self):
         return ConfiguredStorageAddon.objects.filter(authorized_resource=self)
+
+    @property
+    def configured_citation_addons(self):
+        return ConfiguredCitationAddon.objects.filter(authorized_resource=self)
 
     class Meta:
         verbose_name = "Resource Reference"

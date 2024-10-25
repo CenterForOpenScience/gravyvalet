@@ -3,17 +3,17 @@ from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.utils import get_resource_type_from_model
 
-from addon_service.authorized_citation_account.models import AuthorizedCitationAccount
 from addon_service.common import view_names
 from addon_service.common.enum_serializers import EnumNameChoiceField
 from addon_service.common.invocation_status import InvocationStatus
 from addon_service.common.serializer_fields import DataclassRelatedDataField
-from addon_service.configured_citation_addon.models import ConfiguredCitationAddon
 from addon_service.models import (
     AddonOperationModel,
     UserReference,
 )
 
+from ..authorized_account.citation.models import AuthorizedCitationAccount
+from ..configured_addon.citation.models import ConfiguredCitationAddon
 from .models import CitationOperationInvocation
 
 
@@ -50,7 +50,9 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
     operation_name = serializers.CharField(required=True)
-    external_service_name = serializers.CharField(read_only=True)
+    external_service_name = serializers.CharField(
+        read_only=True, source="thru_account.external_service_name"
+    )
 
     thru_account = ResourceRelatedField(
         many=False,
