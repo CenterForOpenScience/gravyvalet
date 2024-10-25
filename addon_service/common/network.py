@@ -47,7 +47,10 @@ class _AiohttpResponseInfo(HttpResponseInfo):
     def headers(self) -> Multidict:
         # TODO: allowed_headers config?
         _response = _PrivateResponse.get(self).aiohttp_response
-        return Multidict(_response.headers.items())
+        header_values = [
+            (str(key), str(value)) for key, value in _response.headers.items()
+        ]
+        return Multidict(header_values)
 
     async def json_content(self) -> typing.Any:
         _response = _PrivateResponse.get(self).aiohttp_response
