@@ -69,3 +69,7 @@ class CredentialsFormats(Enum):
                 credentials, AccessTokenCredentials
             ):
                 yield "X-Dataverse-key", credentials.access_token
+            case CredentialsFormats.PERSONAL_ACCESS_TOKEN if isinstance(
+                credentials, AccessTokenCredentials
+            ):
+                yield "PRIVATE-TOKEN", credentials.access_token
