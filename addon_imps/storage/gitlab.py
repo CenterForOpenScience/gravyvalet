@@ -34,7 +34,6 @@ class GitlabStorageImp(storage.StorageAddonHttpRequestorImp):
             page_cursor,
             {
                 "membership": "true",
-                "page": page_cursor,
                 "simple": "true",
                 "pagination": "true",
                 "sort": "asc",
@@ -118,7 +117,6 @@ class GitlabStorageImp(storage.StorageAddonHttpRequestorImp):
         query_params = self._page_cursor_or_query(
             page_cursor,
             {
-                "page_token": page_cursor,
                 "pagination": "keyset",
                 "path": parsed_id.file_path,
                 "sort": "asc",
