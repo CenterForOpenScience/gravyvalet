@@ -69,4 +69,5 @@ class ConfiguredCitationAddonSerializer(ConfiguredAddonSerializer):
             "connected_operations",
             "connected_operation_names",
             "external_service_name",
+            "external_citation_service",
         ]
