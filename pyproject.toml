@@ -22,6 +22,7 @@ aiohttp = "3.9.3"
 pyjwe = "1.0.0"
 cryptography = "42.0.7"
 boto3 = "1.34"
+boa-api = "^0.1.14"
 
 
 [tool.poetry.group.dev.dependencies]
