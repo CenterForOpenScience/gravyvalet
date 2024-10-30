@@ -48,7 +48,16 @@ class ItemResult:
     item_id: str
     item_name: str
     item_type: ItemType
+    can_be_root: bool = None
+    may_contain_root_candidates: bool = None
     item_path: abc.Sequence[typing.Self] | None = None
+
+    def __post_init__(self):
+        """By default can_be_root and may_contain_root_candidates are bound to item_type"""
+        if self.can_be_root is None:
+            self.can_be_root = self.item_type == ItemType.FOLDER
+        if self.may_contain_root_candidates is None:
+            self.may_contain_root_candidates = self.item_type == ItemType.FOLDER
 
 
 @dataclasses.dataclass
@@ -82,7 +91,6 @@ class ItemSampleResult:
 
 
 class StorageAddonInterface(BaseAddonInterface, typing.Protocol):
-
     ###
     # single-item operations:
 

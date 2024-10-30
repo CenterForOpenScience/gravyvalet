@@ -153,6 +153,8 @@ class _BoxDotComParsedJson:
             item_id=_make_item_id(_item_type, item_json["id"]),
             item_name=item_json["name"],
             item_type=_item_type,
+            can_be_root=_item_type == ItemType.FOLDER,
+            may_contain_root_candidates=_item_type == ItemType.FOLDER,
         )
         try:
             _path = item_json["path_collection"]

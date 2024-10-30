@@ -2,10 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from dataclasses import (
-    dataclass,
-    fields,
-)
+from dataclasses import dataclass
 
 from addon_toolkit.interfaces import storage
 from addon_toolkit.interfaces.storage import (
@@ -154,6 +151,7 @@ def parse_dataverse(data: dict):
         item_type=ItemType.FOLDER,
         item_name=data["name"],
         item_id=f'dataverse/{data["id"]}',
+        can_be_root=False,
     )
 
 
@@ -166,38 +164,14 @@ def parse_mydata(data: dict):
                 item_id=f"dataverse/{file['entity_id']}",
                 item_name=file["name"],
                 item_type=ItemType.FOLDER,
+                can_be_root=False,
+                may_contain_root_candidates=True,
             )
             for file in data["items"]
         ],
         total_count=data["total_count"],
         next_sample_cursor=data["pagination"]["nextPageNumber"],
     )
-
-
-@dataclass(frozen=True, slots=True)
-class Dataverse:
-    name: str
-    id: str
-    type: str
-
-    @property
-    def item_result(self) -> ItemResult:
-        return ItemResult(
-            item_id=f"{self.type}/{self.id}",
-            item_name=self.name,
-            item_type=self.item_type,
-        )
-
-    @property
-    def item_type(self) -> ItemType:
-        if self.type == "datafile":
-            return ItemType.FILE
-        else:
-            return ItemType.FOLDER
-
-    @classmethod
-    def from_json(cls, json: dict):
-        return cls(**{key.name: json.get(key.name, key.default) for key in fields(cls)})
 
 
 def parse_dataset(data: dict) -> ItemResult:
@@ -214,6 +188,7 @@ def parse_dataset(data: dict) -> ItemResult:
                 if item["typeName"] == "title"
             ][0]["value"],
             item_type=ItemType.FOLDER,
+            may_contain_root_candidates=False,
         )
     except (KeyError, IndexError) as e:
         raise ValueError(f"Invalid dataset response: {e=}")

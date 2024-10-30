@@ -132,6 +132,8 @@ class GitHubStorageImp(storage.StorageAddonHttpRequestorImp):
             item_id=item_id,
             item_name=item_json["name"],
             item_type=item_type,
+            may_contain_root_candidates=False,
+            can_be_root=False,
         )
 
     def _parse_github_repo(self, repo_json: dict) -> storage.ItemResult:
@@ -139,4 +141,5 @@ class GitHubStorageImp(storage.StorageAddonHttpRequestorImp):
             item_id=repo_json["full_name"] + ":",
             item_name=repo_json["name"],
             item_type=ItemType.FOLDER,
+            may_contain_root_candidates=False,
         )

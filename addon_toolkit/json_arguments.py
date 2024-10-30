@@ -178,6 +178,8 @@ class JsonschemaObjectBuilder:
             return {"type": "number"}
         if _type is dict:
             return {"type": "dict"}
+        if _type is bool:
+            return {"type": "bool"}
         raise exceptions.TypeNotJsonable(_type)
 
 
@@ -220,7 +222,7 @@ def json_for_typed_value(
         if value not in _type:
             raise exceptions.ValueNotJsonableWithType(value, _type)
         return value.name
-    if _type in (str, int, float):  # check str before abc.Collection
+    if _type in (str, int, float, bool):  # check str before abc.Collection
         if not isinstance(value, (str, int, float)):
             raise exceptions.ValueNotJsonableWithType(value, _type)
         assert issubclass(_type, (str, int, float))  # assertion for type-checker

@@ -37,6 +37,8 @@ class TestAddonOperationInvocationCreate(APITestCase):
                         "item_id": "hello",
                         "item_name": "Hello!?",
                         "item_type": "FOLDER",
+                        "can_be_root": True,
+                        "may_contain_root_candidates": True,
                     }
                 ],
                 "total_count": 1,
