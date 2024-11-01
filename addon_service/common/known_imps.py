@@ -12,12 +12,12 @@ from addon_imps.citations import (
 from addon_imps.storage import (
     box_dot_com,
     dataverse,
+    dropbox,
     figshare,
     github,
     gitlab,
     google_drive,
     onedrive,
-    dropbox,
     s3,
 )
 from addon_service.common.enum_decorators import enum_names_same_as
