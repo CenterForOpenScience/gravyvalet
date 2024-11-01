@@ -16,6 +16,11 @@ class DropboxStorageImp(storage.StorageAddonHttpRequestorImp):
     async def list_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
         return await self.list_child_items(item_id="", page_cursor=page_cursor)
 
+    async def build_wb_config(self, root_folder_id: str, service_name: str) -> dict:
+        return {
+            "folder": root_folder_id,
+        }
+
     async def get_item_info(self, item_id: str) -> storage.ItemResult:
         if not item_id:
             return storage.ItemResult(
