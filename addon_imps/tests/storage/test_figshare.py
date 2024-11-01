@@ -103,7 +103,7 @@ class TestFigshareStorageImp(IsolatedAsyncioTestCase):
         self.imp._fetch_project = MagicMock(spec_set=self.imp._fetch_project)
 
         self.assertEqual(
-            await self.imp.get_item_info("articles/123"), sentinel.item_result
+            await self.imp.get_item_info("article/123"), sentinel.item_result
         )
 
         self.imp._fetch_article.assert_called_once_with("123")
@@ -116,7 +116,7 @@ class TestFigshareStorageImp(IsolatedAsyncioTestCase):
             return_value=MagicMock(item_result=sentinel.item_result),
         )
         self.assertEqual(
-            await self.imp.get_item_info("projects/123"), sentinel.item_result
+            await self.imp.get_item_info("project/123"), sentinel.item_result
         )
 
         self.imp._fetch_project.assert_called_once_with("123")
@@ -142,28 +142,28 @@ class TestFigshareStorageImp(IsolatedAsyncioTestCase):
 
         cases = [
             _ListChildItemsArgs(
-                "projects/123",
+                "project/123",
                 "123",
                 ItemType.FOLDER,
                 "_fetch_project_articles",
                 expected_positive_result,
             ),
             _ListChildItemsArgs(
-                "projects/123",
+                "project/123",
                 "123",
                 None,
                 "_fetch_project_articles",
                 expected_positive_result,
             ),
             _ListChildItemsArgs(
-                "articles/123",
+                "article/123",
                 "123",
                 ItemType.FOLDER,
                 "_fetch_article_files",
                 expected_negative_result,
             ),
             _ListChildItemsArgs(
-                "projects/123",
+                "project/123",
                 "123",
                 ItemType.FILE,
                 "_fetch_project_articles",
@@ -181,7 +181,7 @@ class TestFigshareStorageImp(IsolatedAsyncioTestCase):
             ],
             *[
                 _ListChildItemsArgs(
-                    "articles/345",
+                    "article/345",
                     "345",
                     item_type,
                     "_fetch_article_files",
