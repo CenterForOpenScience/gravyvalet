@@ -42,6 +42,7 @@ class ConfiguredAddonSerializer(serializers.HyperlinkedModelSerializer):
         return super().update(instance, validated_data)
 
     class Meta:
+        resource_name = "configured-addons"
         fields = [
             "id",
             "url",

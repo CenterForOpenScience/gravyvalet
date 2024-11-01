@@ -153,6 +153,7 @@ class AuthorizedAccountSerializer(serializers.HyperlinkedModelSerializer):
         return instance
 
     class Meta:
+        resource_name = "authorized_account"
         fields = [
             "id",
             "url",

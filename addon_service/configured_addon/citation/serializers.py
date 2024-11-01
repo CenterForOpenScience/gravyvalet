@@ -55,6 +55,11 @@ class ConfiguredCitationAddonSerializer(ConfiguredAddonSerializer):
         "connected_operations": "addon_service.serializers.AddonOperationSerializer",
     }
 
+    def to_internal_value(self, data):
+        if "root_folder" in data and not data["root_folder"]:
+            data["root_folder"] = "/"
+        return super().to_internal_value(data)
+
     class Meta:
         model = ConfiguredCitationAddon
         fields = [
