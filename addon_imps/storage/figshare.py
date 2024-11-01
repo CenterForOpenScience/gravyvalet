@@ -13,9 +13,9 @@ from addon_toolkit.interfaces.storage import (
 )
 
 
-FILE_REGEX = re.compile(r"^articles/(?P<article_id>\d*)/files/(?P<file_id>\d*)$")
-ARTICLE_REGEX = re.compile(r"^articles/(?P<article_id>\d*)$")
-PROJECT_REGEX = re.compile(r"^projects/(?P<project_id>\d*)$")
+FILE_REGEX = re.compile(r"^article/(?P<article_id>\d*)/files/(?P<file_id>\d*)$")
+ARTICLE_REGEX = re.compile(r"^article/(?P<article_id>\d*)$")
+PROJECT_REGEX = re.compile(r"^project/(?P<project_id>\d*)$")
 
 
 class FigshareStorageImp(storage.StorageAddonHttpRequestorImp):
@@ -38,6 +38,10 @@ class FigshareStorageImp(storage.StorageAddonHttpRequestorImp):
             items=[entry.item_result for entry in items],
             next_sample_cursor=str(page_cursor + 1),
         )
+
+    async def build_wb_config(self, root_folder_id: str, service_name: str) -> dict:
+        segments = root_folder_id.split("/")
+        return {"container_type": segments[0], "container_id": segments[1]}
 
     async def get_item_info(self, item_id: str) -> storage.ItemResult:
         if not item_id:
@@ -153,7 +157,7 @@ class File(ItemResultable):
     @property
     def item_result(self) -> ItemResult:
         return ItemResult(
-            item_id=f"articles{self.article_id}/files/{self.id}",
+            item_id=f"article/{self.article_id}/files/{self.id}",
             item_name=self.name,
             item_type=ItemType.FILE,
         )
@@ -167,7 +171,7 @@ class Project(ItemResultable):
     @property
     def item_result(self) -> ItemResult:
         return ItemResult(
-            item_id=f"projects/{self.id}",
+            item_id=f"project/{self.id}",
             item_name=self.title,
             item_type=ItemType.FOLDER,
         )
@@ -181,7 +185,7 @@ class Article(ItemResultable):
     @property
     def item_result(self) -> ItemResult:
         return ItemResult(
-            item_id=f"articles/{self.id}",
+            item_id=f"article/{self.id}",
             item_name=self.title,
             item_type=ItemType.FOLDER,
         )

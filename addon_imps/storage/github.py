@@ -35,6 +35,13 @@ class GitHubStorageImp(storage.StorageAddonHttpRequestorImp):
                     items=items, total_count=len(items)
                 ).with_cursor(self._create_offset_cursor(len(items), page_cursor))
 
+    async def build_wb_config(self, root_folder_id: str, service_name: str) -> dict:
+        owner, repo, _ = self._parse_github_item_id(root_folder_id)
+        return {
+            "owner": owner,
+            "repo": repo,
+        }
+
     async def get_item_info(self, item_id: str) -> storage.ItemResult:
         if item_id == "." or not item_id:
             return storage.ItemResult(

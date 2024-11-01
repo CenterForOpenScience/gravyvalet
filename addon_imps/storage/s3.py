@@ -25,6 +25,13 @@ class S3StorageImp(storage.StorageAddonClientRequestorImp):
             "s3", aws_access_key_id=access_key, aws_secret_access_key=secret_key
         )
 
+    async def build_wb_config(self, root_folder_id: str, service_name: str) -> dict:
+        return {
+            "bucket": root_folder_id.split(":/")[0],
+            "id": root_folder_id,
+            "encrypt_uploads": True,  # TODO: somehow include this into settings
+        }
+
     async def get_item_info(self, item_id: str) -> storage.ItemResult:
         if item_id and ":/" in item_id:
             # All item_ids should contain a '/'
@@ -96,20 +103,21 @@ class S3StorageImp(storage.StorageAddonClientRequestorImp):
                 for folder in response["CommonPrefixes"]:
                     results.append(
                         storage.ItemResult(
-                            item_id=f'{item_id}{folder["Prefix"]}',
-                            item_name=folder["Prefix"],
+                            item_id=f'{bucket}:/{folder["Prefix"]}',
+                            item_name=folder["Prefix"].split("/")[-2] + "/",
                             item_type=storage.ItemType.FOLDER,
                         )
                     )
             if response.get("Contents") and (item_type is not storage.ItemType.FOLDER):
                 for file in response["Contents"]:
-                    results.append(
-                        storage.ItemResult(
-                            item_id=f'{item_id}{file["Key"]}',
-                            item_name=file["Key"],
-                            item_type=storage.ItemType.FILE,
+                    if not file["Key"].endswith("/"):
+                        results.append(
+                            storage.ItemResult(
+                                item_id=f'{bucket}:/{file["Key"]}',
+                                item_name=file["Key"],
+                                item_type=storage.ItemType.FILE,
+                            )
                         )
-                    )
             return storage.ItemSampleResult(
                 items=results,
                 total_count=len(results),

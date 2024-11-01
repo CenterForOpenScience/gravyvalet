@@ -152,6 +152,9 @@ class StorageAddonImp(AddonImp):
 
     config: StorageConfig
 
+    async def build_wb_config(self, root_folder_id: str, service_name: str) -> dict:
+        return {}
+
 
 @dataclasses.dataclass
 class StorageAddonHttpRequestorImp(StorageAddonImp):

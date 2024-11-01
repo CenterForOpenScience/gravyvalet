@@ -116,7 +116,8 @@ class OAuth2TokenMetadata(AddonsServiceBaseModel):
     ) -> tuple[AuthorizedAccount]:
         # update this record's fields
         self.state_nonce = None  # one-time-use, now used
-        self.refresh_token = fresh_token_result.refresh_token
+        if fresh_token_result.refresh_token:
+            self.refresh_token = fresh_token_result.refresh_token
         if fresh_token_result.expires_in is None:
             self.access_token_expiration = None
         else:

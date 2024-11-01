@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from addon_service.common.credentials_formats import CredentialsFormats
-from addon_service.common.waterbutler_compat import WaterButlerCredentialsSerializer
+from addon_service.common.waterbutler_compat import WaterButlerConfigSerializer
 from addon_service.configured_addon.views import ConfiguredAddonViewSet
 
 from .models import ConfiguredStorageAddon
@@ -26,4 +26,4 @@ class ConfiguredStorageAddonViewSet(ConfiguredAddonViewSet):
         if addon.external_service.credentials_format is CredentialsFormats.OAUTH2:
             addon.base_account.refresh_oauth_access_token__blocking()
         self.resource_name = "waterbutler-credentials"  # for the jsonapi resource type
-        return Response(WaterButlerCredentialsSerializer(addon).data)
+        return Response(WaterButlerConfigSerializer(addon).data)

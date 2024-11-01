@@ -47,6 +47,8 @@ class GitlabStorageImp(storage.StorageAddonHttpRequestorImp):
             )
 
     def _get_next_cursor(self, headers):
+        if not headers.get("Link"):
+            return
         next_link_candidates = [
             item for item in headers["Link"].split(",") if 'rel="next"' in item
         ]
@@ -170,13 +172,13 @@ def parse_item(repo_id: str, raw_item: dict) -> ItemResult:
 # module-local helpers
 @dataclass(frozen=True, slots=True)
 class Repository(ItemResultable):
-    id: str
+    path_with_namespace: str
     name: str
 
     @property
     def item_result(self) -> ItemResult:
         return ItemResult(
-            item_id=f"{self.id}:",
+            item_id=f"{quote_plus(self.path_with_namespace)}:",
             item_name=self.name,
             item_type=ItemType.FOLDER,
         )
