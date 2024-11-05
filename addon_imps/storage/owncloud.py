@@ -1,6 +1,3 @@
-import base64
-import functools
-import typing
 import xml.etree.ElementTree as ET
 from urllib.parse import (
     unquote,
