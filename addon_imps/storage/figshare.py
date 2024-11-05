@@ -39,8 +39,8 @@ class FigshareStorageImp(storage.StorageAddonHttpRequestorImp):
             next_sample_cursor=str(page_cursor + 1),
         )
 
-    async def build_wb_config(self, root_folder_id: str, _: str) -> dict:
-        segments = root_folder_id.split("/")
+    async def build_wb_config(self) -> dict:
+        segments = self.config.connected_root_id.split("/")
         return {"container_type": segments[0], "container_id": segments[1]}
 
     async def get_item_info(self, item_id: str) -> storage.ItemResult:

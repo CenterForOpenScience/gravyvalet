@@ -25,10 +25,10 @@ class S3StorageImp(storage.StorageAddonClientRequestorImp):
             "s3", aws_access_key_id=access_key, aws_secret_access_key=secret_key
         )
 
-    async def build_wb_config(self, root_folder_id: str, _: str) -> dict:
+    async def build_wb_config(self) -> dict:
         return {
-            "bucket": root_folder_id.split(":/")[0],
-            "id": root_folder_id,
+            "bucket": self.config.connected_root_id.split(":/")[0],
+            "id": self.config.connected_root_id,
             "encrypt_uploads": True,  # TODO: somehow include this into settings
         }
 

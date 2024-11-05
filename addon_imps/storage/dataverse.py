@@ -28,8 +28,10 @@ class DataverseStorageImp(storage.StorageAddonHttpRequestorImp):
     async def get_external_account_id(self, _: dict[str, str]) -> str:
         return ""
 
-    async def build_wb_config(self, root_folder_id: str, host: str) -> dict:
-        match = DATASET_REGEX.match(root_folder_id)
+    async def build_wb_config(
+        self,
+    ) -> dict:
+        match = DATASET_REGEX.match(self.config.connected_root_id)
         async with self.network.GET(f"datasets/{match['id']}") as response:
             content = await response.json_content()
             parsed = parse_dataset(content)
@@ -37,7 +39,7 @@ class DataverseStorageImp(storage.StorageAddonHttpRequestorImp):
                 "id": match["id"],
                 "name": parsed.item_name,
                 "doi": content["data"]["latestVersion"]["datasetPersistentId"],
-                "host": urlparse(host).hostname,
+                "host": urlparse(self.config.external_api_url).hostname,
             }
 
     async def list_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:

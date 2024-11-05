@@ -160,7 +160,7 @@ class StorageAddonImp(AddonImp):
 
     config: StorageConfig
 
-    async def build_wb_config(self, root_folder_id: str, host: str) -> dict:
+    async def build_wb_config(self) -> dict:
         return {}
 
 

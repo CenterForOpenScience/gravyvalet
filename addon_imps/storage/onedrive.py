@@ -30,11 +30,11 @@ class OneDriveStorageImp(storage.StorageAddonHttpRequestorImp):
             total_count=1,
         )
 
-    async def build_wb_config(self, root_folder_id: str, _: str) -> dict:
+    async def build_wb_config(self) -> dict:
         async with self.network.GET("me/drive") as _response:
             json = await _response.json_content()
             return {
-                "folder": root_folder_id,
+                "folder": self.config.connected_root_id,
                 "drive_id": json.get("id"),
             }
 

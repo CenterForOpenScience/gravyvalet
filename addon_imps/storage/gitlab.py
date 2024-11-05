@@ -33,11 +33,11 @@ class GitlabStorageImp(storage.StorageAddonHttpRequestorImp):
             resp_json = await response.json_content()
             return resp_json.get("user_id", "")
 
-    async def build_wb_config(self, root_folder_id: str, host: str) -> dict:
-        item_id = ItemId.parse(root_folder_id)
+    async def build_wb_config(self) -> dict:
+        item_id = ItemId.parse(self.config.connected_root_id)
         owner, repo_name = unquote_plus(item_id.repo_id).split("/")
         repo = await self._get_repository(item_id.repo_id)
-        url = urlparse(host)
+        url = urlparse(self.config.external_api_url)
         return {
             "repo": repo_name,
             "repo_id": str(repo.id),
