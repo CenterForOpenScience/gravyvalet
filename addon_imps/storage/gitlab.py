@@ -3,7 +3,11 @@ from __future__ import annotations
 import urllib
 from dataclasses import dataclass
 from http import HTTPStatus
-from urllib.parse import quote_plus
+from urllib.parse import (
+    quote_plus,
+    unquote_plus,
+    urlparse,
+)
 
 from addon_imps.storage.utils import ItemResultable
 from addon_service.common.exceptions import ItemNotFound
@@ -28,6 +32,18 @@ class GitlabStorageImp(storage.StorageAddonHttpRequestorImp):
         async with self.network.GET("user/preferences") as response:
             resp_json = await response.json_content()
             return resp_json.get("user_id", "")
+
+    async def build_wb_config(self, root_folder_id: str, host: str) -> dict:
+        item_id = ItemId.parse(root_folder_id)
+        owner, repo_name = unquote_plus(item_id.repo_id).split("/")
+        repo = await self._get_repository(item_id.repo_id)
+        url = urlparse(host)
+        return {
+            "repo": repo_name,
+            "repo_id": str(repo.id),
+            "owner": owner,
+            "host": f"{url.scheme}://{url.hostname}",
+        }
 
     async def list_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
         query_params = self._page_cursor_or_query(
@@ -74,12 +90,12 @@ class GitlabStorageImp(storage.StorageAddonHttpRequestorImp):
         if parsed_id.file_path:
             return await self.get_file_or_folder(parsed_id)
 
-        return await self._get_repository(parsed_id.repo_id)
+        return (await self._get_repository(parsed_id.repo_id)).item_result
 
     async def _get_repository(self, repo_id):
         async with self.network.GET(f"projects/{repo_id}") as response:
             content = await response.json_content()
-            return Repository.from_json(content).item_result
+            return Repository.from_json(content)
 
     async def get_file_or_folder(self, parsed_id: ItemId):
         async with self.network.GET(f"projects/{parsed_id.repo_id}") as response:
@@ -173,6 +189,7 @@ def parse_item(repo_id: str, raw_item: dict) -> ItemResult:
 @dataclass(frozen=True, slots=True)
 class Repository(ItemResultable):
     path_with_namespace: str
+    id: int
     name: str
 
     @property

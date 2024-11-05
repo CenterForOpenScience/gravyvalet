@@ -35,7 +35,7 @@ class GitHubStorageImp(storage.StorageAddonHttpRequestorImp):
                     items=items, total_count=len(items)
                 ).with_cursor(self._create_offset_cursor(len(items), page_cursor))
 
-    async def build_wb_config(self, root_folder_id: str, service_name: str) -> dict:
+    async def build_wb_config(self, root_folder_id: str, _: str) -> dict:
         owner, repo, _ = self._parse_github_item_id(root_folder_id)
         return {
             "owner": owner,

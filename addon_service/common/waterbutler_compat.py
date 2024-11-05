@@ -44,6 +44,6 @@ class WaterButlerConfigSerializer(serializers.Serializer):
         )
         imp_config = async_to_sync(imp.build_wb_config)(
             configured_storage_addon.root_folder,
-            configured_storage_addon.external_service.wb_key,
+            configured_storage_addon.base_account.api_base_url,
         )
         return imp_config

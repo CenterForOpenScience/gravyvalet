@@ -27,7 +27,7 @@ class GoogleDriveStorageImp(storage.StorageAddonHttpRequestorImp):
     async def list_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
         return ItemSampleResult(items=[await self.get_item_info("root")], total_count=1)
 
-    async def build_wb_config(self, root_folder_id: str, service_name: str) -> dict:
+    async def build_wb_config(self, root_folder_id: str, _: str) -> dict:
         return {"folder": {"id": root_folder_id}}
 
     async def get_item_info(self, item_id: str) -> storage.ItemResult:

@@ -25,7 +25,7 @@ class S3StorageImp(storage.StorageAddonClientRequestorImp):
             "s3", aws_access_key_id=access_key, aws_secret_access_key=secret_key
         )
 
-    async def build_wb_config(self, root_folder_id: str, service_name: str) -> dict:
+    async def build_wb_config(self, root_folder_id: str, _: str) -> dict:
         return {
             "bucket": root_folder_id.split(":/")[0],
             "id": root_folder_id,
