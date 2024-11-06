@@ -77,7 +77,6 @@ class KnownAddonImps(enum.Enum):
     DATAVERSE = dataverse.DataverseStorageImp
     OWNCLOUD = owncloud.OwnCloudStorageImp
 
-
     GIT_HUB = github.GitHubStorageImp
     GITLAB = gitlab.GitlabStorageImp
     DROPBOX = dropbox.DropboxStorageImp
