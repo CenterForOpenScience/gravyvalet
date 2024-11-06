@@ -92,27 +92,18 @@ class TestGitlabStorageImp(unittest.IsolatedAsyncioTestCase):
         self._assert_get("projects/1")
 
     async def test_get_item_info_file(self):
-        repo_mock = {"default_branch": "main"}
         file_mock = {
             "file_name": "README.md",
             "path": "README.md",
         }
 
-        self._patch_get(repo_mock)
-        self.network.GET.return_value.__aenter__.return_value.headers = {}
         self._patch_get(file_mock)
-        self.imp.get_item_info = AsyncMock(
-            spec_set=self.imp.get_item_info,
-            return_value=ItemResult(
-                item_id="1:README.md", item_name="README.md", item_type=ItemType.FILE
-            ),
-        )
+        self.network.GET.return_value.__aenter__.return_value.headers = {}
         result = await self.imp.get_item_info("1:README.md")
         expected_result = ItemResult(
             item_id="1:README.md", item_name="README.md", item_type=ItemType.FILE
         )
         self.assertEqual(result, expected_result)
-        self.imp.get_item_info.assert_awaited_once_with("1:README.md")
 
     async def test_list_child_items_folder(self):
         folder_mock = [
@@ -148,12 +139,7 @@ class TestGitlabStorageImp(unittest.IsolatedAsyncioTestCase):
         self._patch_get({}, status=HTTPStatus.NOT_FOUND)
 
         with self.assertRaises(ItemNotFound):
-            self.imp.get_item_info = AsyncMock(
-                side_effect=ItemNotFound("item not found"),
-                spec_set=self.imp.get_item_info,
-            )
             await self.imp.get_item_info("1:missing_file.md")
-        self.imp.get_item_info.assert_awaited_once_with("1:missing_file.md")
 
     async def test_list_child_items_not_found(self):
         self._patch_get({}, status=HTTPStatus.NOT_FOUND)
