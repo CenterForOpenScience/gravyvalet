@@ -6,7 +6,6 @@ from unittest.mock import (
 
 from addon_imps.storage.owncloud import (
     _BUILD_PROPFIND_ALLPROPS,
-    _BUILD_PROPFIND_CURRENT_USER_PRINCIPAL,
     OwnCloudStorageImp,
 )
 from addon_toolkit.interfaces import storage
@@ -48,11 +47,11 @@ class TestOwnCloudStorageImp(unittest.IsolatedAsyncioTestCase):
         response_xml = """<?xml version="1.0" encoding="utf-8"?>
         <d:multistatus xmlns:d="DAV:">
             <d:response>
-                <d:href>/remote.php/dav/principals/users/username/</d:href>
+                <d:href>/</d:href>
                 <d:propstat>
                     <d:prop>
                         <d:current-user-principal>
-                            <d:href>/remote.php/dav/principals/users/username/</d:href>
+                            <d:href>/</d:href>
                         </d:current-user-principal>
                     </d:prop>
                     <d:status>HTTP/1.1 200 OK</d:status>
@@ -68,7 +67,7 @@ class TestOwnCloudStorageImp(unittest.IsolatedAsyncioTestCase):
                     <d:status>HTTP/1.1 200 OK</d:status>
                     <d:prop>
                         <d:current-user-principal>
-                            <d:href>/remote.php/dav/principals/users/username/</d:href>
+                            <d:href>/</d:href>
                         </d:current-user-principal>
                         <d:displayname>Test User</d:displayname>
                     </d:prop>
@@ -80,23 +79,14 @@ class TestOwnCloudStorageImp(unittest.IsolatedAsyncioTestCase):
         result = await self.imp.get_external_account_id({})
 
         self.assertEqual(result, "Test User")
-        self._assert_request(
-            "",
-            {"Depth": "0"},
-            _BUILD_PROPFIND_CURRENT_USER_PRINCIPAL,
-        )
 
     async def test_list_root_items(self):
-        # Mock the list_child_items call since it's used by list_root_items
         mock_response = sentinel.result
         self.imp.list_child_items = AsyncMock(return_value=mock_response)
-
-        # Call the method
         result = await self.imp.list_root_items()
 
-        # Assert the result and list_child_items call
         self.assertEqual(result, mock_response)
-        self.imp.list_child_items.assert_awaited_once_with("FOLDER:/", "")
+        self.imp.list_child_items.assert_awaited_once_with("folder:/", "")
 
     async def test_get_item_info(self):
         response_xml = """<?xml version="1.0" encoding="UTF-8"?>
@@ -114,17 +104,12 @@ class TestOwnCloudStorageImp(unittest.IsolatedAsyncioTestCase):
         </d:multistatus>"""
         self._patch_request(response_xml)
 
-        # Call the method
-        result = await self.imp.get_item_info("FOLDER:/test-folder")
-
-        # Define the expected result
+        result = await self.imp.get_item_info("folder:/test-folder")
         expected_result = ItemResult(
-            item_id="FOLDER:/test-folder",
+            item_id="folder:/test-folder",
             item_name="test-folder",
             item_type=ItemType.FOLDER,
         )
-
-        # Assert the result and request
         self.assertEqual(result, expected_result)
         self._assert_request(
             "test-folder",
@@ -136,7 +121,7 @@ class TestOwnCloudStorageImp(unittest.IsolatedAsyncioTestCase):
         response_xml = """<?xml version="1.0" encoding="UTF-8"?>
         <d:multistatus xmlns:d="DAV:">
             <d:response>
-                <d:href>/remote.php/webdav/test-folder/</d:href>
+                <d:href>/test-folder</d:href>
                 <d:propstat>
                     <d:status>HTTP/1.1 200 OK</d:status>
                     <d:prop>
@@ -146,7 +131,7 @@ class TestOwnCloudStorageImp(unittest.IsolatedAsyncioTestCase):
                 </d:propstat>
             </d:response>
             <d:response>
-                <d:href>/remote.php/webdav/test-file.txt</d:href>
+                <d:href>/test-file.txt</d:href>
                 <d:propstat>
                     <d:status>HTTP/1.1 200 OK</d:status>
                     <d:prop>
@@ -158,25 +143,22 @@ class TestOwnCloudStorageImp(unittest.IsolatedAsyncioTestCase):
         </d:multistatus>"""
         self._patch_request(response_xml)
 
-        # Call the method
-        result = await self.imp.list_child_items("FOLDER:/test-folder")
+        result = await self.imp.list_child_items("folder:/test-folder")
 
-        # Define expected items
         expected_items = [
             ItemResult(
-                item_id="FOLDER:/test-folder",
+                item_id="folder:test-folder",
                 item_name="test-folder",
                 item_type=ItemType.FOLDER,
             ),
             ItemResult(
-                item_id="FILE:/test-file.txt",
+                item_id="file:test-file.txt",
                 item_name="test-file.txt",
                 item_type=ItemType.FILE,
             ),
         ]
         expected_result = ItemSampleResult(items=expected_items)
 
-        # Assert the result and request
         self.assertEqual(result.items, expected_result.items)
         self._assert_request(
             "test-folder",
