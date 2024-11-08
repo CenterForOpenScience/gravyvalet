@@ -146,7 +146,7 @@ class TestGitlabStorageImp(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ItemNotFound):
             await self.imp.list_child_items(item_id="1:missing_folder")
 
-    async def test_list_root_items_pagination(self):
+    async def test_list_root_items_first_page(self):
         mock_response_page_1 = [
             {"id": "1", "name": "repo1", "path_with_namespace": "repo1"},
             {"id": "2", "name": "repo2", "path_with_namespace": "repo2"},
@@ -160,9 +160,10 @@ class TestGitlabStorageImp(unittest.IsolatedAsyncioTestCase):
             ItemResult(item_id="repo1:", item_name="repo1", item_type=ItemType.FOLDER),
             ItemResult(item_id="repo2:", item_name="repo2", item_type=ItemType.FOLDER),
         ]
-
         self.assertEqual(result_page_1.items, expected_items_page_1)
         self.assertEqual(result_page_1.next_sample_cursor, "page=2")
+
+    async def test_list_root_items_second_page(self):
         mock_response_page_2 = [
             {"id": "3", "name": "repo3", "path_with_namespace": "repo3"},
         ]
@@ -171,11 +172,10 @@ class TestGitlabStorageImp(unittest.IsolatedAsyncioTestCase):
         expected_items_page_2 = [
             ItemResult(item_id="repo3:", item_name="repo3", item_type=ItemType.FOLDER),
         ]
-
         self.assertEqual(result_page_2.items, expected_items_page_2)
         self.assertIsNone(result_page_2.next_sample_cursor)
 
-    async def test_list_child_items_pagination(self):
+    async def test_list_child_items_first_page(self):
         folder_mock_page_1 = [
             {"name": "src", "path": "src", "type": "tree"},
             {"name": "README.md", "path": "README.md", "type": "blob"},
@@ -193,9 +193,10 @@ class TestGitlabStorageImp(unittest.IsolatedAsyncioTestCase):
                 item_id="1:README.md", item_name="README.md", item_type=ItemType.FILE
             ),
         ]
-
         self.assertEqual(result_page_1.items, expected_items_page_1)
         self.assertEqual(result_page_1.next_sample_cursor, "page=2")
+
+    async def test_list_child_items_second_page(self):
         folder_mock_page_2 = [
             {"name": "LICENSE", "path": "LICENSE", "type": "blob"},
         ]
@@ -206,6 +207,5 @@ class TestGitlabStorageImp(unittest.IsolatedAsyncioTestCase):
                 item_id="1:LICENSE", item_name="LICENSE", item_type=ItemType.FILE
             ),
         ]
-
         self.assertEqual(result_page_2.items, expected_items_page_2)
         self.assertIsNone(result_page_2.next_sample_cursor)
