@@ -13,7 +13,8 @@ from addon_service.common.invocation_status import InvocationStatus
 from addon_service.tests import _factories
 from addon_service.tests._helpers import (
     MockOSF,
-    jsonapi_ref,
+    jsonapi_thru_account_ref,
+    jsonapi_thru_addon_ref,
 )
 
 
@@ -94,9 +95,11 @@ class TestAddonOperationInvocationCreate(APITestCase):
     ):
         _relationships = {}
         if thru_addon is not None:
-            _relationships["thru_addon"] = {"data": jsonapi_ref(thru_addon)}
+            _relationships["thru_addon"] = {"data": jsonapi_thru_addon_ref(thru_addon)}
         if thru_account is not None:
-            _relationships["thru_account"] = {"data": jsonapi_ref(thru_account)}
+            _relationships["thru_account"] = {
+                "data": jsonapi_thru_account_ref(thru_account)
+            }
         _payload = {
             "data": {
                 "type": "addon-operation-invocations",

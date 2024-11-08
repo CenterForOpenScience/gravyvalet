@@ -1,6 +1,7 @@
 from rest_framework_json_api import serializers
 
 from addon_service.common.enum_serializers import EnumNameMultipleChoiceField
+from addon_service.configured_addon.models import ConfiguredAddon
 from addon_toolkit import AddonCapabilities
 
 
@@ -43,6 +44,7 @@ class ConfiguredAddonSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         resource_name = "configured-addons"
+        model = ConfiguredAddon
         fields = [
             "id",
             "url",

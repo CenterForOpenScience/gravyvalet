@@ -262,6 +262,20 @@ def jsonapi_ref(obj) -> dict:
     }
 
 
+def jsonapi_thru_account_ref(obj) -> dict:
+    return {
+        "type": "authorized_account",
+        "id": obj.pk,
+    }
+
+
+def jsonapi_thru_addon_ref(obj) -> dict:
+    return {
+        "type": "configured-addons",
+        "id": obj.pk,
+    }
+
+
 def get_test_request(user=None, method="get", path="", cookies=None):
     _factory_method = getattr(APIRequestFactory(), method)
     _request = _factory_method(path)  # note that path is optional for view tests
