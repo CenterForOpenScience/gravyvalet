@@ -13,8 +13,12 @@ from addon_service.tasks.invocation import (
 )
 from addon_toolkit import AddonOperationType
 
+from ..authorized_account.citation.serializers import (
+    AuthorizedCitationAccountSerializer,
+)
 from ..authorized_account.models import AuthorizedAccount
 from ..authorized_account.storage.serializers import AuthorizedStorageAccountSerializer
+from ..configured_addon.citation.serializers import ConfiguredCitationAddonSerializer
 from ..configured_addon.models import ConfiguredAddon
 from ..configured_addon.storage.serializers import ConfiguredStorageAddonSerializer
 from .models import AddonOperationInvocation
@@ -43,13 +47,23 @@ class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
     def retrieve_related(self, request, *args, **kwargs):
         instance = self.get_related_instance()
         if isinstance(instance, AuthorizedAccount):
-            serializer = AuthorizedStorageAccountSerializer(
-                instance, context={"request": request}
-            )
+            if hasattr(instance, "authorizedstorageaccount"):
+                serializer = AuthorizedStorageAccountSerializer(
+                    instance, context={"request": request}
+                )
+            else:
+                serializer = AuthorizedCitationAccountSerializer(
+                    instance, context={"request": request}
+                )
         elif isinstance(instance, ConfiguredAddon):
-            serializer = ConfiguredStorageAddonSerializer(
-                instance, context={"request": request}
-            )
+            if hasattr(instance, "configuredstorageaddon"):
+                serializer = ConfiguredStorageAddonSerializer(
+                    instance, context={"request": request}
+                )
+            else:
+                serializer = ConfiguredCitationAddonSerializer(
+                    instance, context={"request": request}
+                )
         else:
             serializer = self.get_related_serializer(instance)
         return Response(serializer.data)
