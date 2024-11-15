@@ -1,3 +1,5 @@
+from rest_framework.response import Response
+
 from addon_service.common.permissions import (
     IsAuthenticated,
     SessionUserIsOwner,
@@ -11,6 +13,10 @@ from addon_service.tasks.invocation import (
 )
 from addon_toolkit import AddonOperationType
 
+from ..authorized_account.models import AuthorizedAccount
+from ..authorized_account.storage.serializers import AuthorizedStorageAccountSerializer
+from ..configured_addon.models import ConfiguredAddon
+from ..configured_addon.storage.serializers import ConfiguredStorageAddonSerializer
 from .models import AddonOperationInvocation
 from .serializers import AddonOperationInvocationSerializer
 
@@ -33,6 +39,20 @@ class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
                 raise NotImplementedError(
                     f"no permission implemented for action '{self.action}'"
                 )
+
+    def retrieve_related(self, request, *args, **kwargs):
+        instance = self.get_related_instance()
+        if isinstance(instance, AuthorizedAccount):
+            serializer = AuthorizedStorageAccountSerializer(
+                instance, context={"request": request}
+            )
+        elif isinstance(instance, ConfiguredAddon):
+            serializer = ConfiguredStorageAddonSerializer(
+                instance, context={"request": request}
+            )
+        else:
+            serializer = self.get_related_serializer(instance)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         super().perform_create(serializer)

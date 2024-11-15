@@ -264,7 +264,7 @@ def jsonapi_ref(obj) -> dict:
 
 def jsonapi_thru_account_ref(obj) -> dict:
     return {
-        "type": "authorized_account",
+        "type": "authorized-accounts",
         "id": obj.pk,
     }
 
