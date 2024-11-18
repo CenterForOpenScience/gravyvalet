@@ -13,7 +13,7 @@ from addon_service.common.validators import (
 from addon_service.external_service.models import ExternalService
 
 
-class SupportedFeatures(Flag):
+class StorageSupportedFeatures(Flag):
     ADD_UPDATE_FILES = auto()
     ADD_UPDATE_FILES_PARTIAL = auto()
     DELETE_FILES = auto()
@@ -26,7 +26,7 @@ class SupportedFeatures(Flag):
 
 
 def validate_supported_features(value):
-    _validate_enum_value(SupportedFeatures, value)
+    _validate_enum_value(StorageSupportedFeatures, value)
 
 
 class ExternalStorageService(ExternalService):
@@ -38,12 +38,12 @@ class ExternalStorageService(ExternalService):
     )
 
     @property
-    def supported_features(self) -> list[SupportedFeatures]:
+    def supported_features(self) -> list[StorageSupportedFeatures]:
         """get the enum representation of int_supported_features"""
-        return SupportedFeatures(self.int_supported_features)
+        return StorageSupportedFeatures(self.int_supported_features)
 
     @supported_features.setter
-    def supported_features(self, new_supported_features: SupportedFeatures):
+    def supported_features(self, new_supported_features: StorageSupportedFeatures):
         """set int_authorized_capabilities without caring its int"""
         self.int_supported_features = new_supported_features.value
 

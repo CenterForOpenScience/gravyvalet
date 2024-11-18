@@ -6,7 +6,7 @@ from addon_service.common import view_names
 from addon_service.common.enum_serializers import EnumNameMultipleChoiceField
 from addon_service.common.serializer_fields import DataclassRelatedDataField
 from addon_service.external_service.serializers import ExternalServiceSerializer
-from addon_service.external_service.storage.models import SupportedFeatures
+from addon_service.external_service.storage.models import StorageSupportedFeatures
 from addon_service.models import ExternalStorageService
 
 
@@ -26,7 +26,7 @@ class ExternalStorageServiceSerializer(ExternalServiceSerializer):
     )
 
     supported_features = EnumNameMultipleChoiceField(
-        enum_cls=SupportedFeatures, read_only=True
+        enum_cls=StorageSupportedFeatures, read_only=True
     )
 
     class Meta:
