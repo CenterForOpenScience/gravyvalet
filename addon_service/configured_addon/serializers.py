@@ -1,6 +1,8 @@
+from django.core.exceptions import ValidationError
 from rest_framework_json_api import serializers
 
 from addon_service.common.enum_serializers import EnumNameMultipleChoiceField
+from addon_service.configured_addon.models import ConfiguredAddon
 from addon_toolkit import AddonCapabilities
 
 
@@ -30,6 +32,14 @@ class ConfiguredAddonSerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         validated_data = self.fix_dotted_base_account(validated_data)
+        base_account = validated_data["base_account"]
+        if ConfiguredAddon.objects.filter(
+            base_account__external_service=base_account.external_service,
+            authorized_resource__resource_uri=validated_data["resource_uri"],
+        ).exists():
+            raise ValidationError(
+                f"ConfiguredAddon for requested addon and authorized_resource {validated_data['resource_uri']} already exists"
+            )
         return super().create(validated_data)
 
     def fix_dotted_base_account(self, validated_data):
