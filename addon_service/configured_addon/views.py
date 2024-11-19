@@ -2,7 +2,7 @@ from addon_service.common.permissions import (
     IsAuthenticated,
     IsValidHMACSignedRequest,
     SessionUserCanViewReferencedResource,
-    SessionUserIsOwner,
+    SessionUserIsOwnerOrResourceAdmin,
     SessionUserMayConnectAddon,
 )
 from addon_service.common.viewsets import RetrieveWriteDeleteViewSet
@@ -14,7 +14,7 @@ class ConfiguredAddonViewSet(RetrieveWriteDeleteViewSet):
             case "retrieve" | "retrieve_related":
                 return [IsAuthenticated(), SessionUserCanViewReferencedResource()]
             case "partial_update" | "update" | "destroy":
-                return [IsAuthenticated(), SessionUserIsOwner()]
+                return [IsAuthenticated(), SessionUserIsOwnerOrResourceAdmin()]
             case "create":
                 return [IsAuthenticated(), SessionUserMayConnectAddon()]
             case "get_wb_credentials":

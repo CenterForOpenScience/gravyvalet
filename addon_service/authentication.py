@@ -13,7 +13,7 @@ class GVCombinedAuthentication(drf_authentication.BaseAuthentication):
         if _user_uri:
             UserReference.objects.get_or_create(user_uri=_user_uri)
             request.session["user_reference_uri"] = _user_uri
-            return (True, None)
+            return True, None
         return None  # unauthenticated
 
     def authenticate_header(self, request):
