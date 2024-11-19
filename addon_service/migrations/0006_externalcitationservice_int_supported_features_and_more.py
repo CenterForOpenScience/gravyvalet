@@ -12,7 +12,7 @@ import addon_service.external_service.storage.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("addon_service", "0004_alter_externalstorageservice_int_supported_features"),
+        ("addon_service", "0005_alter_externalstorageservice_int_supported_features"),
     ]
 
     operations = [
@@ -23,16 +23,6 @@ class Migration(migrations.Migration):
                 null=True,
                 validators=[
                     addon_service.external_service.citation.models.validate_supported_features
-                ],
-            ),
-        ),
-        migrations.AlterField(
-            model_name="externalstorageservice",
-            name="int_supported_features",
-            field=models.IntegerField(
-                null=True,
-                validators=[
-                    addon_service.external_service.storage.models.validate_supported_features
                 ],
             ),
         ),
