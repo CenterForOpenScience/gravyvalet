@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from asgiref.sync import async_to_sync
 from django.core.exceptions import ValidationError as ModelValidationError
 from rest_framework_json_api import serializers
 
-from addon_service.authorized_account.models import AuthorizedAccount
 from addon_service.common.credentials_formats import CredentialsFormats
 from addon_service.external_service.models import ExternalService
 from addon_service.osf_models.fields import encrypt_string
@@ -15,6 +16,9 @@ from addon_service.serializer_fields import (
 from addon_service.user_reference.models import UserReference
 from addon_toolkit import AddonCapabilities
 
+
+if TYPE_CHECKING:
+    from addon_service.authorized_account.models import AuthorizedAccount
 
 REQUIRED_FIELDS = frozenset(["url", "account_owner", "authorized_operations"])
 
@@ -149,8 +153,6 @@ class AuthorizedAccountSerializer(serializers.HyperlinkedModelSerializer):
         return instance
 
     class Meta:
-        resource_name = "authorized-accounts"
-        model = AuthorizedAccount
         fields = [
             "id",
             "url",

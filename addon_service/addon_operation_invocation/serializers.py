@@ -75,8 +75,8 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
     )
 
     included_serializers = {
-        "thru_account": "addon_service.serializers.AuthorizedAccountSerializer",
-        "thru_addon": "addon_service.serializers.ConfiguredAddonSerializer",
+        "thru_account": "addon_service.serializers.AuthorizedStorageAccountSerializer",
+        "thru_addon": "addon_service.serializers.ConfiguredStorageAddonSerializer",
         "operation": "addon_service.serializers.AddonOperationSerializer",
         "by_user": "addon_service.serializers.UserReferenceSerializer",
     }

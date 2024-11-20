@@ -87,7 +87,7 @@ class FigshareStorageImp(storage.StorageAddonHttpRequestorImp):
             ]
 
     async def _fetch_project_articles(
-        self, project_id: int | str, page_cursor: int
+        self, project_id: str, page_cursor: int
     ) -> list[Article]:
         async with self.network.GET(
             f"account/projects/{project_id}/articles",

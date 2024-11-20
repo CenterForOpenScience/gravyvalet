@@ -32,5 +32,4 @@ class ExternalCitationServiceSerializer(ExternalServiceSerializer):
             "display_name",
             "url",
             "configurable_api_root",
-            "wb_key",
         ]

@@ -18,7 +18,6 @@ class ConfiguredCitationAddonSerializer(ConfiguredAddonSerializer):
     """api serializer for the `ConfiguredCitationAddon` model"""
 
     root_folder = serializers.CharField(required=False, allow_blank=True)
-    external_service_name = serializers.CharField(read_only=True)
     url = serializers.HyperlinkedIdentityField(
         view_name=view_names.detail_view(RESOURCE_TYPE)
     )
@@ -68,6 +67,4 @@ class ConfiguredCitationAddonSerializer(ConfiguredAddonSerializer):
             "connected_capabilities",
             "connected_operations",
             "connected_operation_names",
-            "external_service_name",
-            "external_citation_service",
         ]

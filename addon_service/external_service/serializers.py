@@ -28,7 +28,6 @@ class ExternalServiceSerializer(serializers.HyperlinkedModelSerializer):
     }
 
     class Meta:
-        resource_name = "external-services"
         fields = [
             "id",
             "addon_imp",
