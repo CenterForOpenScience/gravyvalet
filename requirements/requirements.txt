@@ -7,7 +7,7 @@ django-cors-headers==4.3.1
 django-filter
 celery==5.4.0
 jsonschema==4.21.1
-aiohttp==3.9.3
+aiohttp==3.11.6
 pyjwe==1.0.0
 cryptography==42.0.7
 
