@@ -132,7 +132,6 @@ class AuthorizedAccountSerializer(serializers.HyperlinkedModelSerializer):
         return authorized_account
 
     def update(self, instance, validated_data):
-        # validated_data = self.fix_dotted_base_account(validated_data)
         # only these fields may be PATCHed:
         if "display_name" in validated_data:
             instance.display_name = validated_data["display_name"]
