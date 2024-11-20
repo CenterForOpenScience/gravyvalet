@@ -255,6 +255,8 @@ class AuthorizedAccount(AddonsServiceBaseModel):
             ),
             state_nonce=oauth2_utils.generate_state_nonce(),
         )
+        # reset credentials
+        self._credentials = None
         self.save()
 
     def clean(self):
