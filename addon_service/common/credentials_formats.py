@@ -54,6 +54,7 @@ class CredentialsFormats(Enum):
             CredentialsFormats.ACCESS_KEY_SECRET_KEY,
             CredentialsFormats.USERNAME_PASSWORD,
             CredentialsFormats.PERSONAL_ACCESS_TOKEN,
+            CredentialsFormats.DATAVERSE_API_TOKEN,
         }
 
     def iter_headers(self, credentials: Credentials) -> Iterator[tuple[str, str]]:

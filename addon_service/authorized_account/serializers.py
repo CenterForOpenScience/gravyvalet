@@ -115,7 +115,9 @@ class AuthorizedAccountSerializer(serializers.HyperlinkedModelSerializer):
                         "initiate_oauth": "this external service is not configured for oauth"
                     }
                 )
-        elif validated_data.get("credentials"):
+        elif authorized_account.credentials_format.is_direct_from_user:
+            if not validated_data.get("credentials"):
+                raise ModelValidationError("Credentials are required")
             authorized_account.credentials = validated_data["credentials"]
             authorized_account.imp_cls.confirm_credentials(
                 authorized_account.credentials
