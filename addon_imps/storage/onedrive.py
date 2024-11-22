@@ -1,3 +1,5 @@
+from dataclasses import replace
+from typing import Final
 from urllib.parse import (
     parse_qs,
     urlparse,
@@ -12,6 +14,9 @@ class NextLinkCursor(Cursor):
         self.this_cursor_str = next_link
 
 
+ROOT_ITEM_ID: Final[str] = "root"
+
+
 class OneDriveStorageImp(storage.StorageAddonHttpRequestorImp):
     """Storage on OneDrive
 
@@ -24,13 +29,11 @@ class OneDriveStorageImp(storage.StorageAddonHttpRequestorImp):
             return str(_json["id"])
 
     async def list_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
+        root_item = await self.get_item_info(ROOT_ITEM_ID)
         return storage.ItemSampleResult(
             items=[
-                storage.ItemResult(
-                    item_id="root",
-                    item_name="All Files",
-                    item_type=storage.ItemType.FOLDER,
-                ),
+                # This is required for waterbutler to understand that root is actual root (it checks if id == 'root')
+                replace(root_item, item_id=ROOT_ITEM_ID),
             ],
             total_count=1,
         )

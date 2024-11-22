@@ -1,4 +1,3 @@
-import asyncio
 import unittest
 from unittest.mock import (
     AsyncMock,
@@ -21,43 +20,48 @@ class NextLinkCursor(Cursor):
         super().__init__(cursor_str=next_link)
 
 
-class TestOneDriveStorageImp(unittest.TestCase):
+class TestOneDriveStorageImp(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         self.config = StorageConfig(
             external_api_url="https://graph.microsoft.com/v1.0",
             connected_root_id=None,
-            external_account_id=None,
+            external_account_id="account-id",
             max_upload_mb=100,
         )
         self.network = AsyncMock(spec=HttpRequestor)
         self.onedrive_imp = OneDriveStorageImp(config=self.config, network=self.network)
 
-    def test_get_external_account_id(self):
+    async def test_get_external_account_id(self):
         mock_response = {"id": "user-id"}
         self.onedrive_imp.network.GET.return_value.__aenter__.return_value.json_content = AsyncMock(
             return_value=mock_response
         )
-        result = asyncio.run(self.onedrive_imp.get_external_account_id({}))
+        result = await self.onedrive_imp.get_external_account_id({})
         self.assertEqual(result, "user-id")
         self.onedrive_imp.network.GET.assert_called_with("me")
 
-    def test_list_root_items(self):
+    async def test_list_root_items(self):
         mock_root_item = ItemResult(
             item_id="root-id",
             item_name="Root",
             item_type=ItemType.FOLDER,
         )
+        returned_root_item = ItemResult(
+            item_id="root",
+            item_name="Root",
+            item_type=ItemType.FOLDER,
+        )
         self.onedrive_imp.get_item_info = AsyncMock(return_value=mock_root_item)
-        result = asyncio.run(self.onedrive_imp.list_root_items())
+        result = await self.onedrive_imp.list_root_items()
         expected_result = ItemSampleResult(
-            items=[mock_root_item],
+            items=[returned_root_item],
             total_count=1,
         )
         self.assertEqual(result.items, expected_result.items)
         self.onedrive_imp.get_item_info.assert_called_with("root")
 
-    def test_get_item_info(self):
+    async def test_get_item_info(self):
         mock_response = {
             "id": "item-id",
             "name": "Item Name",
@@ -68,7 +72,7 @@ class TestOneDriveStorageImp(unittest.TestCase):
         self.onedrive_imp.network.GET.return_value.__aenter__.return_value.json_content = AsyncMock(
             return_value=mock_response
         )
-        result = asyncio.run(self.onedrive_imp.get_item_info("item-id"))
+        result = await self.onedrive_imp.get_item_info("item-id")
         expected_result = ItemResult(
             item_id="item-id",
             item_name="Item Name",
@@ -76,11 +80,11 @@ class TestOneDriveStorageImp(unittest.TestCase):
         )
         self.assertEqual(result, expected_result)
         self.onedrive_imp.network.GET.assert_called_with(
-            "me/drive/items/item-id",
+            "drives/account-id/items/item-id",
             query={"select": "id,name,folder,createdDateTime,lastModifiedDateTime"},
         )
 
-    def test_list_child_items(self):
+    async def test_list_child_items(self):
         mock_response = {
             "value": [
                 {
@@ -109,7 +113,7 @@ class TestOneDriveStorageImp(unittest.TestCase):
                 "https://graph.microsoft.com/nextPageLink"
             )
 
-            result = asyncio.run(self.onedrive_imp.list_child_items("parent-item-id"))
+            result = await self.onedrive_imp.list_child_items("parent-item-id")
 
             expected_items = [
                 ItemResult(
@@ -131,7 +135,7 @@ class TestOneDriveStorageImp(unittest.TestCase):
             )
 
         self.onedrive_imp.network.GET.assert_called_with(
-            "me/drive/items/parent-item-id/children",
+            "drives/account-id/items/parent-item-id/children",
             query={
                 "select": "id,name,folder,createdDateTime,lastModifiedDateTime",
             },
