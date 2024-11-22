@@ -62,6 +62,4 @@ class CustomPolymorphicResourceRelatedField(PolymorphicResourceRelatedField):
             data["type"] = "configured-citation-addons"
         elif hasattr(value, "configuredstorageaccount"):
             data["type"] = "configured-storage-addons"
-        else:
-            raise ValueError(f"Unknown polymorphic model: {value}")
         return data
