@@ -55,13 +55,13 @@ class CustomPolymorphicResourceRelatedField(PolymorphicResourceRelatedField):
     def to_representation(self, value):
         data = super().to_representation(value)
         if hasattr(value, "authorizedcitationaccount"):
-            data["type"] = "authorized-citation-account"
+            data["type"] = "authorized-citation-accounts"
         elif hasattr(value, "authorizedstorageaccount"):
-            data["type"] = "authorized-storage-account"
-        elif hasattr(value, "configuredstorageaddon"):
-            data["type"] = "configured-storage-addon"
+            data["type"] = "authorized-storage-accounts"
+        elif hasattr(value, "configuredcitationaddon"):
+            data["type"] = "configured-citation-addons"
         elif hasattr(value, "configuredstorageaccount"):
-            data["type"] = "configured-storage-account"
+            data["type"] = "configured-storage-addons"
         else:
-            raise ValueError("unknown polymorphic type")
+            raise ValueError(f"Unknown polymorphic model: {value}")
         return data
