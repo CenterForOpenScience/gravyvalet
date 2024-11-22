@@ -60,7 +60,7 @@ class SessionUserMayConnectAddon(permissions.BasePermission):
             and osf.has_osf_permission_on_resource(
                 request,
                 obj.resource_uri,
-                osf.OSFPermission.ADMIN,
+                osf.OSFPermission.WRITE,
             )
         )
 
