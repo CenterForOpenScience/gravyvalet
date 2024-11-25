@@ -62,7 +62,9 @@ class DataverseStorageImp(storage.StorageAddonHttpRequestorImp):
             ],
         ) as response:
             content = await response.json_content()
-            return parse_mydata(content["data"])
+            if resp_data := content.get("data"):
+                return parse_mydata(resp_data)
+            return ItemSampleResult(items=[], total_count=0)
 
     async def get_item_info(self, item_id: str) -> storage.ItemResult:
         if not item_id:
