@@ -125,7 +125,8 @@ async def _token_request(
         if _token_response.content_type == "application/x-www-form-urlencoded":
             response_text = await _token_response.text()
             response_data = dict(urllib.parse.parse_qsl(response_text))
-            response_data["expires_in"] = int(response_data["expires_in"])
+            if expires := response_data.get("expires_in"):
+                response_data["expires_in"] = int(expires)
 
             return FreshTokenResult.from_token_response_json(response_data)
         if not HTTPStatus(_token_response.status).is_success:

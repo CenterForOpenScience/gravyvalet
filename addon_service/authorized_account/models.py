@@ -291,7 +291,10 @@ class AuthorizedAccount(AddonsServiceBaseModel):
                     "credentials": "OAuth2 accounts must assign exactly one of state_nonce and access_token"
                 }
             )
-        if self.credentials and not self.oauth2_token_metadata.refresh_token:
+        if self.credentials and not (
+            self.oauth2_token_metadata.refresh_token
+            or self.oauth2_token_metadata.access_token_only
+        ):
             raise ValidationError(
                 {
                     "credentials": "OAuth2 accounts with an access token must have a refresh token"
@@ -313,6 +316,8 @@ class AuthorizedAccount(AddonsServiceBaseModel):
             _oauth_client_config,
             _oauth_token_metadata,
         ) = await self._load_oauth2_client_config_and_token_metadata()
+        if sync_to_async(lambda: _oauth_token_metadata.access_token_only)():
+            return
         _fresh_token_result = await oauth2_utils.get_refreshed_access_token(
             token_endpoint_url=_oauth_client_config.token_endpoint_url,
             refresh_token=_oauth_token_metadata.refresh_token,
