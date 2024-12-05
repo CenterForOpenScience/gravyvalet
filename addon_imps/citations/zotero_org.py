@@ -1,3 +1,4 @@
+from addon_toolkit.async_utils import join_list
 from addon_toolkit.interfaces.citation import (
     CitationAddonImp,
     ItemResult,
@@ -7,7 +8,6 @@ from addon_toolkit.interfaces.citation import (
 
 
 class ZoteroOrgCitationImp(CitationAddonImp):
-
     async def get_external_account_id(self, auth_result_extras: dict[str, str]) -> str:
         user_id = auth_result_extras.get("userID")
         if user_id:
@@ -48,18 +48,28 @@ class ZoteroOrgCitationImp(CitationAddonImp):
                 )
 
     async def list_root_collections(self) -> ItemSampleResult:
+        """
+        For Zotero this API call lists all libraries which user may access
+        """
         async with self.network.GET(
-            f"users/{self.config.external_account_id}/collections"
+            f"users/{self.config.external_account_id}/groups"
         ) as response:
             collections = await response.json_content()
             items = [
                 ItemResult(
-                    item_id=collection["key"],
-                    item_name=collection["data"].get("name", "Unnamed Collection"),
+                    item_id=f'{collection["id"]}:',
+                    item_name=collection["data"].get("name", "Unnamed Library"),
                     item_type=ItemType.COLLECTION,
                 )
                 for collection in collections
             ]
+            items.append(
+                ItemResult(
+                    item_id="personal:",
+                    item_name="My Library",
+                    item_type=ItemType.COLLECTION,
+                )
+            )
             return ItemSampleResult(items=items, total_count=len(items))
 
     async def list_collection_items(
@@ -67,17 +77,49 @@ class ZoteroOrgCitationImp(CitationAddonImp):
         collection_id: str,
         filter_items: ItemType | None = None,
     ) -> ItemSampleResult:
-        async with self.network.GET(
-            f"users/{self.config.external_account_id}/collections/{collection_id}/items",
-        ) as response:
+        library, collection = collection_id.split(":")
+        tasks = []
+        if filter_items != ItemType.COLLECTION:
+            tasks.append(self.fetch_collection_documents(library, collection))
+        if filter_items != ItemType.DOCUMENT:
+            tasks.append(self.fetch_collection_subcollections(library, collection))
+        all_items = await join_list(tasks)
+        return ItemSampleResult(items=all_items, total_count=len(all_items))
+
+    async def fetch_collection_subcollections(self, library, collection):
+        prefix = self.resolve_collection_prefix(library, collection)
+        async with self.network.GET(f"{prefix}/collections/top") as response:
             items_json = await response.json_content()
-            items = [
+            return [
                 ItemResult(
-                    item_id=item["key"],
-                    item_name=item["data"].get("title", "Unnamed title"),
-                    item_type=ItemType.DOCUMENT,
+                    item_id=f'{library}:{item["key"]}',
+                    item_name=item["data"].get("name", "Unnamed title"),
+                    item_type=ItemType.COLLECTION,
                 )
                 for item in items_json
-                if filter_items is None
             ]
-            return ItemSampleResult(items=items, total_count=len(items))
+
+    async def fetch_collection_documents(self, library, collection):
+        prefix = self.resolve_collection_prefix(library, collection)
+        async with self.network.GET(
+            f"{prefix}/items/top", query={"format": "csljson"}
+        ) as response:
+            items_json = await response.json_content()
+            return [
+                ItemResult(
+                    item_id=f'{library}:{item["id"]}',
+                    item_name=item.get("title", "Unnamed title"),
+                    item_type=ItemType.DOCUMENT,
+                    csl=item,
+                )
+                for item in items_json["items"]
+            ]
+
+    def resolve_collection_prefix(self, library: str, collection):
+        if library == "personal":
+            prefix = f"users/{self.config.external_account_id}"
+        else:
+            prefix = f"groups/{library}"
+        if collection != "ROOT":
+            prefix = f"{prefix}/collections/{collection}"
+        return prefix

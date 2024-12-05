@@ -1,5 +1,6 @@
 import asyncio
 
+from addon_toolkit.async_utils import join_list
 from addon_toolkit.interfaces.citation import (
     CitationAddonImp,
     ItemResult,
@@ -20,41 +21,61 @@ class MendeleyCitationImp(CitationAddonImp):
             return str(user_id)
 
     async def list_root_collections(self) -> ItemSampleResult:
-        async with self.network.GET("folders") as response:
-            response_json = await response.json_content()
-            raw_collections = [
-                collection
-                for collection in response_json
-                if "parent_id" not in collection
+        return ItemSampleResult(
+            items=[
+                ItemResult(
+                    item_id="ROOT",
+                    item_type=ItemType.COLLECTION,
+                    item_name="All Documents",
+                )
             ]
-            return self._parse_collection_response(raw_collections)
+        )
 
     async def list_collection_items(
         self,
         collection_id: str,
         filter_items: ItemType | None = None,
     ) -> ItemSampleResult:
+        tasks = []
+        if filter_items != ItemType.COLLECTION:
+            tasks.append(self._fetch_collection_docuemnts(collection_id))
+        if filter_items != ItemType.DOCUMENT:
+            tasks.append(self._fetch_subcollections(collection_id))
+        items = await join_list(tasks)
+
+        return ItemSampleResult(items=items)
+
+    async def _fetch_subcollections(self, collection_id):
         async with self.network.GET(
-            f"folders/{collection_id}/documents",
+            "folders",
+            query={"parent_id": collection_id} if collection_id != "ROOT" else {},
         ) as response:
             document_ids = await response.json_content()
-            items = await self._fetch_documents_details(document_ids, filter_items)
+            items = self._parse_collection_response(document_ids, collection_id)
 
-            return ItemSampleResult(items=items, total_count=len(items))
+            return items.items
+
+    async def _fetch_collection_docuemnts(self, collection_id: str):
+        if collection_id and collection_id != "ROOT":
+            prefix = f"folders/{collection_id}/"
+        else:
+            prefix = ""
+        async with self.network.GET(
+            f"{prefix}documents",
+        ) as response:
+            document_ids = await response.json_content()
+            return await self._fetch_documents_details(document_ids)
 
     async def _fetch_documents_details(
-        self, document_ids: list[dict], filter_items: ItemType | None
+        self, document_ids: list[dict]
     ) -> list[ItemResult]:
-        tasks = [
-            self._fetch_item_details(doc["id"], filter_items) for doc in document_ids
-        ]
+        tasks = [self._fetch_item_details(doc["id"]) for doc in document_ids]
 
         return list(await asyncio.gather(*tasks))
 
     async def _fetch_item_details(
         self,
         item_id: str,
-        filter_items: ItemType | None,
     ) -> ItemResult:
         async with self.network.GET(f"documents/{item_id}") as item_response:
             item_details = await item_response.json_content()
@@ -68,16 +89,17 @@ class MendeleyCitationImp(CitationAddonImp):
                 csl=csl_data,
             )
 
-    def _parse_collection_response(self, response_json: dict) -> ItemSampleResult:
+    def _parse_collection_response(
+        self, response_json: dict, parent_id: str
+    ) -> ItemSampleResult:
         items = [
             ItemResult(
                 item_id=collection["id"],
                 item_name=collection["name"],
                 item_type=ItemType.COLLECTION,
-                item_path=None,
-                csl=None,
             )
             for collection in response_json
+            if collection.get(parent_id, "ROOT") == parent_id
         ]
 
         return ItemSampleResult(items=items, total_count=len(items))
