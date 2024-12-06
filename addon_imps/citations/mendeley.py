@@ -38,24 +38,23 @@ class MendeleyCitationImp(CitationAddonImp):
     ) -> ItemSampleResult:
         tasks = []
         if filter_items != ItemType.COLLECTION:
-            tasks.append(self._fetch_collection_docuemnts(collection_id))
+            tasks.append(self._fetch_collection_documents(collection_id))
         if filter_items != ItemType.DOCUMENT:
             tasks.append(self._fetch_subcollections(collection_id))
         items = await join_list(tasks)
 
-        return ItemSampleResult(items=items)
+        return ItemSampleResult(items=items, total_count=len(items))
 
     async def _fetch_subcollections(self, collection_id):
         async with self.network.GET(
             "folders",
-            query={"parent_id": collection_id} if collection_id != "ROOT" else {},
         ) as response:
             document_ids = await response.json_content()
             items = self._parse_collection_response(document_ids, collection_id)
 
             return items.items
 
-    async def _fetch_collection_docuemnts(self, collection_id: str):
+    async def _fetch_collection_documents(self, collection_id: str):
         if collection_id and collection_id != "ROOT":
             prefix = f"folders/{collection_id}/"
         else:
@@ -99,7 +98,7 @@ class MendeleyCitationImp(CitationAddonImp):
                 item_type=ItemType.COLLECTION,
             )
             for collection in response_json
-            if collection.get(parent_id, "ROOT") == parent_id
+            if collection.get("parent_id", "ROOT") == parent_id
         ]
 
         return ItemSampleResult(items=items, total_count=len(items))

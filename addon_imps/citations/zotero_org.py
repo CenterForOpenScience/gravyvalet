@@ -82,11 +82,11 @@ class ZoteroOrgCitationImp(CitationAddonImp):
         if filter_items != ItemType.COLLECTION:
             tasks.append(self.fetch_collection_documents(library, collection))
         if filter_items != ItemType.DOCUMENT:
-            tasks.append(self.fetch_collection_subcollections(library, collection))
+            tasks.append(self.fetch_subcollections(library, collection))
         all_items = await join_list(tasks)
         return ItemSampleResult(items=all_items, total_count=len(all_items))
 
-    async def fetch_collection_subcollections(self, library, collection):
+    async def fetch_subcollections(self, library, collection):
         prefix = self.resolve_collection_prefix(library, collection)
         async with self.network.GET(f"{prefix}/collections/top") as response:
             items_json = await response.json_content()
