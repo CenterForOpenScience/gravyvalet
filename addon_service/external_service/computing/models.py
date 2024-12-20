@@ -13,7 +13,11 @@ from addon_service.external_service.models import ExternalService
 
 
 class ComputingSupportedFeatures(Flag):
-    LOGS = auto()
+    ADD_UPDATE_FILES_PARTIAL = auto()
+    FORKING_PARTIAL = auto()
+    LOGS_PARTIAL = auto()
+    PERMISSIONS_PARTIAL = auto()
+    REGISTERING_PARTIAL = auto()
 
 
 def validate_supported_features(value):
