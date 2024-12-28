@@ -22,7 +22,7 @@ class AuthorizedComputingAccount(AuthorizedAccount):
         imp = await get_computing_addon_instance(
             self.imp_cls,
             self,
-            self.computing_imp_config,
+            self.config,
         )
         self.external_account_id = await imp.get_external_account_id(auth_extras or {})
         await self.asave()

@@ -12,6 +12,8 @@ from addon_toolkit.interfaces.citation import (
     CitationConfig,
 )
 from addon_toolkit.interfaces.computing import (
+    ComputingAddonClientRequestorImp,
+    ComputingAddonHttpRequestorImp,
     ComputingAddonImp,
     ComputingConfig,
 )
@@ -113,14 +115,22 @@ async def get_computing_addon_instance(
     """create an instance of a `ComputingAddonImp`"""
 
     assert issubclass(imp_cls, ComputingAddonImp)
-    return imp_cls(
-        config=config,
-        network=GravyvaletHttpRequestor(
-            client_session=await get_singleton_client_session(),
-            prefix_url=config.external_api_url,
-            account=account,
-        ),
-    )
+    assert (
+        imp_cls is not ComputingAddonImp
+    ), "Addons shouldn't directly extend ComputingAddonImp"
+    if issubclass(imp_cls, ComputingAddonHttpRequestorImp):
+        imp = imp_cls(
+            config=config,
+            network=GravyvaletHttpRequestor(
+                client_session=await get_singleton_client_session(),
+                prefix_url=config.external_api_url,
+                account=account,
+            ),
+        )
+    if issubclass(imp_cls, ComputingAddonClientRequestorImp):
+        imp = imp_cls(credentials=await account.get_credentials__async(), config=config)
+
+    return imp
 
 
 get_computing_addon_instance__blocking = async_to_sync(get_computing_addon_instance)
