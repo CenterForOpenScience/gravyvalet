@@ -40,4 +40,5 @@ class ExternalComputingServiceSerializer(ExternalServiceSerializer):
             "configurable_api_root",
             "supported_features",
             "icon_url",
+            "wb_key",
         ]
