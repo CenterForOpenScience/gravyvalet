@@ -32,3 +32,8 @@ class BoaComputingImp(computing.ComputingAddonClientRequestorImp):
         boa_client = BoaClient(endpoint=BOA_API_ENDPOINT)
         boa_client.login(credentials.username, credentials.password)
         return boa_client
+
+    async def build_wb_config(self) -> dict:
+        return {
+            "host": BOA_API_ENDPOINT,
+        }

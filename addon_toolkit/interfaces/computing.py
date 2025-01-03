@@ -44,6 +44,9 @@ class ComputingAddonImp(AddonImp):
 
     config: ComputingConfig
 
+    async def build_wb_config(self) -> dict:
+        return {}
+
 
 @dataclasses.dataclass
 class ComputingAddonHttpRequestorImp(ComputingAddonImp):
