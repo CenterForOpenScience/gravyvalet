@@ -58,12 +58,7 @@ async def get_osf_user_uri(request: django_http.HttpRequest) -> str | None:
     _auth_headers = _get_osf_auth_headers(request)
     if not _auth_headers:
         return None
-    _client = await get_singleton_client_session()
-    async with _client.get(_osfapi_me_url(), headers=_auth_headers) as _response:
-        if HTTPStatus(_response.status).is_client_error:
-            return None
-        _response_content = await _response.json()
-        return _iri_from_osfapi_resource(_response_content["data"])
+    return request.session["user_reference_uri"]
 
 
 @async_to_sync
