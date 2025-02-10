@@ -14,6 +14,10 @@ jobs:
         postgres-version: ['15']
     runs-on: ubuntu-latest
     services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
       postgres:
         image: postgres:${{ matrix.postgres-version }}
         env:
@@ -58,3 +62,4 @@ jobs:
           POSTGRES_DB: gravyvalettest
           POSTGRES_USER: postgres
           SECRET_KEY: oh-so-secret
+          REDIS_HOST: redis://localhost:6379
