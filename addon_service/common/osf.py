@@ -48,9 +48,7 @@ class OSFPermission(enum.StrEnum):
 async def get_osf_user_uri(request: django_http.HttpRequest) -> str | None:
     """get a uri identifying the user making this request"""
     try:
-        uri = _get_hmac_verified_user_iri(request)
-        request.session["user_reference_uri"] = uri
-        return uri
+        return _get_hmac_verified_user_iri(request)
     except hmac_utils.RejectedHmac as e:
         _logger.critical(f"rejected hmac signature!?\n\tpath:{request.path}")
         raise PermissionDenied(e)
@@ -71,8 +69,7 @@ async def get_osf_user_uri(request: django_http.HttpRequest) -> str | None:
         if HTTPStatus(_response.status).is_client_error:
             return None
         _response_content = await _response.json()
-        uri = _iri_from_osfapi_resource(_response_content["data"])
-        request.session["user_reference_uri"] = uri
+        return _iri_from_osfapi_resource(_response_content["data"])
 
 
 @async_to_sync

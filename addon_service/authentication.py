@@ -12,6 +12,8 @@ class GVCombinedAuthentication(drf_authentication.BaseAuthentication):
         _user_uri = osf.get_osf_user_uri(request)
         if _user_uri:
             UserReference.objects.get_or_create(user_uri=_user_uri)
+            if not request.session.get("user_reference_uri"):
+                request.session["user_reference_uri"] = _user_uri
             return True, None
         return None  # unauthenticated
 

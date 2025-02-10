@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 
 class MockOSF:
-    _configured_caller_uri: str | None = None
+    _configured_caller_uri: str | None = ""
     _permissions: dict[str, dict[str, str | bool]]
 
     def __init__(self, permissions=None):
@@ -81,7 +81,7 @@ class MockOSF:
         self._permissions[resource_uri]["public"] = public
 
     def _get_assumed_caller(self, cookies=None):
-        if self._configured_caller_uri:
+        if self._configured_caller_uri or self._configured_caller_uri is None:
             return self._configured_caller_uri
         if cookies is not None:
             return cookies.get(settings.USER_REFERENCE_COOKIE)
