@@ -48,17 +48,31 @@ class OSFPermission(enum.StrEnum):
 async def get_osf_user_uri(request: django_http.HttpRequest) -> str | None:
     """get a uri identifying the user making this request"""
     try:
-        return _get_hmac_verified_user_iri(request)
+        uri = _get_hmac_verified_user_iri(request)
+        request.session["user_reference_uri"] = uri
+        return uri
     except hmac_utils.RejectedHmac as e:
         _logger.critical(f"rejected hmac signature!?\n\tpath:{request.path}")
         raise PermissionDenied(e)
     except hmac_utils.NotUsingHmac:
         pass  # the only acceptable hmac-related error is not using hmac at all
     # not hmac -- ask osf
+
+    if uri := request.session.get("user_reference_uri"):
+        return uri
+
     _auth_headers = _get_osf_auth_headers(request)
     if not _auth_headers:
         return None
-    return request.session["user_reference_uri"]
+    # we must handle the case when old, already created sessions must somehow set user_reference_uri
+    # TODO: delete after all existing osf sessions have been revoked/expired
+    _client = await get_singleton_client_session()
+    async with _client.get(_osfapi_me_url(), headers=_auth_headers) as _response:
+        if HTTPStatus(_response.status).is_client_error:
+            return None
+        _response_content = await _response.json()
+        uri = _iri_from_osfapi_resource(_response_content["data"])
+        request.session["user_reference_uri"] = uri
 
 
 @async_to_sync
