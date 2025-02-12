@@ -38,13 +38,20 @@ async def get_addon_instance(
     imp_cls: type[AddonImp],
     account: AuthorizedAccount,
     config: StorageConfig | CitationConfig | ComputingConfig,
+    require_network: bool = True,
 ) -> AddonImp:
     if issubclass(imp_cls, StorageAddonImp):
-        return await get_storage_addon_instance(imp_cls, account, config)
+        return await get_storage_addon_instance(
+            imp_cls, account, config, require_network
+        )
     elif issubclass(imp_cls, CitationAddonImp):
-        return await get_citation_addon_instance(imp_cls, account, config)
+        return await get_citation_addon_instance(
+            imp_cls, account, config, require_network
+        )
     elif issubclass(imp_cls, ComputingAddonImp):
-        return await get_computing_addon_instance(imp_cls, account, config)
+        return await get_computing_addon_instance(
+            imp_cls, account, config, require_network
+        )
     raise ValueError(f"unknown addon type {imp_cls}")
 
 
@@ -55,6 +62,7 @@ async def get_storage_addon_instance(
     imp_cls: type[StorageAddonImp],
     account: AuthorizedStorageAccount,
     config: StorageConfig,
+    require_network: bool,
 ) -> StorageAddonImp:
     """create an instance of a `StorageAddonImp`
 
@@ -67,10 +75,14 @@ async def get_storage_addon_instance(
     if issubclass(imp_cls, StorageAddonHttpRequestorImp):
         imp = imp_cls(
             config=config,
-            network=GravyvaletHttpRequestor(
-                client_session=await get_singleton_client_session(),
-                prefix_url=config.external_api_url,
-                account=account,
+            network=(
+                GravyvaletHttpRequestor(
+                    client_session=await get_singleton_client_session(),
+                    prefix_url=config.external_api_url,
+                    account=account,
+                )
+                if require_network
+                else None
             ),
         )
     if issubclass(imp_cls, StorageAddonClientRequestorImp):
