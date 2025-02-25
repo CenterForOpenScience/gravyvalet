@@ -1,0 +1,2 @@
+id,request_token_url,auth_url,auth_callback_url,access_token_url,client_key,client_secret
+e3663c71-3520-4fce-b0ff-e56c81a73d54,https://www.zotero.org/oauth/request,https://www.zotero.org/oauth/authorize,http://localhost:8004/v1/oauth1/callback,https://www.zotero.org/oauth/access,client_key,client_secret

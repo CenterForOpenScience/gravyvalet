@@ -1,0 +1,10 @@
+id,auth_uri,auth_callback_url,token_endpoint_url,client_id,client_secret,quirks
+5c161353-7444-478e-881f-3b8aec3a002a,https://figshare.com/account/applications/authorize,http://localhost:8004/v1/oauth2/callback,https://api.figshare.com/v2/token,client_id,client_secret,
+90b44f3d-66e3-444c-9261-534b9e37b21a,https://www.dropbox.com/oauth2/authorize?token_access_type=offline,http://localhost:8004/v1/oauth2/callback,https://www.dropbox.com/oauth2/token,client_id,client_secret,
+5cf93c06-c27f-4446-b8ac-ffac209ba465,https://accounts.google.com/o/oauth2/auth?access_type=offline&approval_prompt=force,http://localhost:8004/v1/oauth2/callback,https://www.googleapis.com/oauth2/v3/token?access_type=offline&prompt=consent,client_id,client_secret,
+a64e222c-a37b-4f34-9f27-83611d851f5c,https://login.microsoftonline.com/common/oauth2/v2.0/authorize,http://localhost:8004/v1/oauth2/callback,https://login.microsoftonline.com/common/oauth2/v2.0/token,client_id,client_secret,
+1b2d71cc-425e-4aa6-886c-e2ff247c4f2c,https://bitbucket.org/site/oauth2/authorize,http://localhost:5000/oauth/callback/bitbucket,https://bitbucket.org/site/oauth2/access_token,client_id,client_secret,
+05328f70-6634-4256-8218-6d562b49fc07,https://github.com/login/oauth/authorize,http://localhost:8004/v1/oauth2/callback,https://github.com/login/oauth/access_token,client_id,client_secret,
+4258d732-db77-42aa-b275-8da841adf77f,https://www.box.com/api/oauth2/authorize,http://localhost:8004/v1/oauth2/callback,https://www.box.com/api/oauth2/token,client_id,client_secret,
+b3fd76fc-3368-47b4-9053-ff4b7ca4baa2,https://api.mendeley.com/oauth/authorize,http://localhost:5000/oauth/callback/mendeley/,https://api.mendeley.com/oauth/token,client_id,client_secret,
+285f28ee-15b5-429e-b7ba-3371a19678a8,https://github.com/login/oauth/authorize,http://localhost:5000/oauth/callback/github,https://github.com/login/oauth/access_token,client_id,client_secret,1
