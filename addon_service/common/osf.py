@@ -55,9 +55,15 @@ async def get_osf_user_uri(request: django_http.HttpRequest) -> str | None:
     except hmac_utils.NotUsingHmac:
         pass  # the only acceptable hmac-related error is not using hmac at all
     # not hmac -- ask osf
+
+    if uri := request.session.get("user_reference_uri"):
+        return uri
+
     _auth_headers = _get_osf_auth_headers(request)
     if not _auth_headers:
         return None
+    # we must handle the case when old, already created sessions must somehow set user_reference_uri
+    # TODO: delete after all existing osf sessions have been revoked/expired
     _client = await get_singleton_client_session()
     async with _client.get(_osfapi_me_url(), headers=_auth_headers) as _response:
         if HTTPStatus(_response.status).is_client_error:

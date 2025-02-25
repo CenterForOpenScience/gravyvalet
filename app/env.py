@@ -36,6 +36,8 @@ OSFDB_PORT = os.environ.get("OSFDB_PORT", "5432")
 OSFDB_CONN_MAX_AGE = os.environ.get("OSFDB_CONN_MAX_AGE", 0)
 OSFDB_SSLMODE = os.environ.get("OSFDB_SSLMODE", "prefer")
 
+REDIS_HOST = os.environ.get("REDIS_HOST", "redis://192.168.168.167:6379")
+
 ###
 # for interacting with osf
 
@@ -46,6 +48,7 @@ OSF_HMAC_EXPIRATION_SECONDS = int(os.environ.get("OSF_HMAC_EXPIRATION_SECONDS", 
 OSF_BASE_URL = os.environ.get("OSF_BASE_URL", "https://osf.example")
 OSF_API_BASE_URL = os.environ.get("OSF_API_BASE_URL", "https://api.osf.example")
 OSF_AUTH_COOKIE_NAME = os.environ.get("OSF_AUTH_COOKIE_NAME", "osf_staging")
+OSF_AUTH_COOKIE_SECRET = os.environ.get("OSF_AUTH_COOKIE_SECRET", "CHANGEME")
 
 ###
 # amqp/celery
