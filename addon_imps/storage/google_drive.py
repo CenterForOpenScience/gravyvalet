@@ -15,6 +15,15 @@ from addon_toolkit.interfaces.storage import (
 )
 
 
+ROOT_ITEM_ID = "root"
+
+ROOT_ITEM = ItemResult(
+    item_name="Root",
+    item_type=ItemType.FOLDER,
+    item_id=ROOT_ITEM_ID,
+)
+
+
 class GoogleDriveStorageImp(storage.StorageAddonHttpRequestorImp):
     """storage on google drive
 
@@ -25,13 +34,15 @@ class GoogleDriveStorageImp(storage.StorageAddonHttpRequestorImp):
         return ""
 
     async def list_root_items(self, page_cursor: str = "") -> storage.ItemSampleResult:
-        return ItemSampleResult(items=[await self.get_item_info("root")], total_count=1)
+        return ItemSampleResult(items=[ROOT_ITEM], total_count=1)
 
     async def build_wb_config(self) -> dict:
         return {"folder": {"id": self.config.connected_root_id}}
 
     async def get_item_info(self, item_id: str) -> storage.ItemResult:
-        item_id = item_id or "root"
+        if item_id == ROOT_ITEM_ID:
+            return ROOT_ITEM
+
         async with self.network.GET(f"drive/v3/files/{item_id}") as response:
             if response.http_status == 200:
                 json = await response.json_content()
