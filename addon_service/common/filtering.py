@@ -41,7 +41,7 @@ def extract_filter_expressions(
     Since no formal JSON:API scheme exists for complex filter operations, we have settled on the following norm:
     Filter params can have either one or two arguments.
     The first argument MUST be a field on the serialized output of the endpoint
-    The second arugment is an OPTIONAL comparison operator (i.e. `icontains`, `lte`, etc.)
+    The second argument is an OPTIONAL comparison operator (i.e. `icontains`, `lte`, etc.)
 
     >>> from addon_service.models import UserReference
     >>> class DemoSerializer(serializers.Serializer):

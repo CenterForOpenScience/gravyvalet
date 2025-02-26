@@ -88,7 +88,7 @@ QueryParamFamilies = dict[str, Iterable[JSONAPIQueryParam]]
 def group_query_params_by_family(
     query_items: Iterable[tuple[str, Iterable[str] | str]]
 ) -> QueryParamFamilies:
-    """Extracts JSON:API query familes from a list of (ParameterName, ParameterValues) tuples.
+    """Extracts JSON:API query families from a list of (ParameterName, ParameterValues) tuples.
 
     Data should be pre-normalized before calling, such as by using the results of
     `urllib.parse.parse_qs(...).items()` or `django.utils.QueryDict.lists()`

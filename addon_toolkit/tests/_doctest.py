@@ -15,7 +15,7 @@ def load_doctests(*modules):
     load_tests = load_doctests(my.module.with.doctests)
     ```
 
-    (if there's a need, could support pass-thru kwargs to DocTestSuite)
+    (if there's a need, could support pass-through kwargs to DocTestSuite)
     """
 
     def _load_tests(loader, tests, pattern):
