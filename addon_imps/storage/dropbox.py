@@ -37,10 +37,21 @@ class DropboxStorageImp(storage.StorageAddonHttpRequestorImp):
                 "path": self.config.connected_root_id,
             },
         ) as _response:
+            if _response.http_status != 200:
+                error_content = await _response.text_content()
+                raise ValueError(
+                    f"Request failed with status {_response.http_status}: {error_content}"
+                )
+
             content = await _response.json_content()
-            return {
-                "folder": content["path_display"],
-            }
+
+            if "error" in content:
+                raise ValueError(f"Dropbox API error: {content}")
+
+            try:
+                return {"folder": content["path_display"]}
+            except KeyError as e:
+                raise KeyError(f"Missing 'path_display' in response: {content}") from e
 
     async def get_item_info(self, item_id: str) -> storage.ItemResult:
         if self._is_root_id(item_id):
