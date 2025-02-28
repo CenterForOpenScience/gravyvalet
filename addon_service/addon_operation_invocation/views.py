@@ -40,7 +40,7 @@ class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
             case "partial_update" | "update" | "destroy":
                 return [IsAuthenticated(), SessionUserIsOwner()]
             case "create":
-                return [IsAuthenticated(), SessionUserMayPerformInvocation()]
+                return [SessionUserMayPerformInvocation()]
             case None:
                 return super().get_permissions()
             case _:

@@ -86,13 +86,10 @@ async def has_osf_permission_on_resource(
         pass  # the only acceptable hmac-related error is not using hmac at all
     # not hmac -- ask osf
     _client = await get_singleton_client_session()
+
     async with _client.get(
         _osfapi_guid_url(resource_uri),
-        params={
-            "resolve": "f",  # do not redirect to the referent
-            "embed": "referent",  # instead, include the referent in the response
-            "fields[nodes]": "current_user_permissions",
-        },
+        params=_make_guid_query_params(request),
         headers=[
             *_get_osf_auth_headers(request),
             ("Accept", "application/vnd.api+json"),  # jsonapi
@@ -114,6 +111,17 @@ async def has_osf_permission_on_resource(
             required_permission
             in _referent_data["attributes"]["current_user_permissions"]
         )
+
+
+def _make_guid_query_params(request):
+    params = {
+        "resolve": "f",  # do not redirect to the referent
+        "embed": "referent",  # instead, include the referent in the response
+        "fields[nodes]": "current_user_permissions",
+    }
+    if view_only := request.GET.get("view_only"):
+        params["view_only"] = view_only
+    return params
 
 
 ###

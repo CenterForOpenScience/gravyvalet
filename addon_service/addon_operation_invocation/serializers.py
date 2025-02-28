@@ -23,6 +23,7 @@ from addon_service.models import (
     AddonOperationModel,
     UserReference,
 )
+from app import settings
 
 
 RESOURCE_TYPE = get_resource_type_from_model(AddonOperationInvocation)
@@ -112,7 +113,10 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
         _imp_cls = _thru_account.imp_cls
         _operation = _imp_cls.get_operation_declaration(_operation_name)
         _request = self.context["request"]
-        _user_uri = _request.session.get("user_reference_uri")
+        _user_uri = (
+            _request.session.get("user_reference_uri")
+            or f"{settings.OSF_BASE_URL}/anonymous"
+        )
         _user, _ = UserReference.objects.get_or_create(user_uri=_user_uri)
         return AddonOperationInvocation(
             operation=AddonOperationModel(_imp_cls.ADDON_INTERFACE, _operation),
