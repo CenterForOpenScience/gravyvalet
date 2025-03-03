@@ -9,6 +9,9 @@ from addon_toolkit.interfaces.citation import (
 
 ROOT_ITEM_ID = "ROOT"
 
+# Accounting for some post-migration artifacts
+ROOT_ITEM_IDS = "ROOT", "None"
+
 
 class ZoteroOrgCitationImp(CitationAddonImp):
     async def get_external_account_id(self, auth_result_extras: dict[str, str]) -> str:
@@ -77,7 +80,7 @@ class ZoteroOrgCitationImp(CitationAddonImp):
 
     async def get_item_info(self, item_id: str) -> ItemResult:
         item_type, library, id_ = item_id.split(":")
-        if item_type == ItemType.COLLECTION and id_ == ROOT_ITEM_ID:
+        if item_type == ItemType.COLLECTION and id_ in ROOT_ITEM_IDS:
             return await self._fetch_library(library)
         if item_type == ItemType.COLLECTION:
             return await self._fetch_collection(library, id_)
