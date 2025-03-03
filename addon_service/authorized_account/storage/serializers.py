@@ -57,6 +57,16 @@ class AuthorizedStorageAccountSerializer(AuthorizedAccountSerializer):
         "authorized_operations": "addon_service.serializers.AddonOperationSerializer",
     }
 
+    configured_storage_addons_uris = serializers.SerializerMethodField()
+
+    def get_configured_storage_addons_uris(self, obj):
+        return obj.configured_storage_addons.select_related(
+            'authorized_resource'
+        ).values_list(
+            'authorized_resource__resource_uri',
+            flat=True
+        )
+
     class Meta:
         model = AuthorizedStorageAccount
         fields = [
@@ -75,4 +85,5 @@ class AuthorizedStorageAccountSerializer(AuthorizedAccountSerializer):
             "external_storage_service",
             "initiate_oauth",
             "credentials_available",
+            "configured_storage_addons_uris",
         ]
