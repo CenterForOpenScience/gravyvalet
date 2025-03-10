@@ -150,6 +150,7 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
 
     def test_post__sets_credentials(self):
         for creds_format in NON_OAUTH_FORMATS:
+            self.setUp()
             external_service = _factories.ExternalStorageServiceFactory()
             external_service.int_credentials_format = creds_format.value
             external_service.save()
@@ -200,29 +201,31 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
 
                 self.assertNotIn("auth_url", _resp.data)
 
-    def test_post__api_base_url__success(self):
-        for service_type in [
-            ServiceTypes.HOSTED,
-            ServiceTypes.PUBLIC | ServiceTypes.HOSTED,
-        ]:
-            with self.subTest(service_type=service_type):
-                service = _factories.ExternalStorageOAuth2ServiceFactory(
-                    service_type=service_type
-                )
-                _resp = self.client.post(
-                    reverse("authorized-storage-accounts-list"),
-                    _make_post_payload(
-                        external_service=service, api_root="https://api.my.service/"
-                    ),
-                    format="vnd.api+json",
-                )
-                with self.subTest("Creation succeeds"):
-                    self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
-                with self.subTest("api_base_url set on account"):
-                    account = db.AuthorizedStorageAccount.objects.get(
-                        id=_resp.data["id"]
-                    )
-                    self.assertTrue(account._api_base_url)
+    def test_post__api_base_url_hosted__success(self):
+        self._test_post__api_base_url__success(ServiceTypes.HOSTED)
+
+    def test_post__api_base_url_hybrid__success(self):
+        self._test_post__api_base_url__success(
+            ServiceTypes.PUBLIC | ServiceTypes.HOSTED
+        )
+
+    def _test_post__api_base_url__success(self, service_type):
+        with self.subTest(service_type=service_type):
+            service = _factories.ExternalStorageOAuth2ServiceFactory(
+                service_type=service_type
+            )
+            _resp = self.client.post(
+                reverse("authorized-storage-accounts-list"),
+                _make_post_payload(
+                    external_service=service, api_root="https://api.my.service/"
+                ),
+                format="vnd.api+json",
+            )
+            with self.subTest("Creation succeeds"):
+                self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
+            with self.subTest("api_base_url set on account"):
+                account = db.AuthorizedStorageAccount.objects.get(id=_resp.data["id"])
+                self.assertTrue(account._api_base_url)
 
     def test_post__api_base_url__invalid__required(self):
         service = _factories.ExternalStorageOAuth2ServiceFactory(

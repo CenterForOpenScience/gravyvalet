@@ -26,6 +26,8 @@ boa-api = "^0.1.14"
 django-silk = "^5.3.2"
 django-celery-beat = "^2.7.0"
 tqdm = "^4.67.1"
+itsdangerous = "^2.2.0"
+redis = "^5.2.1"
 
 
 [tool.poetry.group.dev.dependencies]
