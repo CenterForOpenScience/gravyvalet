@@ -7,6 +7,7 @@ from addon_service.authorized_account.storage.models import AuthorizedStorageAcc
 from addon_service.common.base_model import AddonsServiceBaseModel
 from addon_service.configured_addon.computing.models import ConfiguredComputingAddon
 from addon_service.configured_addon.storage.models import ConfiguredStorageAddon
+from addon_service.configured_addon.link.models import ConfiguredLinkAddon
 from addon_service.resource_reference.models import ResourceReference
 
 
@@ -23,6 +24,12 @@ class UserReference(AddonsServiceBaseModel):
     @property
     def configured_computing_addons(self):
         return ConfiguredComputingAddon.objects.filter(
+            base_account__account_owner=self,
+        )
+
+    @property
+    def configured_link_addons(self):
+        return ConfiguredLinkAddon.objects.filter(
             base_account__account_owner=self,
         )
 

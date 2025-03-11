@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from addon_service.authorized_account.citation.models import AuthorizedCitationAccount
 from addon_service.authorized_account.computing.models import AuthorizedComputingAccount
 from addon_service.authorized_account.storage.models import AuthorizedStorageAccount
+from addon_service.authorized_account.link.models import AuthorizedLinkAccount
 from addon_service.oauth1.utils import get_access_token
 from addon_service.osf_models.fields import decrypt_string
 
@@ -23,6 +24,8 @@ def oauth1_callback_view(request):
             account = AuthorizedCitationAccount.objects.get(pk=pk)
         case "AuthorizedComputingAccount":
             account = AuthorizedComputingAccount.objects.get(pk=pk)
+        case "AuthorizedLinkAccount":
+            account = AuthorizedLinkAccount.objects.get(pk=pk)
 
     oauth1_client_config = account.external_service.oauth1_client_config
     final_credentials, other_info = async_to_sync(get_access_token)(

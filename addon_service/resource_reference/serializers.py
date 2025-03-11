@@ -46,6 +46,9 @@ class ResourceReferenceSerializer(serializers.HyperlinkedModelSerializer):
         "configured_computing_addons": (
             "addon_service.serializers.ConfiguredComputingAddonSerializer"
         ),
+        "configured_link_addons": (
+            "addon_service.serializers.ConfiguredLinkAddonSerializer"
+        ),
     }
 
     class Meta:
@@ -57,4 +60,5 @@ class ResourceReferenceSerializer(serializers.HyperlinkedModelSerializer):
             "configured_storage_addons",
             "configured_citation_addons",
             "configured_computing_addons",
+            "configured_link_addons",
         ]

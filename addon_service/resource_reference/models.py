@@ -5,6 +5,7 @@ from addon_service.common.base_model import AddonsServiceBaseModel
 from addon_service.configured_addon.citation.models import ConfiguredCitationAddon
 from addon_service.configured_addon.computing.models import ConfiguredComputingAddon
 from addon_service.configured_addon.storage.models import ConfiguredStorageAddon
+from addon_service.configured_addon.link.models import ConfiguredLinkAddon
 
 
 class ResourceReference(AddonsServiceBaseModel):
@@ -40,6 +41,18 @@ class ResourceReference(AddonsServiceBaseModel):
             "base_account__external_service__externalcomputingservice",
             "base_account__authorizedcitationaccount",
             "base_account__account_owner",
+        )
+
+    @property
+    def configured_link_addons(self):
+        return (
+            ConfiguredLinkAddon.objects.filter(authorized_resource=self)
+            .select_related(
+                "base_account__external_service__externallinkservice",
+                "base_account__authorizedlinkaccount",
+                "base_account__account_owner",
+            )
+            .order_by(Lower("_display_name"))
         )
 
     class Meta:
