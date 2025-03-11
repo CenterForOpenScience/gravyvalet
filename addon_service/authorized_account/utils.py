@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from addon_toolkit.interfaces.citation import CitationAddonImp
 from addon_toolkit.interfaces.computing import ComputingAddonImp
 from addon_toolkit.interfaces.storage import StorageAddonImp
+from addon_toolkit.interfaces.link import LinkAddonImp
 
 
 if TYPE_CHECKING:
@@ -18,5 +19,7 @@ def get_config_for_account(account: AuthorizedAccount):
         return account.authorizedcitationaccount.config
     elif issubclass(account.imp_cls, ComputingAddonImp):
         return account.authorizedcomputingaccount.config
+    elif issubclass(account.imp_cls, LinkAddonImp):
+        return account.authorizedlinkaccount.config
 
     raise ValueError(f"this function implementation does not support {account.imp_cls}")

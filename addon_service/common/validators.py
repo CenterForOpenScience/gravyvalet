@@ -11,6 +11,7 @@ from addon_toolkit import AddonCapabilities
 from addon_toolkit.interfaces.citation import CitationAddonImp
 from addon_toolkit.interfaces.computing import ComputingAddonImp
 from addon_toolkit.interfaces.storage import StorageAddonImp
+from addon_toolkit.interfaces.link import LinkAddonImp
 
 from . import known_imps
 from .credentials_formats import CredentialsFormats
@@ -65,6 +66,9 @@ def validate_citation_imp_number(value):
 
 def validate_computing_imp_number(value):
     _validate_imp_number(value, ComputingAddonImp)
+
+def validate_link_imp_number(value):
+    _validate_imp_number(value, LinkAddonImp)
 
 
 ###

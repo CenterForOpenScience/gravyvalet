@@ -18,6 +18,9 @@ from addon_service.authorized_account.serializers import AuthorizedAccountSerial
 from addon_service.authorized_account.storage.serializers import (
     AuthorizedStorageAccountSerializer,
 )
+from addon_service.authorized_account.link.serializers import (
+    AuthorizedLinkAccountSerializer,
+)
 from addon_service.configured_addon.citation.serializers import (
     ConfiguredCitationAddonSerializer,
 )
@@ -31,6 +34,9 @@ from addon_service.configured_addon.serializers import ConfiguredAddonSerializer
 from addon_service.configured_addon.storage.serializers import (
     ConfiguredStorageAddonSerializer,
 )
+from addon_service.configured_addon.link.serializers import (
+    ConfiguredLinkAddonSerializer,
+)
 from addon_service.external_service.citation.serializers import (
     ExternalCitationServiceSerializer,
 )
@@ -40,6 +46,9 @@ from addon_service.external_service.computing.serializers import (
 from addon_service.external_service.serializers import ExternalServiceSerializer
 from addon_service.external_service.storage.serializers import (
     ExternalStorageServiceSerializer,
+)
+from addon_service.external_service.link.serializers import (
+    ExternalLinkServiceSerializer,
 )
 from addon_service.resource_reference.serializers import ResourceReferenceSerializer
 from addon_service.user_reference.serializers import UserReferenceSerializer
@@ -51,6 +60,9 @@ __all__ = (
     "AuthorizedStorageAccountSerializer",
     "ConfiguredStorageAddonSerializer",
     "ExternalStorageServiceSerializer",
+    "AuthorizedLinkAccountSerializer",
+    "ConfiguredLinkAddonSerializer",
+    "ExternalLinkServiceSerializer",
     "ConfiguredCitationAddonSerializer",
     "ExternalCitationServiceSerializer",
     "AuthorizedCitationAccountSerializer",

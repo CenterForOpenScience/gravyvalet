@@ -10,6 +10,9 @@ from addon_service.configured_addon.models import ConfiguredAddon
 from addon_service.configured_addon.storage.serializers import (
     ConfiguredStorageAddonSerializer,
 )
+from addon_service.configured_addon.link.serializers import (
+    ConfiguredLinkAddonSerializer,
+)
 
 
 class ConfiguredAddonPolymorphicSerializer(serializers.PolymorphicModelSerializer):
@@ -17,6 +20,7 @@ class ConfiguredAddonPolymorphicSerializer(serializers.PolymorphicModelSerialize
         ConfiguredCitationAddonSerializer,
         ConfiguredComputingAddonSerializer,
         ConfiguredStorageAddonSerializer,
+        ConfiguredLinkAddonSerializer,
     ]
 
     class Meta:

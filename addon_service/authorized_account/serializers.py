@@ -34,6 +34,7 @@ class AuthorizedAccountSerializer(serializers.HyperlinkedModelSerializer):
         # Check if it's a POST request and remove the field as it's not in our FE spec
         if "context" in kwargs and kwargs["context"]["request"].method == "POST":
             self.fields.pop("configured_storage_addons", None)
+            self.fields.pop("configured_link_addons", None)
 
     display_name = serializers.CharField(
         allow_blank=True, allow_null=True, required=False, max_length=256
@@ -55,6 +56,8 @@ class AuthorizedAccountSerializer(serializers.HyperlinkedModelSerializer):
         "account_owner": "addon_service.serializers.UserReferenceSerializer",
         "external_storage_service": "addon_service.serializers.ExternalStorageServiceSerializer",
         "configured_storage_addons": "addon_service.serializers.ConfiguredStorageAddonSerializer",
+        "external_link_service": "addon_service.serializers.ExternalLinkServiceSerializer",
+        "configured_link_addons": "addon_service.serializers.ConfiguredLinkAddonSerializer",
         "authorized_operations": "addon_service.serializers.AddonOperationSerializer",
     }
 
