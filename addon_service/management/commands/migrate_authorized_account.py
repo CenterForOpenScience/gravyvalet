@@ -233,55 +233,59 @@ class Command(BaseCommand):
         )
         if not users_external_accounts:
             return
-        osf_account: ExternalAccount = users_external_accounts[0]
         user = OsfUser.objects.get(pk=user_settings.owner_id)
-        try:
-            credentials = self.get_credentials(external_service, osf_account)
-        except CredentialException as e:
-            logger.error(
-                f"Skipping account migration with {osf_account.pk=} for service {external_service.display_name} "
-                f"due to credentials parse error {e=}"
-            )
-            return
-        user_uri = f"{OSF_BASE}/{user.guid}"
-        account_owner = UserReference.objects.get_or_create(user_uri=user_uri)
-        account = AuthorizedAccount(
-            display_name=service_name.capitalize(),
-            int_authorized_capabilities=(
-                AddonCapabilities.UPDATE | AddonCapabilities.ACCESS
-            ).value,
-            account_owner=account_owner[0],
-            external_service=external_service,
-            credentials=credentials,
-            external_account_id=osf_account.provider_id,
-        )
-
-        if external_service.credentials_format == CredentialsFormats.OAUTH2:
-            token_metadata = OAuth2TokenMetadata(
-                refresh_token=osf_account.refresh_token,
-                access_token_expiration=osf_account.expires_at,
-                authorized_scopes=external_service.supported_scopes,
-            )
-            token_metadata.save(full_clean=False)
-            account.oauth2_token_metadata = token_metadata
-
-        if api_url := self.get_api_base_url(external_service, osf_account):
+        account_map = {}
+        for osf_account in users_external_accounts:
             try:
-                account.api_base_url = api_url
-            except ValidationError:
-                print(api_url)
+                credentials = self.get_credentials(external_service, osf_account)
+            except CredentialException as e:
+                logger.error(
+                    f"Skipping account migration with {osf_account.pk=} for service {external_service.display_name} "
+                    f"due to credentials parse error {e=}"
+                )
+                return
+            user_uri = f"{OSF_BASE}/{user.guid}"
+            account_owner = UserReference.objects.get_or_create(user_uri=user_uri)
+            account = AuthorizedAccount(
+                display_name=service_name.capitalize(),
+                int_authorized_capabilities=(
+                    AddonCapabilities.UPDATE | AddonCapabilities.ACCESS
+                ).value,
+                account_owner=account_owner[0],
+                external_service=external_service,
+                credentials=credentials,
+                external_account_id=osf_account.provider_id,
+            )
 
-        account.save(full_clean=False)
+            if external_service.credentials_format == CredentialsFormats.OAUTH2:
+                token_metadata = OAuth2TokenMetadata(
+                    refresh_token=osf_account.refresh_token,
+                    access_token_expiration=osf_account.expires_at,
+                    authorized_scopes=external_service.supported_scopes,
+                )
+                token_metadata.save(full_clean=False)
+                account.oauth2_token_metadata = token_metadata
+
+            if api_url := self.get_api_base_url(external_service, osf_account):
+                try:
+                    account.api_base_url = api_url
+                except ValidationError:
+                    print(api_url)
+
+            account.save(full_clean=False)
+            account_map[osf_account.id] = account
 
         for node_settings in node_settings_set:
+            node_guid = get_node_guid(node_settings.owner_id)
             resource_reference = ResourceReference.objects.get_or_create(
-                resource_uri=f"{OSF_BASE}/{get_node_guid(node_settings.owner_id)}"
+                resource_uri=f"{OSF_BASE}/{node_guid}"
             )[0]
+            base_account = account_map.get(node_settings.external_account.id)
             configured_addon = ConfiguredAddon(
                 int_connected_capabilities=(
                     AddonCapabilities.UPDATE | AddonCapabilities.ACCESS
                 ).value,
-                base_account=account,
+                base_account=base_account,
                 authorized_resource=resource_reference,
             )
             root_folder = get_root_folder_for_provider(node_settings, service_name)
@@ -323,7 +327,6 @@ class Command(BaseCommand):
             # was merged on 05/09/2022 to address this issue.
             # Hence, there are many accounts without refresh tokens created before 05/09/2022 on production.
             # Access tokens issued prior to the change still works, and we should migrate them as is.
-            print("Migrating Dropbox account without refresh token")
             self.check_fields(osf_account, ["oauth_key"])
             credentials = AccessTokenCredentials(access_token=osf_account.oauth_key)
         else:

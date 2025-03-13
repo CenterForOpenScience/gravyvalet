@@ -6,6 +6,8 @@ from addon_service.common.dibs import dibs
 from addon_toolkit.credentials import Credentials
 from addon_toolkit.json_arguments import json_for_dataclass
 
+from ..common.credentials_formats import CredentialsFormats
+from ..common.validators import validate_credentials_format
 from . import encryption
 
 
@@ -15,6 +17,12 @@ class ExternalCredentials(AddonsServiceBaseModel):
     _scrypt_block_size = models.IntegerField()
     _scrypt_cost_log2 = models.IntegerField()
     _scrypt_parallelization = models.IntegerField()
+    int_credentials_format = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[validate_credentials_format],
+        verbose_name="Credentials format",
+    )
 
     # Attributes inherited from back-references:
     # storage (AuthorizedStorageAccount._credentials, One2One)
@@ -29,10 +37,12 @@ class ExternalCredentials(AddonsServiceBaseModel):
         )
 
     @classmethod
-    def new(cls):
+    def new(cls, credential_format: CredentialsFormats = None):
         # initialize key-parameter fields with fresh defaults
         _new = cls()
         _new._key_parameters = encryption.KeyParameters()
+        if credential_format:
+            _new.int_credentials_format = credential_format.value
         return _new
 
     ###
@@ -99,16 +109,20 @@ class ExternalCredentials(AddonsServiceBaseModel):
                 *filter(
                     bool,
                     [
-                        getattr(self, "authorized_account", None),
+                        *self.authorized_account.all(),
                         getattr(self, "temporary_authorized_account", None),
                     ],
                 )
             ]
-        except ExternalCredentials.authorized_account.RelatedObjectDoesNotExist:
+        except (
+            ExternalCredentials.temporary_authorized_account.RelatedObjectDoesNotExist
+        ):
             return None
 
     @property
     def format(self):
+        if self.int_credentials_format:
+            return CredentialsFormats(self.int_credentials_format)
         if not self.authorized_accounts:
             return None
         return self.authorized_accounts[0].external_service.credentials_format
