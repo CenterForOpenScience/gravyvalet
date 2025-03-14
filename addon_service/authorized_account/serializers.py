@@ -31,9 +31,15 @@ class AuthorizedAccountSerializer(serializers.HyperlinkedModelSerializer):
                 f"{self.__class__.__name__} requires {self.REQUIRED_FIELDS} to be instantiated"
             )
 
+        if "context" not in kwargs:
+            return
+
         # Check if it's a POST request and remove the field as it's not in our FE spec
-        if "context" in kwargs and kwargs["context"]["request"].method == "POST":
+        if kwargs["context"]["request"].method == "POST":
             self.fields.pop("configured_storage_addons", None)
+
+        if kwargs["context"]["request"].query_params.get("uris") != "true":
+            self.fields.pop("configured_addons_uris")
 
     display_name = serializers.CharField(
         allow_blank=True, allow_null=True, required=False, max_length=256

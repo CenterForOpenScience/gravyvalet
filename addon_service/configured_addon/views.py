@@ -5,12 +5,11 @@ from addon_service.common.permissions import (
     SessionUserIsOwnerOrResourceAdmin,
     SessionUserMayConnectAddon,
 )
-from addon_service.common.view_only_filter import ViewOnlyFilter
 from addon_service.common.viewsets import RetrieveWriteDeleteViewSet
 
 
 class ConfiguredAddonViewSet(RetrieveWriteDeleteViewSet):
-    filter_backends = [ViewOnlyFilter]  # Ensures `view_only` is always allowed
+    allowed_query_params = ["view_only"]
 
     def get_permissions(self):
         match self.action:

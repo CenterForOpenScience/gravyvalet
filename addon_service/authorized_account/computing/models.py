@@ -1,5 +1,6 @@
 from addon_service.addon_imp.instantiation import get_computing_addon_instance
 from addon_service.authorized_account.models import AuthorizedAccount
+from addon_service.configured_addon.computing.models import ConfiguredComputingAddon
 from addon_toolkit.interfaces.computing import ComputingConfig
 
 
@@ -26,6 +27,12 @@ class AuthorizedComputingAccount(AuthorizedAccount):
         )
         self.external_account_id = await imp.get_external_account_id(auth_extras or {})
         await self.asave()
+
+    @property
+    def configured_computing_addons(self):
+        return ConfiguredComputingAddon.objects.filter(
+            base_account=self
+        ).select_related("authorized_resource")
 
     @property
     def config(self) -> ComputingConfig:

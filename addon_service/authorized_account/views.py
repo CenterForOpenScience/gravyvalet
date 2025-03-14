@@ -8,6 +8,7 @@ from addon_service.common.viewsets import RetrieveWriteDeleteViewSet
 
 
 class AuthorizedAccountViewSet(RetrieveWriteDeleteViewSet, ABC):
+    allowed_query_params = ["uris"]
 
     def get_permissions(self):
         match self.action:

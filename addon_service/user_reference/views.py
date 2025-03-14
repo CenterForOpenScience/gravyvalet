@@ -11,5 +11,6 @@ class UserReferenceViewSet(RestrictedReadOnlyViewSet):
     permission_classes = [
         SessionUserIsOwner,
     ]
+    allowed_query_params = ["uris"]
     # Satisfies requirements of `RestrictedReadOnlyViewSet.list`
     required_list_filter_fields = ("user_uri",)

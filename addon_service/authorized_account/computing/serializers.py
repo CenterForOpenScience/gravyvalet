@@ -56,6 +56,13 @@ class AuthorizedComputingAccountSerializer(AuthorizedAccountSerializer):
         "authorized_operations": "addon_service.serializers.AddonOperationSerializer",
     }
 
+    configured_addons_uris = serializers.SerializerMethodField()
+
+    def get_configured_addons_uris(self, obj):
+        return obj.configured_computing_addons.values_list(
+            "authorized_resource__resource_uri", flat=True
+        )
+
     class Meta:
         model = AuthorizedComputingAccount
         fields = [
@@ -73,4 +80,5 @@ class AuthorizedComputingAccountSerializer(AuthorizedAccountSerializer):
             "external_computing_service",
             "initiate_oauth",
             "credentials_available",
+            "configured_addons_uris",
         ]
