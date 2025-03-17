@@ -10,6 +10,7 @@ from addon_imps.citations import (
     zotero_org,
 )
 from addon_imps.computing import boa
+from addon_imps.links import dataverse as dataverse_link
 from addon_imps.storage import (
     bitbucket,
     box_dot_com,
@@ -79,6 +80,7 @@ class KnownAddonImps(enum.Enum):
     BITBUCKET = bitbucket.BitbucketStorageImp
     DATAVERSE = dataverse.DataverseStorageImp
     OWNCLOUD = owncloud.OwnCloudStorageImp
+    DATAVERSE_LINK = dataverse_link.DataverseLinkImp
 
     GITHUB = github.GitHubStorageImp
     GITLAB = gitlab.GitlabStorageImp
@@ -111,6 +113,8 @@ class AddonImpNumbers(enum.Enum):
     GITHUB = 1013
 
     BOA = 1020
+
+    DATAVERSE_LINK = 1014
 
     if __debug__:
         BLARG = -7

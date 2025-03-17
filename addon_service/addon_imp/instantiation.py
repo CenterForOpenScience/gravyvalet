@@ -23,6 +23,12 @@ from addon_toolkit.interfaces.storage import (
     StorageAddonImp,
     StorageConfig,
 )
+from addon_toolkit.interfaces.link import (
+    LinkAddonClientRequestorImp,
+    LinkAddonHttpRequestorImp,
+    LinkAddonImp,
+    LinkConfig,
+)
 
 
 if TYPE_CHECKING:
@@ -31,13 +37,14 @@ if TYPE_CHECKING:
         AuthorizedCitationAccount,
         AuthorizedComputingAccount,
         AuthorizedStorageAccount,
+        AuthorizedLinkAccount,
     )
 
 
 async def get_addon_instance(
     imp_cls: type[AddonImp],
     account: AuthorizedAccount,
-    config: StorageConfig | CitationConfig | ComputingConfig,
+    config: StorageConfig | CitationConfig | ComputingConfig | LinkConfig,
 ) -> AddonImp:
     if issubclass(imp_cls, StorageAddonImp):
         return await get_storage_addon_instance(imp_cls, account, config)
@@ -45,6 +52,8 @@ async def get_addon_instance(
         return await get_citation_addon_instance(imp_cls, account, config)
     elif issubclass(imp_cls, ComputingAddonImp):
         return await get_computing_addon_instance(imp_cls, account, config)
+    elif issubclass(imp_cls, LinkAddonImp):
+        return await get_link_addon_instance(imp_cls, account, config)
     raise ValueError(f"unknown addon type {imp_cls}")
 
 
@@ -134,3 +143,32 @@ async def get_computing_addon_instance(
 
 
 get_computing_addon_instance__blocking = async_to_sync(get_computing_addon_instance)
+
+async def get_link_addon_instance(
+    imp_cls: type[LinkAddonImp],
+    account: AuthorizedLinkAccount,
+    config: StorageConfig,
+) -> LinkAddonImp:
+    """create an instance of a `StorageAddonImp`
+
+    (TODO: decide on a common constructor for all `AddonImp`s, remove this)
+    """
+    assert issubclass(imp_cls, LinkAddonImp)
+    assert (
+        imp_cls is not LinkAddonImp
+    ), "Addons shouldn't directly extend StorageAddonImp"
+    if issubclass(imp_cls, LinkAddonHttpRequestorImp):
+        imp = imp_cls(
+            config=config,
+            network=GravyvaletHttpRequestor(
+                client_session=await get_singleton_client_session(),
+                prefix_url=config.external_api_url,
+                account=account,
+            ),
+        )
+    if issubclass(imp_cls, LinkAddonClientRequestorImp):
+        imp = imp_cls(credentials=await account.get_credentials__async(), config=config)
+
+    return imp
+
+get_link_addon_instance__blocking = async_to_sync(get_link_addon_instance)

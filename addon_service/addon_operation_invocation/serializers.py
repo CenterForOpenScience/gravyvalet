@@ -73,6 +73,7 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
             "base_account__external_service",
             "base_account__authorizedstorageaccount",
             "base_account__authorizedcitationaccount",
+            "base_account__authorizedlinkaccount",
             "base_account__account_owner",
         ),
         related_link_view_name=view_names.related_view(RESOURCE_TYPE),
