@@ -41,7 +41,7 @@ class EnumNameChoiceField(_BaseEnumNameChoiceField):
         return self.enum_cls[_name]
 
     def to_representation(self, value: enum.Enum):
-        return super().to_representation(value).name
+        return value.name
 
 
 class EnumNameMultipleChoiceField(

@@ -1,5 +1,5 @@
 # Use the official Python image AS the base image
-FROM python:3.12 AS gv-base
+FROM python:3.13 AS gv-base
 
 # System Dependencies:
 RUN apt-get update && apt-get install -y libpq-dev
@@ -12,7 +12,7 @@ ENV PATH="$PATH:/root/.local/bin"
 # END gv-base
 
 # BEGIN gv-runtime-base
-FROM python:3.12-slim AS gv-runtime-base
+FROM python:3.13-slim AS gv-runtime-base
 
 # System Dependencies:
 RUN apt-get update && apt-get install -y libpq-dev
@@ -36,7 +36,7 @@ RUN poetry install --without release
 # BEGIN gv-dev
 FROM gv-runtime-base AS gv-dev
 
-COPY --from=gv-dev-deps /code/.venv/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=gv-dev-deps /code/.venv/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 
 COPY . /code/
 
@@ -60,7 +60,7 @@ RUN poetry install --without dev
 
 # BEGIN gv-deploy
 FROM gv-runtime-base AS gv-deploy
-COPY --from=gv-deploy-deps /code/.venv/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=gv-deploy-deps /code/.venv/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY . /code/
 # copy auto-generated static docs (without the dev dependencies that built them)
 COPY --from=gv-docs /code/addon_service/static/gravyvalet_code_docs/ /code/addon_service/static/gravyvalet_code_docs/

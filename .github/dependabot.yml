@@ -5,7 +5,7 @@ version: 2
 updates:
   # python dependencies
   - package-ecosystem: "poetry"
-    directory: "/requirements/"
+    directory: "/"
     schedule:
       interval: "daily"
     labels:
