@@ -56,10 +56,7 @@ class GravyvaletModelAdmin(admin.ModelAdmin):
                 label=db_field.verbose_name,
                 choices=[
                     (None, ""),
-                    *(
-                        (_member.value, _member.name)
-                        for _member in _enum.__members__.values()
-                    ),
+                    *((_member.value, _member.name) for _member in _enum),
                 ],
             )
         if (
@@ -69,10 +66,7 @@ class GravyvaletModelAdmin(admin.ModelAdmin):
             _enum = self.enum_multiple_choice_fields[db_field.name]
             return EnumNameMultipleChoiceField(
                 choices=[
-                    *(
-                        (_member.value, _member.name)
-                        for _member in _enum.__members__.values()
-                    ),
+                    *((_member.value, _member.name) for _member in _enum),
                 ],
                 widget=forms.CheckboxSelectMultiple,
                 enum_cls=_enum,
