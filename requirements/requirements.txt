@@ -5,7 +5,7 @@ djangorestframework==3.14.0
 djangorestframework-jsonapi==6.1.0
 django-cors-headers==4.3.1
 django-filter
-celery==5.4.0
+celery==5.5.1
 jsonschema==4.21.1
 aiohttp==3.9.3
 pyjwe==1.0.0
