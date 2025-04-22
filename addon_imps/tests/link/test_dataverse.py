@@ -240,7 +240,7 @@ class TestDataverseLinkImp(unittest.IsolatedAsyncioTestCase):
             return_value=ItemSampleResult(items=[], total_count=0)
         )
 
-        result = await self.imp.list_child_items("")
+        result = await self.imp.list_child_items("", item_type=None)
 
         self.imp.list_root_items.assert_awaited_once_with("")
         self.assertEqual(len(result.items), 0)
@@ -265,7 +265,7 @@ class TestDataverseLinkImp(unittest.IsolatedAsyncioTestCase):
                 item_type=ItemType.FOLDER,
             )
 
-            result = await self.imp.list_child_items("dataverse/123")
+            result = await self.imp.list_child_items("dataverse/123", item_type=None)
 
             self._assert_get("api/dataverses/123/contents")
 
@@ -298,7 +298,35 @@ class TestDataverseLinkImp(unittest.IsolatedAsyncioTestCase):
             await self.imp.get_item_info("dataset/invalid")
 
     async def test_list_child_items_non_dataverse(self):
-        result = await self.imp.list_child_items("dataset/123")
+        result = await self.imp.list_child_items("dataset/123", item_type=None)
 
         self.assertEqual(len(result.items), 0)
         self.assertEqual(result.total_count, 0)
+
+    async def test_list_child_items_with_item_type(self):
+        dataverse_contents = {
+            "data": [
+                {"type": "dataverse", "id": "456", "title": "Sub Dataverse"},
+                {"type": "dataset", "id": "789", "title": "Dataset"},
+            ]
+        }
+
+        self._patch_get(dataverse_contents)
+
+        with patch.object(
+            self.imp, "_fetch_dataset", new_callable=AsyncMock
+        ) as mock_fetch_dataset:
+            mock_fetch_dataset.return_value = ItemResult(
+                item_id="dataset/789",
+                item_name="Dataset",
+                item_type=ItemType.FOLDER,
+            )
+
+            result = await self.imp.list_child_items(
+                "dataverse/123", item_type=ItemType.FOLDER
+            )
+
+            self._assert_get("api/dataverses/123/contents")
+
+            for item in result.items:
+                self.assertEqual(item.item_type, ItemType.FOLDER)
