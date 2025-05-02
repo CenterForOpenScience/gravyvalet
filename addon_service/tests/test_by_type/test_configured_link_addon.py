@@ -75,7 +75,7 @@ class TestConfiguredLinkAddonAPI(APITestCase):
         _resp = self.client.get(self._detail_path)
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
         self.assertEqual(_resp.data["target_id"], self._addon.target_id)
-        self.assertEqual(_resp.data["resource_type"], self._addon.resource_type)
+        self.assertEqual(_resp.data["resource_type"], self._addon.resource_type.name)
 
     def test_methods_not_allowed(self):
         _methods_not_allowed = {
@@ -115,13 +115,15 @@ class TestConfiguredLinkAddonModel(TestCase):
         self._addon.save()
 
         refreshed = db.ConfiguredLinkAddon.objects.get(id=self._addon.id)
-        self.assertEqual(refreshed.resource_type, "Book")
+        self.assertEqual(refreshed.resource_type, SupportedResourceTypes.Book)
+        self.assertEqual(refreshed.resource_type.name, "Book")
 
         self._addon.resource_type = SupportedResourceTypes.Other
         self._addon.save()
 
         refreshed = db.ConfiguredLinkAddon.objects.get(id=self._addon.id)
-        self.assertEqual(refreshed.resource_type, "Other")
+        self.assertEqual(refreshed.resource_type, SupportedResourceTypes.Other)
+        self.assertEqual(refreshed.resource_type.name, "Other")
 
     def test_validator_valid_types(self):
         try:
@@ -202,7 +204,9 @@ class TestConfiguredLinkAddonViewSet(TestCase):
 
         with self.subTest("Confirm expected attributes"):
             self.assertEqual(_resp.data["target_id"], self._addon.target_id)
-            self.assertEqual(_resp.data["resource_type"], self._addon.resource_type)
+            self.assertEqual(
+                _resp.data["resource_type"], self._addon.resource_type.name
+            )
             self.assertIn("connected_operation_names", _resp.data)
 
         with self.subTest("Confirm expected relationships"):
@@ -286,7 +290,7 @@ class TestCreateConfiguredLinkAddon(APITestCase):
                 "type": "configured-link-addons",
                 "attributes": {
                     "target_id": "some-target-id",
-                    "resource_type": "DATASET",
+                    "resource_type": "Other",
                     "connected_capabilities": ["ACCESS"],
                     "authorized_resource_uri": self._resource.resource_uri,
                 },
@@ -315,8 +319,9 @@ class TestCreateConfiguredLinkAddon(APITestCase):
 
         self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
 
-        self.assertEqual(_resp.data["resource_type"], "Other")
+        self.assertEqual(_resp.data["resource_type"], SupportedResourceTypes.Other.name)
 
         addon = db.ConfiguredLinkAddon.objects.get(id=_resp.data["id"])
         self.assertEqual(addon.target_id, "some-target-id")
-        self.assertEqual(addon.resource_type, "Other")
+        self.assertEqual(addon.resource_type, SupportedResourceTypes.Other)
+        self.assertEqual(addon.resource_type.name, "Other")
