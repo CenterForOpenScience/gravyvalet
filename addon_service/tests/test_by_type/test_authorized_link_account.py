@@ -4,7 +4,6 @@ from unittest.mock import (
     patch,
 )
 
-from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
@@ -102,7 +101,6 @@ class TestAuthorizedLinkAccountAPI(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
         self._mock_osf = MockOSF()
         self._mock_osf.configure_assumed_caller(self._user.user_uri)
         self.enterContext(self._mock_osf.mocking())
@@ -289,7 +287,6 @@ class TestAuthorizedLinkAccountViewSet(TestCase):
     def test_get(self):
         request = get_test_request(user=self._user)
         request.session = {"user_reference_uri": self._user.user_uri}
-        request.COOKIES = {settings.USER_REFERENCE_COOKIE: self._user.user_uri}
         _resp = self._view(
             request,
             pk=self._account.pk,
@@ -317,7 +314,6 @@ class TestAuthorizedLinkAccountViewSet(TestCase):
     def test_owner_access(self):
         request = get_test_request(user=self._user)
         request.session = {"user_reference_uri": self._user.user_uri}
-        request.COOKIES = {settings.USER_REFERENCE_COOKIE: self._user.user_uri}
         _resp = self._view(
             request,
             pk=self._account.pk,
@@ -329,7 +325,6 @@ class TestAuthorizedLinkAccountViewSet(TestCase):
         self._mock_osf.configure_assumed_caller(_another_user.user_uri)
         request = get_test_request(user=_another_user)
         request.session = {"user_reference_uri": _another_user.user_uri}
-        request.COOKIES = {settings.USER_REFERENCE_COOKIE: _another_user.user_uri}
         _resp = self._view(
             request,
             pk=self._account.pk,
@@ -344,7 +339,6 @@ class TestCreateAuthorizedLinkAccount(APITestCase):
         cls._external_service = _factories.ExternalLinkOAuth2ServiceFactory()
 
     def setUp(self):
-        self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
 
         self._mock_osf = MockOSF()
         self._mock_osf.configure_assumed_caller(self._user.user_uri)

@@ -4,7 +4,6 @@ from unittest.mock import (
     patch,
 )
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
@@ -50,7 +49,6 @@ class TestConfiguredLinkAddonAPI(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
         self._mock_osf = MockOSF()
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._resource.resource_uri, "admin"
@@ -117,13 +115,13 @@ class TestConfiguredLinkAddonModel(TestCase):
         self._addon.save()
 
         refreshed = db.ConfiguredLinkAddon.objects.get(id=self._addon.id)
-        self.assertEqual(refreshed.resource_type, "BOOK")
+        self.assertEqual(refreshed.resource_type, "Book")
 
         self._addon.resource_type = SupportedResourceTypes.Other
         self._addon.save()
 
         refreshed = db.ConfiguredLinkAddon.objects.get(id=self._addon.id)
-        self.assertEqual(refreshed.resource_type, "DATASET")
+        self.assertEqual(refreshed.resource_type, "Other")
 
     def test_validator_valid_types(self):
         try:
@@ -195,7 +193,6 @@ class TestConfiguredLinkAddonViewSet(TestCase):
     def test_get(self):
         request = get_test_request(user=self._user)
         request.session = {"user_reference_uri": self._user.user_uri}
-        request.COOKIES = {settings.USER_REFERENCE_COOKIE: self._user.user_uri}
 
         _resp = self._view(
             request,
@@ -218,7 +215,6 @@ class TestConfiguredLinkAddonViewSet(TestCase):
     def test_owner_access(self):
         request = get_test_request(user=self._user)
         request.session = {"user_reference_uri": self._user.user_uri}
-        request.COOKIES = {settings.USER_REFERENCE_COOKIE: self._user.user_uri}
 
         _resp = self._view(
             request,
@@ -232,7 +228,6 @@ class TestConfiguredLinkAddonViewSet(TestCase):
 
         request = get_test_request(user=_another_user)
         request.session = {"user_reference_uri": _another_user.user_uri}
-        request.COOKIES = {settings.USER_REFERENCE_COOKIE: _another_user.user_uri}
 
         _resp = self._view(
             request,
@@ -281,7 +276,6 @@ class TestCreateConfiguredLinkAddon(APITestCase):
         self.addCleanup(self.instance_blocking_patcher.stop)
 
     def test_create_addon(self):
-        self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._resource.resource_uri, "admin"
         )
@@ -321,8 +315,8 @@ class TestCreateConfiguredLinkAddon(APITestCase):
 
         self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
 
-        self.assertEqual(_resp.data["resource_type"], "DATASET")
+        self.assertEqual(_resp.data["resource_type"], "Other")
 
         addon = db.ConfiguredLinkAddon.objects.get(id=_resp.data["id"])
         self.assertEqual(addon.target_id, "some-target-id")
-        self.assertEqual(addon.resource_type, "DATASET")
+        self.assertEqual(addon.resource_type, "Other")
