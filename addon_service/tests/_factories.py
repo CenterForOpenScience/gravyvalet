@@ -220,7 +220,7 @@ class ExternalLinkServiceFactory(DjangoModelFactory):
             api_base_url = "https://api.example.url/v1"
 
         supported_resource_types = (
-            supported_resource_types or SupportedResourceTypes.DATASET
+            supported_resource_types or SupportedResourceTypes.Other
         )
 
         return super()._create(
@@ -319,7 +319,7 @@ class ConfiguredLinkAddonFactory(DjangoModelFactory):
             credentials=credentials,
         )
 
-        resource_type = resource_type or SupportedResourceTypes.DATASET
+        resource_type = resource_type or SupportedResourceTypes.Other
 
         kwargs["int_resource_type"] = resource_type.value
 

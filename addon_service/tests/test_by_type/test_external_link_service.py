@@ -131,15 +131,15 @@ class TestExternalLinkServiceModel(TestCase):
         )
 
     def test_supported_resource_types_property(self):
-        self._els.supported_resource_types = SupportedResourceTypes.DATASET
+        self._els.supported_resource_types = SupportedResourceTypes.Other
         self._els.save()
 
         refreshed = db.ExternalLinkService.objects.get(id=self._els.id)
         self.assertEqual(
-            refreshed.supported_resource_types, SupportedResourceTypes.DATASET
+            refreshed.supported_resource_types, SupportedResourceTypes.Other
         )
 
-        multi_type = SupportedResourceTypes.DATASET | SupportedResourceTypes.PROJECT
+        multi_type = SupportedResourceTypes.Other | SupportedResourceTypes.Project
         self._els.supported_resource_types = multi_type
         self._els.save()
 

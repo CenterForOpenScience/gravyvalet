@@ -113,13 +113,13 @@ class TestConfiguredLinkAddonModel(TestCase):
         self.assertEqual(self._addon.resource_type, _addon_from_db.resource_type)
 
     def test_resource_type_property(self):
-        self._addon.resource_type = SupportedResourceTypes.BOOK
+        self._addon.resource_type = SupportedResourceTypes.Book
         self._addon.save()
 
         refreshed = db.ConfiguredLinkAddon.objects.get(id=self._addon.id)
         self.assertEqual(refreshed.resource_type, "BOOK")
 
-        self._addon.resource_type = SupportedResourceTypes.DATASET
+        self._addon.resource_type = SupportedResourceTypes.Other
         self._addon.save()
 
         refreshed = db.ConfiguredLinkAddon.objects.get(id=self._addon.id)
@@ -127,9 +127,9 @@ class TestConfiguredLinkAddonModel(TestCase):
 
     def test_validator_valid_types(self):
         try:
-            is_supported_resource_type(SupportedResourceTypes.DATASET.value)
-            is_supported_resource_type(SupportedResourceTypes.JOURNAL.value)
-            is_supported_resource_type(SupportedResourceTypes.SOFTWARE.value)
+            is_supported_resource_type(SupportedResourceTypes.Other.value)
+            is_supported_resource_type(SupportedResourceTypes.Journal.value)
+            is_supported_resource_type(SupportedResourceTypes.Software.value)
         except ValidationError:
             self.fail("Validator raised ValidationError unexpectedly on valid types")
 
@@ -138,14 +138,14 @@ class TestConfiguredLinkAddonModel(TestCase):
             is_supported_resource_type(-999)
 
         combined = (
-            SupportedResourceTypes.DATASET.value | SupportedResourceTypes.JOURNAL.value
+            SupportedResourceTypes.Other.value | SupportedResourceTypes.Journal.value
         )
         with self.assertRaises(ValidationError):
             is_supported_resource_type(combined)
 
     def test_validation_on_save(self):
         self._addon.int_resource_type = (
-            SupportedResourceTypes.DATASET.value | SupportedResourceTypes.JOURNAL.value
+            SupportedResourceTypes.Other.value | SupportedResourceTypes.Journal.value
         )
         with self.assertRaises(ValidationError):
             self._addon.clean_fields()
