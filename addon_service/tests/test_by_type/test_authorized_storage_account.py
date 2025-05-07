@@ -1,7 +1,6 @@
 import urllib
 from http import HTTPStatus
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
@@ -100,8 +99,8 @@ class TestAuthorizedStorageAccountAPI(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
         self._mock_osf = MockOSF()
+        self._mock_osf.configure_assumed_caller(self._user.user_uri)
         self.enterContext(self._mock_osf.mocking())
 
     @property
@@ -488,13 +487,12 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
     def setUp(self):
         super().setUp()
         self._mock_osf = MockOSF()
+        self._mock_osf.configure_assumed_caller(self._user.user_uri)
         self.enterContext(self._mock_osf.mocking())
 
     def test_get_related__empty(self):
         _resp = self._related_view(
-            get_test_request(
-                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
-            ),
+            get_test_request(),
             pk=self._asa.pk,
             related_field="configured_storage_addons",
         )
@@ -507,9 +505,7 @@ class TestAuthorizedStorageAccountRelatedView(TestCase):
             base_account=self._asa,
         )
         _resp = self._related_view(
-            get_test_request(
-                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
-            ),
+            get_test_request(),
             pk=self._asa.pk,
             related_field="configured_storage_addons",
         )

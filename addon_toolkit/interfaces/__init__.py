@@ -3,6 +3,7 @@ import enum
 from . import (
     citation,
     computing,
+    link,
     storage,
 )
 from ._base import BaseAddonInterface
@@ -21,3 +22,4 @@ class AllAddonInterfaces(enum.Enum):
     STORAGE = storage.StorageAddonInterface
     CITATION = citation.CitationServiceInterface
     COMPUTING = computing.ComputingAddonInterface
+    LINK = link.LinkAddonInterface

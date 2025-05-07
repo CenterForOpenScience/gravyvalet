@@ -34,6 +34,12 @@ class UserReferenceSerializer(serializers.HyperlinkedModelSerializer):
         related_link_view_name=view_names.related_view(RESOURCE_TYPE),
     )
 
+    authorized_link_accounts = HyperlinkedRelatedField(
+        many=True,
+        queryset=AuthorizedCitationAccount.objects.all(),
+        related_link_view_name=view_names.related_view(RESOURCE_TYPE),
+    )
+
     authorized_computing_accounts = HyperlinkedRelatedField(
         many=True,
         queryset=AuthorizedComputingAccount.objects.all(),
@@ -56,6 +62,9 @@ class UserReferenceSerializer(serializers.HyperlinkedModelSerializer):
         "authorized_computing_accounts": (
             "addon_service.serializers.AuthorizedComputingAccountSerializer"
         ),
+        "authorized_link_accounts": (
+            "addon_service.serializers.AuthorizedComputingAccountSerializer"
+        ),
         "configured_resources": (
             "addon_service.serializers.ResourceReferenceSerializer"
         ),
@@ -70,5 +79,6 @@ class UserReferenceSerializer(serializers.HyperlinkedModelSerializer):
             "authorized_storage_accounts",
             "authorized_citation_accounts",
             "authorized_computing_accounts",
+            "authorized_link_accounts",
             "configured_resources",
         ]

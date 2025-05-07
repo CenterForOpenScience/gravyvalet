@@ -64,6 +64,8 @@ class CustomPolymorphicResourceRelatedField(PolymorphicResourceRelatedField):
                 data["type"] = "authorized-storage-accounts"
             elif hasattr(value, "authorizedcomputingaccount"):
                 data["type"] = "authorized-computing-accounts"
+            elif hasattr(value, "authorizedlinkaccount"):
+                data["type"] = "authorized-link-accounts"
         elif isinstance(value, ConfiguredAddon):
             if hasattr(value, "configuredcitationaddon"):
                 data["type"] = "configured-citation-addons"
@@ -71,4 +73,6 @@ class CustomPolymorphicResourceRelatedField(PolymorphicResourceRelatedField):
                 data["type"] = "configured-storage-addons"
             elif hasattr(value, "configuredcomputingaddon"):
                 data["type"] = "configured-computing-addons"
+            elif hasattr(value, "configuredlinkaddon"):
+                data["type"] = "configured-link-addons"
         return data

@@ -9,6 +9,7 @@ from addon_service.authorized_account.polymorphic_serializers import (
 )
 from addon_service.common import view_names
 from addon_service.common.enum_serializers import EnumNameChoiceField
+from addon_service.common.get_user_uri import get_user_uri
 from addon_service.common.invocation_status import InvocationStatus
 from addon_service.common.serializer_fields import (
     CustomPolymorphicResourceRelatedField,
@@ -113,10 +114,7 @@ class AddonOperationInvocationSerializer(serializers.HyperlinkedModelSerializer)
         _imp_cls = _thru_account.imp_cls
         _operation = _imp_cls.get_operation_declaration(_operation_name)
         _request = self.context["request"]
-        _user_uri = (
-            _request.session.get("user_reference_uri")
-            or f"{settings.OSF_BASE_URL}/anonymous"
-        )
+        _user_uri = get_user_uri(_request) or f"{settings.OSF_BASE_URL}/anonymous"
         _user, _ = UserReference.objects.get_or_create(user_uri=_user_uri)
         return AddonOperationInvocation(
             operation=AddonOperationModel(_imp_cls.ADDON_INTERFACE, _operation),

@@ -26,13 +26,13 @@ class TestResourceReferenceAPI(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
         self._mock_osf = MockOSF()
         self._mock_osf.configure_user_role(
             user_uri=self._user.user_uri,
             resource_uri=self._resource.resource_uri,
             role="admin",
         )
+        self._mock_osf.configure_assumed_caller(self._user.user_uri)
         self.enterContext(self._mock_osf.mocking())
 
     @property
@@ -74,7 +74,7 @@ class TestResourceReferenceAPI(APITestCase):
 
     def test_list__wrong_user(self):
         other_user = _factories.UserReferenceFactory()
-        self.client.cookies[settings.USER_REFERENCE_COOKIE] = other_user.user_uri
+        self._mock_osf.configure_assumed_caller(other_user)
         _resp = self.client.get(
             self._list_path, {"filter[resource_uri]": self._resource.resource_uri}
         )
@@ -142,13 +142,12 @@ class TestResourceReferenceViewSet(TestCase):
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._resource.resource_uri, "admin"
         )
+        self._mock_osf.configure_assumed_caller(self._user.user_uri)
         self.enterContext(self._mock_osf.mocking())
 
     def test_get(self):
         _resp = self._view(
-            get_test_request(
-                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
-            ),
+            get_test_request(),
             pk=self._resource.pk,
         )
         self.assertEqual(_resp.status_code, HTTPStatus.OK)
@@ -165,6 +164,7 @@ class TestResourceReferenceViewSet(TestCase):
                     "configured_storage_addons",
                     "configured_citation_addons",
                     "configured_computing_addons",
+                    "configured_link_addons",
                 },
             )
 
@@ -172,6 +172,7 @@ class TestResourceReferenceViewSet(TestCase):
         self._mock_osf.configure_resource_visibility(
             self._resource.resource_uri, public=False
         )
+        self._mock_osf.configure_assumed_caller(None)
         _anon_resp = self._view(get_test_request(), pk=self._resource.pk)
         self.assertEqual(_anon_resp.status_code, HTTPStatus.UNAUTHORIZED)
 
@@ -186,10 +187,10 @@ class TestResourceReferenceViewSet(TestCase):
         self._mock_osf.configure_resource_visibility(
             self._resource.resource_uri, public=False
         )
+        wrong_user = _factories.UserReferenceFactory()
+        self._mock_osf.configure_assumed_caller(wrong_user)
         _resp = self._view(
-            get_test_request(
-                cookies={settings.USER_REFERENCE_COOKIE: "this is wrong user auth"}
-            ),
+            get_test_request(),
             pk=self._resource.pk,
         )
         self.assertEqual(_resp.status_code, HTTPStatus.FORBIDDEN)
@@ -200,7 +201,7 @@ class TestResourceReferenceViewSet(TestCase):
         )
         _resp = self._view(
             get_test_request(
-                cookies={settings.USER_REFERENCE_COOKIE: "this is wrong user auth"}
+                cookies={settings.OSF_AUTH_COOKIE_NAME: "this is wrong user auth"}
             ),
             pk=self._resource.pk,
         )
@@ -221,6 +222,7 @@ class TestResourceReferenceRelatedView(TestCase):
 
     def setUp(self):
         self._mock_osf = MockOSF()
+        self._mock_osf.configure_assumed_caller(self._user.user_uri)
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._resource.resource_uri, "admin"
         )
@@ -230,9 +232,7 @@ class TestResourceReferenceRelatedView(TestCase):
         self._csa.delete()
 
         _resp = self._related_view(
-            get_test_request(
-                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
-            ),
+            get_test_request(),
             pk=self._resource.pk,
             related_field="configured_storage_addons",
         )
@@ -246,7 +246,7 @@ class TestResourceReferenceRelatedView(TestCase):
         ) + [self._csa]
         _resp = self._related_view(
             get_test_request(
-                cookies={settings.USER_REFERENCE_COOKIE: self._user.user_uri}
+                cookies={settings.OSF_AUTH_COOKIE_NAME: self._user.user_uri}
             ),
             pk=self._resource.pk,
             related_field="configured_storage_addons",
