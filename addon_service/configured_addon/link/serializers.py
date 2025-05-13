@@ -67,6 +67,7 @@ class ConfiguredLinkAddonSerializer(ConfiguredAddonSerializer):
     class Meta:
         model = ConfiguredLinkAddon
         read_only_fields = ["external_link_service"]
+        one_addon_per_node = False
         fields = [
             "id",
             "display_name",
