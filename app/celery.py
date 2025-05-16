@@ -28,6 +28,12 @@ class TaskUrgency(enum.Enum):
 gv_chill_queue = Queue(TaskUrgency.CHILL.queue_name())
 gv_reactive_queue = Queue(TaskUrgency.REACTIVE.queue_name())
 gv_interactive_queue = Queue(TaskUrgency.INTERACTIVE.queue_name())
+osf_high_queue = Queue(
+    "external_high", no_declare=True
+)  # this queue must be declared by osf's celery
+osf_low_queue = Queue(
+    "external_low", no_declare=True
+)  # this queue must be declared by osf's celery
 
 app = Celery(
     broker_url=AMQP_BROKER_URL,
@@ -44,6 +50,8 @@ app = Celery(
         "addon_service.management.commands.refresh_addon_tokens.*": {
             "queue": gv_chill_queue
         },
+        "osf.*": {"queue": osf_high_queue},
+        "website.*": {"queue": osf_high_queue},
     },
     include=[
         "addon_service.tasks",

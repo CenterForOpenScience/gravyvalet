@@ -20,7 +20,6 @@ from urllib.parse import (
 )
 
 from asgiref.sync import sync_to_async
-from django.conf import settings
 from django.contrib.sessions.backends.db import SessionStore
 from django.urls import reverse
 from rest_framework.test import APIRequestFactory
@@ -80,11 +79,13 @@ class MockOSF:
     def configure_resource_visibility(self, resource_uri, *, public=True):
         self._permissions[resource_uri]["public"] = public
 
-    def _get_assumed_caller(self, cookies=None):
+    def _get_assumed_caller(self, request):
         if self._configured_caller_uri:
+            request.session["user_reference_uri"] = self._configured_caller_uri
             return self._configured_caller_uri
-        if cookies is not None:
-            return cookies.get(settings.USER_REFERENCE_COOKIE)
+
+        if request.COOKIES is not None:
+            return request.session.get("user_reference_uri")
         return None
 
     def _get_user_permissions(self, user_uri, resource_uri):
@@ -103,8 +104,7 @@ class MockOSF:
     def _mock_user_check(self, request) -> tuple[Any, Any] | None:
         # replaces `authenticate` on a custom rest_framework authenticator:
         # https://www.django-rest-framework.org/api-guide/authentication/#custom-authentication
-        caller_uri = self._get_assumed_caller(cookies=request.COOKIES)
-        request.session["user_reference_uri"] = caller_uri
+        caller_uri = self._get_assumed_caller(request)
         return (
             (None, None)  # success! return a tuple (values here yet unused)
             if caller_uri
@@ -112,7 +112,7 @@ class MockOSF:
         )
 
     def _mock_resource_check(self, request, uri, required_permission, *args, **kwargs):
-        caller = self._get_assumed_caller(cookies=request.COOKIES)
+        caller = self._get_assumed_caller(request)
         permissions = self._get_user_permissions(user_uri=caller, resource_uri=uri)
         return bool(required_permission.lower() in permissions)
 
