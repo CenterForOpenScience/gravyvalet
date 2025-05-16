@@ -4,7 +4,10 @@ from django.db import transaction
 from addon_service.addon_imp.instantiation import get_addon_instance__blocking
 from addon_service.common.dibs import dibs
 from addon_service.common.invocation_status import InvocationStatus
-from addon_service.models import AddonOperationInvocation
+from addon_service.models import (
+    AddonOperationInvocation,
+    AuthorizedStorageAccount,
+)
 from addon_toolkit.json_arguments import json_for_typed_value
 
 
@@ -48,3 +51,10 @@ def perform_invocation__celery(invocation_pk: str) -> None:
     invocation = AddonOperationInvocation.objects.get(pk=invocation_pk)
     with dibs(invocation):  # TODO: handle dibs errors
         perform_invocation__blocking(invocation)
+
+
+@celery.shared_task(acks_late=True)
+def refresh_oauth_access_token__celery(authorized_account_pk: str):
+    AuthorizedStorageAccount.objects.get(
+        pk=authorized_account_pk
+    ).refresh_oauth_access_token__blocking(force=True)

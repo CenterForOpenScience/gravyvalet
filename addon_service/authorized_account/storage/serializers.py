@@ -18,6 +18,7 @@ from addon_service.models import (
     ExternalStorageService,
     UserReference,
 )
+from addon_service.tasks.invocation import refresh_oauth_access_token__celery
 
 
 RESOURCE_TYPE = get_resource_type_from_model(AuthorizedStorageAccount)
@@ -83,4 +84,43 @@ class AuthorizedStorageAccountSerializer(AuthorizedAccountSerializer):
             "initiate_oauth",
             "credentials_available",
             "configured_addons_uris",
+        ]
+
+
+class GoogleDriveStorageAccountSerializer(AuthorizedStorageAccountSerializer):
+    oauth_token = serializers.SerializerMethodField()
+    serialize_oauth_token = serializers.BooleanField(write_only=True, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.context["request"].data.get("serialize_oauth_token"):
+            self.fields.pop("oauth_token")
+
+    def get_oauth_token(self, obj: AuthorizedStorageAccount):
+        if self.validated_data.get("serialize_oauth_token"):
+            refresh_oauth_access_token__celery.apply_async([obj.pk], countdown=300)
+            return obj._credentials.decrypted_credentials.access_token
+        return None
+
+    class Meta:
+        model = AuthorizedStorageAccount
+        fields = [
+            "id",
+            "url",
+            "display_name",
+            "account_owner",
+            "api_base_url",
+            "auth_url",
+            "authorized_capabilities",
+            "authorized_operations",
+            "authorized_operation_names",
+            "configured_storage_addons",
+            "credentials",
+            "default_root_folder",
+            "external_storage_service",
+            "initiate_oauth",
+            "credentials_available",
+            "configured_addons_uris",
+            "oauth_token",
+            "serialize_oauth_token",
         ]
