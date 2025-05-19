@@ -41,6 +41,10 @@ class ZenodoLinkImp(LinkAddonHttpRequestorImp):
     """
 
     async def build_url_for_id(self, item_id: str) -> str:
+        """
+        This method is used by ConfiguredLinkAddon to construct user-facing url,
+        which will take them to the configured resource web page
+        """
         if match := DEPOSITION_REGEX.match(item_id):
             return self._build_deposition_url(match["id"])
         elif match := FILE_REGEX.match(item_id):
@@ -55,26 +59,30 @@ class ZenodoLinkImp(LinkAddonHttpRequestorImp):
         return f"{self.config.external_web_url}/deposition/{deposition_id}"
 
     async def get_external_account_id(self, _: dict[str, str]) -> str:
-        try:
-            async with self.network.GET("api/deposit/depositions") as response:
-                if not response.http_status.is_success:
-                    raise ValidationError(
-                        "Could not get Zenodo account id, check your API Token"
-                    )
-                # Zenodo doesn't have a specific endpoint for user info
-                # Using the first deposition's owner as the account ID
-                content = await response.json_content()
-                if content and len(content) > 0:
-                    return str(content[0].get("owner", ""))
-                return "zenodo_user"  # Fallback if no depositions found
-        except ValueError as exc:
-            if "relative url may not alter the base url" in str(exc).lower():
+        """
+        This method fetches external account's id on the provider side, and is meant for use internally.
+
+        For Zenodo it has to fetch user's depositions and take owner id form it,
+        as Zenodo API does not provide direct way to fetch user's internal id
+        """
+        async with self.network.GET("api/deposit/depositions") as response:
+            if not response.http_status.is_success:
                 raise ValidationError(
-                    "Invalid host URL. Please check your Zenodo base URL."
+                    "Could not get Zenodo account id, check your API Token"
                 )
-            raise
+            content = await response.json_content()
+            if content and len(content) > 0:
+                return str(content[0].get("owner", ""))
+            return "zenodo_user"  # Fallback if no depositions found
 
     async def list_root_items(self, page_cursor: str = "") -> ItemSampleResult:
+        """
+        This method lists root (top level ) from external provider.
+        Please note that it must return only public items.
+
+        For Zenodo it fetches user's depositions and filters them to be public on client's side
+        (as the API does not such filtering)
+        """
         page = 1
         if page_cursor:
             try:
@@ -95,6 +103,7 @@ class ZenodoLinkImp(LinkAddonHttpRequestorImp):
         """Parse the response from the depositions endpoint.
 
         The depositions endpoint returns a list of depositions directly, not wrapped in a hits object.
+        Also filter only public (only published) depositions.
         """
         items = []
         for deposition in raw_content:
@@ -115,6 +124,9 @@ class ZenodoLinkImp(LinkAddonHttpRequestorImp):
         )
 
     async def get_item_info(self, item_id: str) -> ItemResult:
+        """
+        This method fetches desired item from an API
+        """
         if not item_id:
             return ItemResult(item_id="", item_name="", item_type=ItemType.FOLDER)
         elif match := DEPOSITION_REGEX.match(item_id):
@@ -130,6 +142,11 @@ class ZenodoLinkImp(LinkAddonHttpRequestorImp):
         page_cursor: str = "",
         item_type: ItemType | None = None,
     ) -> ItemSampleResult:
+        """
+        This method lists children items of requested id. Used to navigate item tree (if there is one).
+
+        For Zenodo it fetches files for given depositions, as there is no apparent item tree
+        """
         if not item_id:
             return await self.list_root_items(page_cursor)
         elif match := DEPOSITION_REGEX.match(item_id):
@@ -142,6 +159,9 @@ class ZenodoLinkImp(LinkAddonHttpRequestorImp):
             return ItemSampleResult(items=[], total_count=0)
 
     async def _fetch_record_files(self, record_id: str) -> list[ItemResult]:
+        """
+        Helper used to fetch deposition's files
+        """
         async with self.network.GET(
             f"api/deposit/depositions/{record_id}/files"
         ) as response:
@@ -151,6 +171,9 @@ class ZenodoLinkImp(LinkAddonHttpRequestorImp):
             return [self._parse_file(file, record_id) for file in files]
 
     async def _fetch_file(self, record_id: str, file_id: str) -> ItemResult:
+        """
+        Helper used to fetch deposition's file
+        """
         async with self.network.GET(
             f"api/deposit/depositions/{record_id}/files/{file_id}"
         ) as response:
@@ -161,7 +184,10 @@ class ZenodoLinkImp(LinkAddonHttpRequestorImp):
 
             return self._parse_file(file, record_id)
 
-    def _parse_file(self, file, record_id):
+    def _parse_file(self, file: dict, record_id: str) -> ItemResult:
+        """
+        Helper which parses file response into ItemResult
+        """
         return ItemResult(
             item_id=f"file/{record_id}/{file.get('id')}",
             item_name=file.get("filename"),
@@ -170,6 +196,9 @@ class ZenodoLinkImp(LinkAddonHttpRequestorImp):
         )
 
     async def _fetch_deposition(self, deposition_id: str) -> ItemResult:
+        """
+        Helper used to fetch deposition
+        """
         async with self.network.GET(
             f"api/deposit/depositions/{deposition_id}"
         ) as response:
@@ -178,7 +207,10 @@ class ZenodoLinkImp(LinkAddonHttpRequestorImp):
             content = await response.json_content()
             return self._parse_deposition(content)
 
-    def _parse_deposition(self, raw):
+    def _parse_deposition(self, raw: dict) -> ItemResult:
+        """
+        Helper which parses deposition response into ItemResult
+        """
         deposition_id = raw.get("id")
 
         metadata = raw.get("metadata", {})
