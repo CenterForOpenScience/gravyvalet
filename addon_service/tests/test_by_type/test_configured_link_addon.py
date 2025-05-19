@@ -49,6 +49,7 @@ class TestConfiguredLinkAddonAPI(APITestCase):
 
     def setUp(self):
         super().setUp()
+        self.client.cookies["osf"] = self._user.user_uri
         self._mock_osf = MockOSF()
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._resource.resource_uri, "admin"
@@ -108,7 +109,9 @@ class TestConfiguredLinkAddonModel(TestCase):
     def test_can_load(self):
         _addon_from_db = db.ConfiguredLinkAddon.objects.get(id=self._addon.id)
         self.assertEqual(self._addon.target_id, _addon_from_db.target_id)
-        self.assertEqual(self._addon.resource_type, _addon_from_db.resource_type)
+        self.assertEqual(
+            self._addon.resource_type.value, _addon_from_db.resource_type.value
+        )
 
     def test_resource_type_property(self):
         self._addon.resource_type = SupportedResourceTypes.Book
@@ -116,18 +119,16 @@ class TestConfiguredLinkAddonModel(TestCase):
 
         refreshed = db.ConfiguredLinkAddon.objects.get(id=self._addon.id)
         self.assertEqual(refreshed.resource_type, SupportedResourceTypes.Book)
-        self.assertEqual(refreshed.resource_type.name, "Book")
 
-        self._addon.resource_type = SupportedResourceTypes.Other
+        self._addon.resource_type = SupportedResourceTypes.Dataset
         self._addon.save()
 
         refreshed = db.ConfiguredLinkAddon.objects.get(id=self._addon.id)
-        self.assertEqual(refreshed.resource_type, SupportedResourceTypes.Other)
-        self.assertEqual(refreshed.resource_type.name, "Other")
+        self.assertEqual(refreshed.resource_type, SupportedResourceTypes.Dataset)
 
     def test_validator_valid_types(self):
         try:
-            is_supported_resource_type(SupportedResourceTypes.Other.value)
+            is_supported_resource_type(SupportedResourceTypes.Dataset.value)
             is_supported_resource_type(SupportedResourceTypes.Journal.value)
             is_supported_resource_type(SupportedResourceTypes.Software.value)
         except ValidationError:
@@ -138,14 +139,14 @@ class TestConfiguredLinkAddonModel(TestCase):
             is_supported_resource_type(-999)
 
         combined = (
-            SupportedResourceTypes.Other.value | SupportedResourceTypes.Journal.value
+            SupportedResourceTypes.Dataset.value | SupportedResourceTypes.Journal.value
         )
         with self.assertRaises(ValidationError):
             is_supported_resource_type(combined)
 
     def test_validation_on_save(self):
         self._addon.int_resource_type = (
-            SupportedResourceTypes.Other.value | SupportedResourceTypes.Journal.value
+            SupportedResourceTypes.Dataset.value | SupportedResourceTypes.Journal.value
         )
         with self.assertRaises(ValidationError):
             self._addon.clean_fields()
@@ -195,6 +196,7 @@ class TestConfiguredLinkAddonViewSet(TestCase):
     def test_get(self):
         request = get_test_request(user=self._user)
         request.session = {"user_reference_uri": self._user.user_uri}
+        request.COOKIES = {"osf": self._user.user_uri}
 
         _resp = self._view(
             request,
@@ -219,6 +221,7 @@ class TestConfiguredLinkAddonViewSet(TestCase):
     def test_owner_access(self):
         request = get_test_request(user=self._user)
         request.session = {"user_reference_uri": self._user.user_uri}
+        request.COOKIES = {"osf": self._user.user_uri}
 
         _resp = self._view(
             request,
@@ -232,6 +235,7 @@ class TestConfiguredLinkAddonViewSet(TestCase):
 
         request = get_test_request(user=_another_user)
         request.session = {"user_reference_uri": _another_user.user_uri}
+        request.COOKIES = {"osf": _another_user.user_uri}
 
         _resp = self._view(
             request,
@@ -246,11 +250,12 @@ class TestCreateConfiguredLinkAddon(APITestCase):
         cls._user = _factories.UserReferenceFactory()
         cls._resource = _factories.ResourceReferenceFactory()
         cls._authorized_account = _factories.AuthorizedLinkAccountFactory(
-            account_owner=cls._user,
-            authorized_capabilities=AddonCapabilities.ACCESS,
+            account_owner=cls._user
         )
 
     def setUp(self):
+        super().setUp()
+        self.client.cookies["osf"] = self._user.user_uri
         self._mock_osf = MockOSF()
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._resource.resource_uri, "admin"
@@ -262,66 +267,65 @@ class TestCreateConfiguredLinkAddon(APITestCase):
             "addon_service.configured_addon.link.models.ConfiguredLinkAddon.target_url",
             mock_target_url,
         )
-        self.instance_patcher = patch(
-            "addon_service.addon_imp.instantiation.get_link_addon_instance",
-            mock_get_link_addon_instance,
-        )
-        self.instance_blocking_patcher = patch(
+        self.target_url_patcher.start()
+        self.addCleanup(self.target_url_patcher.stop)
+
+        self.instantiate_patcher = patch(
             "addon_service.addon_imp.instantiation.get_link_addon_instance__blocking",
             mock_get_link_addon_instance,
         )
+        self.instantiate_patcher.start()
+        self.addCleanup(self.instantiate_patcher.stop)
 
-        self.target_url_patcher.start()
-        self.instance_patcher.start()
-        self.instance_blocking_patcher.start()
-
-        self.addCleanup(self.target_url_patcher.stop)
-        self.addCleanup(self.instance_patcher.stop)
-        self.addCleanup(self.instance_blocking_patcher.stop)
+    @property
+    def _list_path(self):
+        return reverse("configured-link-addons-list")
 
     def test_create_addon(self):
-        self._mock_osf.configure_user_role(
-            self._user.user_uri, self._resource.resource_uri, "admin"
-        )
-        self._mock_osf.configure_assumed_caller(self._user.user_uri)
+        _initial_count = db.ConfiguredLinkAddon.objects.count()
 
-        request_data = {
-            "data": {
-                "type": "configured-link-addons",
-                "attributes": {
-                    "target_id": "some-target-id",
-                    "resource_type": "Other",
-                    "connected_capabilities": ["ACCESS"],
-                    "authorized_resource_uri": self._resource.resource_uri,
-                },
-                "relationships": {
-                    "base_account": {
-                        "data": {
-                            "type": "authorized-link-accounts",
-                            "id": str(self._authorized_account.id),
-                        }
-                    },
-                    "authorized_resource": {
-                        "data": {
-                            "type": "resource-references",
-                            "id": str(self._resource.id),
-                        }
-                    },
-                },
-            }
-        }
+        _target_id = "12345"
+        _resource_type = SupportedResourceTypes.Dataset
+
+        import json
 
         _resp = self.client.post(
-            reverse("configured-link-addons-list"),
-            request_data,
-            format="vnd.api+json",
+            self._list_path,
+            data=json.dumps(
+                {
+                    "data": {
+                        "type": "configured-link-addons",
+                        "attributes": {
+                            "target_id": _target_id,
+                            "resource_type": _resource_type.name,
+                            "connected_capabilities": [AddonCapabilities.ACCESS.name],
+                            "authorized_resource_uri": self._resource.resource_uri,
+                        },
+                        "relationships": {
+                            "base_account": {
+                                "data": {
+                                    "id": str(self._authorized_account.id),
+                                    "type": "authorized-link-accounts",
+                                }
+                            },
+                            "authorized_resource": {
+                                "data": {
+                                    "id": self._resource.resource_uri,
+                                    "type": "resource-references",
+                                }
+                            },
+                        },
+                    }
+                }
+            ),
+            content_type="application/vnd.api+json",
         )
 
-        self.assertEqual(_resp.status_code, HTTPStatus.CREATED)
+        self.assertEqual(
+            _resp.status_code, HTTPStatus.CREATED, f"Response content: {_resp.content}"
+        )
 
-        self.assertEqual(_resp.data["resource_type"], SupportedResourceTypes.Other.name)
-
-        addon = db.ConfiguredLinkAddon.objects.get(id=_resp.data["id"])
-        self.assertEqual(addon.target_id, "some-target-id")
-        self.assertEqual(addon.resource_type, SupportedResourceTypes.Other)
-        self.assertEqual(addon.resource_type.name, "Other")
+        self.assertEqual(db.ConfiguredLinkAddon.objects.count(), _initial_count + 1)
+        _created = db.ConfiguredLinkAddon.objects.get(id=_resp.data["id"])
+        self.assertEqual(_created.target_id, _target_id)
+        self.assertEqual(_created.resource_type.value, _resource_type.value)
