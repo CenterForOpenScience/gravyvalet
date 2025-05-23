@@ -11,6 +11,7 @@ from addon_imps.citations import (
 )
 from addon_imps.computing import boa
 from addon_imps.link import dataverse as link_dataverse
+from addon_imps.link import zenodo
 from addon_imps.storage import (
     bitbucket,
     box_dot_com,
@@ -88,6 +89,7 @@ class KnownAddonImps(enum.Enum):
     GITHUB = github.GitHubStorageImp
     GITLAB = gitlab.GitlabStorageImp
     DROPBOX = dropbox.DropboxStorageImp
+    ZENODO = zenodo.ZenodoLinkImp
 
     BOA = boa.BoaComputingImp
 
@@ -112,9 +114,10 @@ class AddonImpNumbers(enum.Enum):
     DATAVERSE = 1010
     GITLAB = 1011
     BITBUCKET = 1012
+    GITHUB = 1013
 
     LINK_DATAVERSE = 1030
-    GITHUB = 1013
+    ZENODO = 1031
 
     BOA = 1020
 
