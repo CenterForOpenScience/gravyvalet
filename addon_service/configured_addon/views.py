@@ -19,7 +19,7 @@ class ConfiguredAddonViewSet(RetrieveWriteDeleteViewSet):
                 return [IsAuthenticated(), SessionUserIsOwnerOrResourceAdmin()]
             case "create":
                 return [IsAuthenticated(), SessionUserMayConnectAddon()]
-            case "get_wb_credentials":
+            case "get_wb_credentials" | "get_verified_links":
                 return [IsValidHMACSignedRequest()]
             case None:
                 return super().get_permissions()

@@ -6,6 +6,7 @@ from django.core.management import BaseCommand
 
 from addon_service.external_service.citation.models import ExternalCitationService
 from addon_service.external_service.computing.models import ExternalComputingService
+from addon_service.external_service.link.models import ExternalLinkService
 from addon_service.external_service.storage.models import ExternalStorageService
 from addon_service.oauth1 import OAuth1ClientConfig
 from addon_service.oauth2 import OAuth2ClientConfig
@@ -20,6 +21,7 @@ service_type_map = {
     "storage": ExternalStorageService,
     "citation": ExternalCitationService,
     "computing": ExternalComputingService,
+    "link": ExternalLinkService,
 }
 
 icons_path = Path(__file__).parent.parent.parent / "static/provider_icons"

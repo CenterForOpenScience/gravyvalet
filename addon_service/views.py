@@ -16,6 +16,7 @@ from addon_service.authorized_account.citation.views import (
 from addon_service.authorized_account.computing.views import (
     AuthorizedComputingAccountViewSet,
 )
+from addon_service.authorized_account.link.views import AuthorizedLinkAccountViewSet
 from addon_service.authorized_account.storage.views import (
     AuthorizedStorageAccountViewSet,
 )
@@ -23,11 +24,13 @@ from addon_service.configured_addon.citation.views import ConfiguredCitationAddo
 from addon_service.configured_addon.computing.views import (
     ConfiguredComputingAddonViewSet,
 )
+from addon_service.configured_addon.link.views import ConfiguredLinkAddonViewSet
 from addon_service.configured_addon.storage.views import ConfiguredStorageAddonViewSet
 from addon_service.external_service.citation.views import ExternalCitationServiceViewSet
 from addon_service.external_service.computing.views import (
     ExternalComputingServiceViewSet,
 )
+from addon_service.external_service.link.views import ExternalLinkServiceViewSet
 from addon_service.external_service.storage.views import ExternalStorageServiceViewSet
 from addon_service.oauth1.views import oauth1_callback_view
 from addon_service.oauth2.views import oauth2_callback_view
@@ -61,6 +64,9 @@ __all__ = (
     "AuthorizedComputingAccountViewSet",
     "ConfiguredComputingAddonViewSet",
     "ExternalComputingServiceViewSet",
+    "AuthorizedLinkAccountViewSet",
+    "ConfiguredLinkAddonViewSet",
+    "ExternalLinkServiceViewSet",
     "AuthorizedStorageAccountViewSet",
     "ConfiguredStorageAddonViewSet",
     "ExternalStorageServiceViewSet",

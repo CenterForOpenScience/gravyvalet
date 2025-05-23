@@ -19,10 +19,12 @@ from ..authorized_account.citation.serializers import (
 from ..authorized_account.computing.serializers import (
     AuthorizedComputingAccountSerializer,
 )
+from ..authorized_account.link.serializers import AuthorizedLinkAccountSerializer
 from ..authorized_account.models import AuthorizedAccount
 from ..authorized_account.storage.serializers import AuthorizedStorageAccountSerializer
 from ..configured_addon.citation.serializers import ConfiguredCitationAddonSerializer
 from ..configured_addon.computing.serializers import ConfiguredComputingAddonSerializer
+from ..configured_addon.link.serializers import ConfiguredLinkAddonSerializer
 from ..configured_addon.models import ConfiguredAddon
 from ..configured_addon.storage.serializers import ConfiguredStorageAddonSerializer
 from .models import AddonOperationInvocation
@@ -63,6 +65,10 @@ class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
                 serializer = AuthorizedComputingAccountSerializer(
                     instance, context={"request": request}
                 )
+            elif hasattr(instance, "authorizedlinkaccount"):
+                serializer = AuthorizedLinkAccountSerializer(
+                    instance, context={"request": request}
+                )
             else:
                 raise ValueError("unknown authorized account type")
         elif isinstance(instance, ConfiguredAddon):
@@ -76,6 +82,10 @@ class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
                 )
             elif hasattr(instance, "configuredcomputingaddon"):
                 serializer = ConfiguredComputingAddonSerializer(
+                    instance, context={"request": request}
+                )
+            elif hasattr(instance, "configuredlinkaddon"):
+                serializer = ConfiguredLinkAddonSerializer(
                     instance, context={"request": request}
                 )
             else:
