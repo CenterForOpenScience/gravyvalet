@@ -10,7 +10,8 @@ from addon_imps.citations import (
     zotero_org,
 )
 from addon_imps.computing import boa
-from addon_imps.link import dataverse as link_dataverse, zenodo
+from addon_imps.link import dataverse as link_dataverse
+from addon_imps.link import zenodo
 from addon_imps.storage import (
     bitbucket,
     box_dot_com,
