@@ -107,6 +107,7 @@ INSTALLED_APPS = [
     "rest_framework_json_api",
     "addon_service",
     "django_celery_beat",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -171,7 +172,37 @@ DATABASES = {
         },
     },
 }
-
+SWAGGER_SETTINGS = {
+    "DEFAULT_AUTO_SCHEMA_CLASS": "drf_yasg_json_api.inspectors.SwaggerAutoSchema",  # Overridden
+    "DEFAULT_FIELD_INSPECTORS": [
+        "drf_yasg_json_api.inspectors.NamesFormatFilter",  # Replaces CamelCaseJSONFilter
+        "drf_yasg.inspectors.RecursiveFieldInspector",
+        "drf_yasg_json_api.inspectors.XPropertiesFilter",  # Added
+        "drf_yasg_json_api.inspectors.JSONAPISerializerSmartInspector",  # Added
+        "drf_yasg.inspectors.ReferencingSerializerInspector",
+        "drf_yasg_json_api.inspectors.IntegerIDFieldInspector",  # Added
+        "drf_yasg.inspectors.ChoiceFieldInspector",
+        "drf_yasg.inspectors.FileFieldInspector",
+        "drf_yasg.inspectors.DictFieldInspector",
+        "drf_yasg.inspectors.JSONFieldInspector",
+        "drf_yasg.inspectors.HiddenFieldInspector",
+        "drf_yasg_json_api.inspectors.ManyRelatedFieldInspector",  # Added
+        "drf_yasg_json_api.inspectors.IntegerPrimaryKeyRelatedFieldInspector",  # Added
+        "drf_yasg.inspectors.RelatedFieldInspector",
+        "drf_yasg.inspectors.SerializerMethodFieldInspector",
+        "drf_yasg.inspectors.SimpleFieldInspector",
+        "drf_yasg.inspectors.StringDefaultFieldInspector",
+    ],
+    "DEFAULT_FILTER_INSPECTORS": [
+        "drf_yasg_json_api.inspectors.DjangoFilterInspector",  # Added (optional), requires django_filter
+        "drf_yasg.inspectors.CoreAPICompatInspector",
+    ],
+    "DEFAULT_PAGINATOR_INSPECTORS": [
+        "drf_yasg_json_api.inspectors.DjangoRestResponsePagination",  # Added
+        "drf_yasg.inspectors.DjangoRestResponsePagination",
+        "drf_yasg.inspectors.CoreAPICompatInspector",
+    ],
+}
 if env.OSFDB_HOST:
     DATABASES["osf"] = {
         "ENGINE": "django.db.backends.postgresql",
@@ -193,12 +224,13 @@ DATABASE_ROUTERS = ["addon_service.osf_models.db_router.OsfDatabaseRouter"]
 REST_FRAMEWORK = {
     "PAGE_SIZE": 101,
     "EXCEPTION_HANDLER": "addon_service.exception_handler.api_exception_handler",
-    "DEFAULT_PAGINATION_CLASS": "rest_framework_json_api.pagination.JsonApiPageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "drf_spectacular_jsonapi.schemas.pagination.JsonApiPageNumberPagination",
     "DEFAULT_PARSER_CLASSES": (
         "rest_framework_json_api.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular_jsonapi.schemas.openapi.JsonApiAutoSchema",
     "DEFAULT_RENDERER_CLASSES": (
         "rest_framework_json_api.renderers.JSONRenderer",
         "rest_framework_json_api.renderers.BrowsableAPIRenderer",
@@ -219,6 +251,19 @@ REST_FRAMEWORK = {
     "TEST_REQUEST_DEFAULT_FORMAT": "vnd.api+json",
 }
 
+SPECTACULAR_SETTINGS = {
+    "TITLE": "GravyValet API",
+    "DESCRIPTION": "Addons service designed for use with OSF",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "PREPROCESSING_HOOKS": ["drf_spectacular_jsonapi.hooks.fix_nested_path_parameters"],
+    "EXTENSIONS_INFO": {
+        "drf_spectacular_jsonapi.extensions.JSONAPIResourceExtension": {},
+        "drf_spectacular_jsonapi.extensions.JSONAPIErrorExtension": {},
+    },
+    # OTHER SETTINGS
+}
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
