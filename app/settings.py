@@ -209,7 +209,6 @@ REST_FRAMEWORK = {
         "addon_service.common.queryparams_filter.AllowedQueryParamsFilter",
         "rest_framework_json_api.filters.OrderingFilter",
         "rest_framework_json_api.django_filters.DjangoFilterBackend",
-        "rest_framework.filters.SearchFilter",
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "addon_service.authentication.GVCombinedAuthentication",
@@ -228,11 +227,6 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "PREPROCESSING_HOOKS": ["drf_spectacular_jsonapi.hooks.fix_nested_path_parameters"],
-    "EXTENSIONS_INFO": {
-        "drf_spectacular_jsonapi.extensions.JSONAPIResourceExtension": {},
-        "drf_spectacular_jsonapi.extensions.JSONAPIErrorExtension": {},
-    },
-    # OTHER SETTINGS
 }
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
