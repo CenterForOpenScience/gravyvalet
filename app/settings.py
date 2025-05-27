@@ -172,37 +172,7 @@ DATABASES = {
         },
     },
 }
-SWAGGER_SETTINGS = {
-    "DEFAULT_AUTO_SCHEMA_CLASS": "drf_yasg_json_api.inspectors.SwaggerAutoSchema",  # Overridden
-    "DEFAULT_FIELD_INSPECTORS": [
-        "drf_yasg_json_api.inspectors.NamesFormatFilter",  # Replaces CamelCaseJSONFilter
-        "drf_yasg.inspectors.RecursiveFieldInspector",
-        "drf_yasg_json_api.inspectors.XPropertiesFilter",  # Added
-        "drf_yasg_json_api.inspectors.JSONAPISerializerSmartInspector",  # Added
-        "drf_yasg.inspectors.ReferencingSerializerInspector",
-        "drf_yasg_json_api.inspectors.IntegerIDFieldInspector",  # Added
-        "drf_yasg.inspectors.ChoiceFieldInspector",
-        "drf_yasg.inspectors.FileFieldInspector",
-        "drf_yasg.inspectors.DictFieldInspector",
-        "drf_yasg.inspectors.JSONFieldInspector",
-        "drf_yasg.inspectors.HiddenFieldInspector",
-        "drf_yasg_json_api.inspectors.ManyRelatedFieldInspector",  # Added
-        "drf_yasg_json_api.inspectors.IntegerPrimaryKeyRelatedFieldInspector",  # Added
-        "drf_yasg.inspectors.RelatedFieldInspector",
-        "drf_yasg.inspectors.SerializerMethodFieldInspector",
-        "drf_yasg.inspectors.SimpleFieldInspector",
-        "drf_yasg.inspectors.StringDefaultFieldInspector",
-    ],
-    "DEFAULT_FILTER_INSPECTORS": [
-        "drf_yasg_json_api.inspectors.DjangoFilterInspector",  # Added (optional), requires django_filter
-        "drf_yasg.inspectors.CoreAPICompatInspector",
-    ],
-    "DEFAULT_PAGINATOR_INSPECTORS": [
-        "drf_yasg_json_api.inspectors.DjangoRestResponsePagination",  # Added
-        "drf_yasg.inspectors.DjangoRestResponsePagination",
-        "drf_yasg.inspectors.CoreAPICompatInspector",
-    ],
-}
+
 if env.OSFDB_HOST:
     DATABASES["osf"] = {
         "ENGINE": "django.db.backends.postgresql",
