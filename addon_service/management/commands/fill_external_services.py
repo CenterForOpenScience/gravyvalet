@@ -1,4 +1,5 @@
 import csv
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -7,6 +8,7 @@ from django.core.management import BaseCommand
 from addon_service.external_service.citation.models import ExternalCitationService
 from addon_service.external_service.computing.models import ExternalComputingService
 from addon_service.external_service.link.models import ExternalLinkService
+from addon_service.external_service.models import ExternalService
 from addon_service.external_service.storage.models import ExternalStorageService
 from addon_service.oauth1 import OAuth1ClientConfig
 from addon_service.oauth2 import OAuth2ClientConfig
@@ -25,11 +27,13 @@ service_type_map = {
 }
 
 icons_path = Path(__file__).parent.parent.parent / "static/provider_icons"
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         services = self.load_csv_data(services_csv)
+
         oauth2_configs = self.load_csv_data(oauth2_csv)
         oauth1_configs = self.load_csv_data(oauth1_csv)
 
@@ -44,14 +48,24 @@ class Command(BaseCommand):
                 oauth1_config = oauth1_configs[oauth1_id]
                 oauth1_config = OAuth1ClientConfig.objects.create(**oauth1_config)
                 service["oauth1_client_config"] = oauth1_config
+            logger.warning(f"Filled service {service['display_name']}")
             model.objects.create(**service)
 
     def load_csv_data(self, path: Path) -> dict[str, dict[str, Any]]:
+        current_services_names = {
+            service[0]
+            for service in ExternalService.objects.values_list("display_name").all()
+        }
         with path.open() as services_file:
             item = csv.reader(services_file)
             field_names = next(item)
             data_list = [dict(zip(field_names, service)) for service in item]
-            return {item.pop("id"): self.fix_values(item) for item in data_list}
+            print(data_list)
+            return {
+                item.pop("id"): self.fix_values(item)
+                for item in data_list
+                if item.get("display_name") not in current_services_names
+            }
 
     def fix_values(self, item):
         raw_values = {key: self.fix_value(value) for key, value in item.items()}

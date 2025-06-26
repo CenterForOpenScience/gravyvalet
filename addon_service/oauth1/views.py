@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from asgiref.sync import async_to_sync
 from django.http import HttpResponse
+from drf_spectacular.utils import extend_schema
 
 from addon_service.authorized_account.citation.models import AuthorizedCitationAccount
 from addon_service.authorized_account.computing.models import AuthorizedComputingAccount
@@ -10,6 +11,7 @@ from addon_service.oauth1.utils import get_access_token
 from addon_service.osf_models.fields import decrypt_string
 
 
+@extend_schema(exclude=True)
 def oauth1_callback_view(request):
     oauth_token = request.GET["oauth_token"]
     oauth_verifier = request.GET["oauth_verifier"]

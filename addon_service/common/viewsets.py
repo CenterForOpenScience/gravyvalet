@@ -73,6 +73,17 @@ class _CreateWithPermissionsMixin(drf_mixins.CreateModelMixin):
             _instance.save()
 
 
+class RetrieveCreateViewSet(
+    _DrfJsonApiHelpers,
+    _CreateWithPermissionsMixin,
+    drf_mixins.RetrieveModelMixin,
+    GenericViewSet,
+):
+    """viewset allowing create, retrieve, update"""
+
+    http_method_names = ["get", "post", "head", "options"]
+
+
 class RetrieveWriteViewSet(
     _DrfJsonApiHelpers,
     _CreateWithPermissionsMixin,

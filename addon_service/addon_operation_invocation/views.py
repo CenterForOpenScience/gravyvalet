@@ -1,3 +1,7 @@
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+)
 from rest_framework.response import Response
 
 from addon_service.common.permissions import (
@@ -6,7 +10,7 @@ from addon_service.common.permissions import (
     SessionUserMayAccessInvocation,
     SessionUserMayPerformInvocation,
 )
-from addon_service.common.viewsets import RetrieveWriteViewSet
+from addon_service.common.viewsets import RetrieveCreateViewSet
 from addon_service.tasks.invocation import (
     perform_invocation__blocking,
     perform_invocation__celery,
@@ -31,7 +35,16 @@ from .models import AddonOperationInvocation
 from .serializers import AddonOperationInvocationSerializer
 
 
-class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
+@extend_schema_view(
+    create=extend_schema(
+        description="Perform some action using external service, for instance list files on storage provider. "
+        "In order to perform such action you need to include configured_addon relationship"
+    ),
+    retrieve=extend_schema(
+        description="Get singular instance of addon operation invocation by it's pk. May be useful to view action log",
+    ),
+)
+class AddonOperationInvocationViewSet(RetrieveCreateViewSet):
     queryset = AddonOperationInvocation.objects.all()
     serializer_class = AddonOperationInvocationSerializer
 
@@ -40,6 +53,7 @@ class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
             case "retrieve" | "retrieve_related":
                 return [IsAuthenticated(), SessionUserMayAccessInvocation()]
             case "partial_update" | "update" | "destroy":
+                # prohibit this? Maybe allow only to delete invocation from action log, but definitely not update
                 return [IsAuthenticated(), SessionUserIsOwner()]
             case "create":
                 return [SessionUserMayPerformInvocation()]

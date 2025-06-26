@@ -138,7 +138,7 @@ class ConfiguredAddon(AddonsServiceBaseModel):
         return self.base_account.imp_cls
 
     @property
-    def external_service_name(self):
+    def external_service_name(self) -> str:
         number = self.base_account.external_service.int_addon_imp
         return AddonImpNumbers(number).name.lower()
 
