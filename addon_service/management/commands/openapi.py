@@ -37,10 +37,6 @@ def fix_resource(s: str) -> str:
 
 
 def get_schema_from_ref(openapi_data, ref):
-    """
-    Resolves a $ref string to its corresponding schema object in the OpenAPI data.
-    Example: '#/components/schemas/Article' -> openapi_data['components']['schemas']['Article']
-    """
     parts = ref.strip("#/").split("/")
     node = openapi_data
     for part in parts:
@@ -97,7 +93,6 @@ class Command(BaseCommand):
                     continue
 
                 try:
-                    # We assume the 'get' operation on the primary resource defines its schema
                     schema_ref: str = paths[primary_resource_path]["get"]["responses"][
                         "200"
                     ]["content"][JSON_API_CONTENT_TYPE]["schema"]["$ref"]
@@ -136,10 +131,7 @@ class Command(BaseCommand):
                         .get("items", {})
                         .get("properties"),
                     )["type"]["enum"][0]
-                    # if resource.endswith('s'):
                     resource = resource.removesuffix("s")
-                    # schema_name = f'Paginated{kebab_to_camel(resource)}List'
-                    # else:
                     schema_name = f"{kebab_to_camel(resource)}Response"
                     new_schema_ref = f"#/components/schemas/{schema_name}"
                     new_path_item = copy.deepcopy(
@@ -188,7 +180,6 @@ class Command(BaseCommand):
             for path in new_paths:
                 print(f"  + Added specific path: {path}")
 
-            # Dump the modified data to the output file
             with open(output_file, "w") as f:
                 yaml.dump(data, f)
             print(f"\n✅ Success! Wrote refined OpenAPI spec to '{output_file}'")
@@ -196,6 +187,5 @@ class Command(BaseCommand):
             print(
                 "\n✅ No generic relationship paths found to modify. Output file is unchanged."
             )
-            # Optionally write to output file anyway
             with open(output_file, "w") as f:
                 yaml.dump(data, f, CSafeDumper)
