@@ -47,6 +47,13 @@ def get_schema_from_ref(openapi_data, ref):
     return node
 
 
+def make_decription(child_name: str, parent_name: str, relation_name: str):
+    if relation_name.endswith("s"):
+        return f"Fetch all related {kebab_to_camel(child_name)}s to this {parent_name}"
+    else:
+        return f"Fetch {parent_name}'s {kebab_to_camel(child_name)}"
+
+
 class Command(BaseCommand):
 
     def add_arguments(self, parser):
@@ -78,30 +85,29 @@ class Command(BaseCommand):
             if "get" in path_item
         }
 
-        for path, path_item in paths.items():
+        for path, parent_path_item in paths.items():
             if path.endswith(f"/{{{RELATED_FIELD_PARAM_NAME}}}/"):
                 print(f"  -> Found generic relationship path: {path}")
                 paths_to_delete.append(path)
 
                 base_path = path.rsplit("/", 2)[0] + "/"
-                primary_resource_path = f"{base_path}"
 
-                if primary_resource_path not in paths:
+                if base_path not in paths:
                     print(
-                        f"    [!] Warning: Could not find parent path '{primary_resource_path}' to infer relationships. Skipping."
+                        f"    [!] Warning: Could not find parent path '{base_path}' to infer relationships. Skipping."
                     )
                     continue
 
                 try:
-                    schema_ref: str = paths[primary_resource_path]["get"]["responses"][
-                        "200"
-                    ]["content"][JSON_API_CONTENT_TYPE]["schema"]["$ref"]
+                    schema_ref: str = paths[base_path]["get"]["responses"]["200"][
+                        "content"
+                    ][JSON_API_CONTENT_TYPE]["schema"]["$ref"]
                     primary_resource_schema = get_schema_from_ref(
                         data, schema_ref.removesuffix("Response")
                     )
                 except KeyError:
                     print(
-                        f"    [!] Warning: Could not find a valid 200 OK schema reference for '{primary_resource_path}'. Skipping."
+                        f"    [!] Warning: Could not find a valid 200 OK schema reference for '{base_path}'. Skipping."
                     )
                     continue
 
@@ -117,7 +123,7 @@ class Command(BaseCommand):
                     ]["properties"]
                 except KeyError:
                     print(
-                        f"    [!] Warning: No 'properties.relationships.properties' found in schema for '{primary_resource_path}'. Skipping."
+                        f"    [!] Warning: No 'properties.relationships.properties' found in schema for '{base_path}'. Skipping."
                     )
                     continue
 
@@ -133,19 +139,26 @@ class Command(BaseCommand):
                     )["type"]["enum"][0]
                     resource = resource.removesuffix("s")
                     schema_name = f"{kebab_to_camel(resource)}Response"
-                    new_schema_ref = f"#/components/schemas/{schema_name}"
+                    relationship_schema_ref = f"#/components/schemas/{schema_name}"
                     new_path_item = copy.deepcopy(
                         reverse_path_index.get(f"{fix_resource(resource)}s-retrieve")
                     )
-                    if not new_path_item:
-                        new_path_item = copy.deepcopy(path_item)
 
                     method = "get"
                     operation = new_path_item[method]
                     operation["operationId"] = (
-                        f"{path_item[method]['operationId']}_related_{rel_name}"
+                        f"{parent_path_item[method]['operationId']}_related_{rel_name}"
                     )
-                    operation["tags"] = path_item[method]["tags"]
+                    parent_name = schema_ref.rsplit("/", maxsplit=1)[1].removesuffix(
+                        "Response"
+                    )
+                    operation["description"] = (
+                        f"Fetch all related {kebab_to_camel(resource)}s to this {parent_name}"
+                    )
+                    operation["description"] = make_decription(
+                        resource, parent_name, rel_name
+                    )
+                    operation["tags"] = parent_path_item[method]["tags"]
                     if "parameters" in operation:
                         operation["parameters"] = [
                             p
@@ -156,11 +169,13 @@ class Command(BaseCommand):
                     try:
                         operation["responses"]["200"]["content"][JSON_API_CONTENT_TYPE][
                             "schema"
-                        ] = {"$ref": new_schema_ref}
+                        ] = {"$ref": relationship_schema_ref}
                         print(
                             f"      ✓ Creating endpoint '{method.upper()} {new_path_str}'"
                         )
-                        print(f"        - Pointing schema to: {new_schema_ref}")
+                        print(
+                            f"        - Pointing schema to: {relationship_schema_ref}"
+                        )
 
                     except KeyError:
                         print(
@@ -169,7 +184,12 @@ class Command(BaseCommand):
 
                     new_paths[new_path_str] = {"get": operation}
 
-        output_file = options["output"]
+        self.collect_and_write_output(
+            data, new_paths, options["output"], paths_to_delete
+        )
+
+    @staticmethod
+    def collect_and_write_output(data, new_paths, output_file, paths_to_delete):
         if paths_to_delete:
             print("\n🔄 Updating OpenAPI structure...")
             for path in paths_to_delete:
