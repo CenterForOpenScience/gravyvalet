@@ -60,7 +60,6 @@ class Command(BaseCommand):
             item = csv.reader(services_file)
             field_names = next(item)
             data_list = [dict(zip(field_names, service)) for service in item]
-            print(data_list)
             return {
                 item.pop("id"): self.fix_values(item)
                 for item in data_list
