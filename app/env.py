@@ -48,6 +48,7 @@ OSF_BASE_URL = os.environ.get("OSF_BASE_URL", "https://osf.example")
 OSF_API_BASE_URL = os.environ.get("OSF_API_BASE_URL", "https://api.osf.example")
 OSF_AUTH_COOKIE_NAME = os.environ.get("OSF_AUTH_COOKIE_NAME", "osf_staging")
 OSF_AUTH_COOKIE_SECRET = os.environ.get("OSF_AUTH_COOKIE_SECRET", "CHANGEME")
+SESSION_COOKIE_DOMAIN = os.environ.get("SESSION_COOKIE_DOMAIN")
 
 ###
 # amqp/celery
