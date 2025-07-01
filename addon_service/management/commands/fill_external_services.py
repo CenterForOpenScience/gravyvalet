@@ -44,6 +44,18 @@ class Command(BaseCommand):
                 oauth1_config = oauth1_configs[oauth1_id]
                 oauth1_config = OAuth1ClientConfig.objects.create(**oauth1_config)
                 service["oauth1_client_config"] = oauth1_config
+
+            valid_fields = {field.name for field in model._meta.get_fields()}
+            service = {
+                key: value for key, value in service.items() if key in valid_fields
+            }
+
+            if (
+                "int_supported_features" in service
+                and service["int_supported_features"] is None
+            ):
+                service["int_supported_features"] = 0
+
             model.objects.create(**service)
 
     def load_csv_data(self, path: Path) -> dict[str, dict[str, Any]]:
@@ -55,7 +67,11 @@ class Command(BaseCommand):
 
     def fix_values(self, item):
         raw_values = {key: self.fix_value(value) for key, value in item.items()}
-        return {key: value for key, value in raw_values.items() if value is not None}
+        return {
+            key: value
+            for key, value in raw_values.items()
+            if value is not None or key == "int_supported_features"
+        }
 
     def fix_value(self, data):
         if data == "":
