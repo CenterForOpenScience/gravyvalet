@@ -25,18 +25,12 @@ ENV PATH="$PATH:/root/.local/bin"
 # END gv-runtime-base
 
 # BEGIN gv-dev-deps
-FROM gv-base AS gv-dev-deps
+FROM gv-base AS gv-dev
 
 # install dev and non-dev dependencies:
 RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.8.3
 RUN python -m venv .venv
 RUN poetry install --without release
-# END gv-dev-deps
-
-# BEGIN gv-dev
-FROM gv-runtime-base AS gv-dev
-
-COPY --from=gv-dev-deps /code/.venv/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 
 COPY . /code/
 
