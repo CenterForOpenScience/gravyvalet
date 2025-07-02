@@ -1,4 +1,3 @@
-import time
 from importlib import import_module
 
 import itsdangerous
@@ -7,7 +6,6 @@ from django.contrib.sessions.backends.base import UpdateError
 from django.contrib.sessions.exceptions import SessionInterrupted
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.utils.cache import patch_vary_headers
-from django.utils.http import http_date
 
 
 SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
@@ -21,9 +19,8 @@ def ensure_str(value):
 
 class UnsignCookieSessionMiddleware(SessionMiddleware):
     """
-    Overrides the process_request hook of SessionMiddleware
-    to retrieve the session key for finding the correct session
-    by unsigning the cookie value using server secret
+    Overrides the process_request hook of SessionMiddleware to retrieve the session key for finding/setting the
+    correct session by unsigning/signing the cookie value using server secret.
     """
 
     def process_request(self, request):
@@ -41,11 +38,11 @@ class UnsignCookieSessionMiddleware(SessionMiddleware):
 
     def process_response(self, request, response):
         """
-        If request.session was modified, or if the configuration is to save the
-        session every time, save the changes and set a session cookie or delete
-        the session cookie if the session has been emptied.
-        This is mostly a direct port from django SessionMiddleware.process_response
-        The only difference is that the cookie value we set is also signed.
+        If `request.session` was modified, or if the configuration is to save the session every time, save the changes
+        and set a session cookie. This is port from `SessionMiddleware.process_response` with the following changes:
+        1) Sign cookie value using server secret.
+        2) Don't delete cookie.
+        3) Don't set `Max-Age` or `Expires`
         """
         try:
             accessed = request.session.accessed
@@ -53,49 +50,34 @@ class UnsignCookieSessionMiddleware(SessionMiddleware):
             empty = request.session.is_empty()
         except AttributeError:
             return response
-        # First check if we need to delete this cookie.
-        # The session should be deleted only if the session is entirely empty.
-        if settings.SESSION_COOKIE_NAME in request.COOKIES and empty:
-            response.delete_cookie(
-                settings.SESSION_COOKIE_NAME,
-                path=settings.SESSION_COOKIE_PATH,
-                domain=settings.SESSION_COOKIE_DOMAIN,
-                samesite=settings.SESSION_COOKIE_SAMESITE,
-            )
+
+        if accessed:
             patch_vary_headers(response, ("Cookie",))
-        else:
-            if accessed:
-                patch_vary_headers(response, ("Cookie",))
-            if (modified or settings.SESSION_SAVE_EVERY_REQUEST) and not empty:
-                if request.session.get_expire_at_browser_close():
-                    max_age = None
-                    expires = None
-                else:
-                    max_age = request.session.get_expiry_age()
-                    expires_time = time.time() + max_age
-                    expires = http_date(expires_time)
-                if response.status_code < 500:
-                    try:
-                        request.session.save()
-                    except UpdateError:
-                        raise SessionInterrupted(
-                            "The request's session was deleted before the "
-                            "request completed. The user may have logged "
-                            "out in a concurrent request, for example."
-                        )
-                    response.set_cookie(
-                        settings.SESSION_COOKIE_NAME,
-                        ensure_str(
-                            itsdangerous.Signer(settings.OSF_AUTH_COOKIE_SECRET).sign(
-                                request.session.session_key
-                            )
-                        ),
-                        max_age=max_age,
-                        expires=expires,
-                        domain=settings.SESSION_COOKIE_DOMAIN,
-                        path=settings.SESSION_COOKIE_PATH,
-                        secure=settings.SESSION_COOKIE_SECURE or None,
-                        httponly=settings.SESSION_COOKIE_HTTPONLY or None,
-                        samesite=settings.SESSION_COOKIE_SAMESITE,
+
+        # GV only accesses or modifies OSF cookie, but does not delete it. OSF handles the creation and deletion.
+        if settings.SESSION_COOKIE_NAME in request.COOKIES and empty:
+            return response
+
+        if (modified or settings.SESSION_SAVE_EVERY_REQUEST) and not empty:
+            if response.status_code < 500:
+                try:
+                    request.session.save()
+                except UpdateError:
+                    raise SessionInterrupted(
+                        "The request's session was deleted before the request completed. "
+                        "The user may have logged out in a concurrent request, for example."
                     )
+                response.set_cookie(
+                    settings.SESSION_COOKIE_NAME,
+                    ensure_str(
+                        itsdangerous.Signer(settings.OSF_AUTH_COOKIE_SECRET).sign(
+                            request.session.session_key
+                        )
+                    ),
+                    domain=settings.SESSION_COOKIE_DOMAIN,
+                    secure=settings.SESSION_COOKIE_SECURE,
+                    httponly=settings.SESSION_COOKIE_HTTPONLY,
+                    samesite=settings.SESSION_COOKIE_SAMESITE,
+                )
+
         return response
