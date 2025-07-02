@@ -11,6 +11,7 @@ from addon_service.oauth1.utils import get_access_token
 from addon_service.osf_models.fields import decrypt_string
 
 
+# Exclude oAuth views from openapi schema as they are from internal use only
 @extend_schema(exclude=True)
 def oauth1_callback_view(request):
     oauth_token = request.GET["oauth_token"]

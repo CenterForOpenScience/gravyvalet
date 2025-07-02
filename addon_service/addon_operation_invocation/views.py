@@ -6,7 +6,6 @@ from rest_framework.response import Response
 
 from addon_service.common.permissions import (
     IsAuthenticated,
-    SessionUserIsOwner,
     SessionUserMayAccessInvocation,
     SessionUserMayPerformInvocation,
 )
@@ -52,9 +51,6 @@ class AddonOperationInvocationViewSet(RetrieveCreateViewSet):
         match self.action:
             case "retrieve" | "retrieve_related":
                 return [IsAuthenticated(), SessionUserMayAccessInvocation()]
-            case "partial_update" | "update" | "destroy":
-                # prohibit this? Maybe allow only to delete invocation from action log, but definitely not update
-                return [IsAuthenticated(), SessionUserIsOwner()]
             case "create":
                 return [SessionUserMayPerformInvocation()]
             case None:

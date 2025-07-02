@@ -11,7 +11,9 @@ from .serializers import AuthorizedLinkAccountSerializer
 
 @extend_schema_view(
     create=extend_schema(
-        description='Create new authorized link account for given external link service.\n For OAuth services it\'s required to create account with `"initiate_oauth"=true` in order to proceed with OAuth flow'
+        description="Create new authorized link account for given external link service.\n "
+        'For OAuth services it\'s required to create account with `"initiate_oauth"=true` '
+        "in order to proceed with OAuth flow"
     ),
 )
 class AuthorizedLinkAccountViewSet(AuthorizedAccountViewSet):

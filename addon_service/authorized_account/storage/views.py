@@ -15,7 +15,9 @@ from .serializers import (
 
 @extend_schema_view(
     create=extend_schema(
-        description='Create new authorized storage account for given external storage service.\n For OAuth services it\'s required to create account with `"initiate_oauth"=true` in order to proceed with OAuth flow'
+        description="Create new authorized storage account for given external storage service."
+        '\n For OAuth services it\'s required to create account with `"initiate_oauth"=true` '
+        "in order to proceed with OAuth flow"
     ),
 )
 class AuthorizedStorageAccountViewSet(AuthorizedAccountViewSet):

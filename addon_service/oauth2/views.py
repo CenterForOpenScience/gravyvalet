@@ -13,6 +13,7 @@ from addon_service.models import (
 from addon_service.oauth2.utils import get_initial_access_token
 
 
+# Exclude oAuth views from openapi schema as they are from internal use only
 @extend_schema(exclude=True)
 @transaction.non_atomic_requests  # async views and ATOMIC_REQUESTS do not mix
 async def oauth2_callback_view(request):
