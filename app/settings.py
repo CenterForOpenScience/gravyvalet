@@ -69,6 +69,9 @@ ALLOWED_RESOURCE_URI_PREFIXES = {OSF_BASE_URL}
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_COOKIE_NAME = env.OSF_AUTH_COOKIE_NAME
 SESSION_COOKIE_DOMAIN = env.SESSION_COOKIE_DOMAIN
+SESSION_COOKIE_SECURE = env.SESSION_COOKIE_SECURE
+SESSION_COOKIE_HTTPONLY = env.SESSION_COOKIE_HTTPONLY
+SESSION_COOKIE_SAMESITE = env.SESSION_COOKIE_SAMESITE
 OSF_AUTH_COOKIE_SECRET = env.OSF_AUTH_COOKIE_SECRET
 REDIS_HOST = env.REDIS_HOST
 
@@ -115,7 +118,6 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "app.middleware.UnsignCookieSessionMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",

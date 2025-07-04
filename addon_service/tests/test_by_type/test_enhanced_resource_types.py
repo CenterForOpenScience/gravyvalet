@@ -1,6 +1,7 @@
 from http import HTTPStatus
 
 from django.test import TestCase
+from itsdangerous import Signer
 from rest_framework.test import APITestCase
 
 from addon_service.common.credentials_formats import CredentialsFormats
@@ -8,6 +9,7 @@ from addon_service.common.enum_serializers import EnumNameMultipleChoiceField
 from addon_service.tests import _factories
 from addon_service.tests._helpers import MockOSF
 from addon_toolkit.interfaces.link import SupportedResourceTypes
+from app import settings
 
 
 class TestResourceTypesSorting(APITestCase):
@@ -24,7 +26,9 @@ class TestResourceTypesSorting(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.client.cookies["osf"] = self._user.user_uri
+        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = (
+            Signer(settings.OSF_AUTH_COOKIE_SECRET).sign(self._user.user_uri).decode()
+        )
         self._mock_osf = MockOSF()
         self._mock_osf.configure_assumed_caller(self._user.user_uri)
         self.enterContext(self._mock_osf.mocking())

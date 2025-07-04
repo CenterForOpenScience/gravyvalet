@@ -30,7 +30,7 @@ class TestSessionSharingMiddleware(TestCase):
         signed_cookie = signer.sign(session_key)
 
         request = self.factory.get("/")
-        request.COOKIES = {settings.SESSION_COOKIE_NAME: signed_cookie}
+        request.COOKIES = {settings.SESSION_COOKIE_NAME: signed_cookie.decode()}
 
         result = self.middleware.process_request(request)
 
@@ -73,7 +73,7 @@ class TestSessionSharingMiddleware(TestCase):
         signed_cookie = signer.sign(session_key)
 
         request = self.factory.get("/")
-        request.COOKIES = {settings.SESSION_COOKIE_NAME: signed_cookie}
+        request.COOKIES = {settings.SESSION_COOKIE_NAME: signed_cookie.decode()}
 
         self.middleware.process_request(request)
 
@@ -119,7 +119,7 @@ class TestSessionSharingIntegration(APITestCase):
         signer = itsdangerous.Signer(settings.OSF_AUTH_COOKIE_SECRET)
         signed_cookie = signer.sign(session_key)
 
-        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = signed_cookie
+        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = signed_cookie.decode()
 
         session_store = SessionStore(session_key=session_key)
         session_store["user_reference_uri"] = self._user.user_uri
@@ -135,7 +135,7 @@ class TestSessionSharingIntegration(APITestCase):
         signer = itsdangerous.Signer(settings.OSF_AUTH_COOKIE_SECRET)
         signed_cookie = signer.sign(session_key)
 
-        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = signed_cookie
+        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = signed_cookie.decode()
 
         session_store = SessionStore(session_key=session_key)
         session_store["user_reference_uri"] = self._user.user_uri
@@ -160,7 +160,7 @@ class TestSessionSharingIntegration(APITestCase):
         signer = itsdangerous.Signer(settings.OSF_AUTH_COOKIE_SECRET)
         signed_cookie = signer.sign(invalid_session_key)
 
-        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = signed_cookie
+        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = signed_cookie.decode()
 
         url = f"/v1/resource-references/{self._resource.pk}/"
         response = self.client.get(url)
@@ -213,7 +213,7 @@ class TestSessionSecurityFeatures(TestCase):
         signed_cookie = signer.sign(session_key)
 
         request = RequestFactory().get("/")
-        request.COOKIES = {settings.SESSION_COOKIE_NAME: signed_cookie}
+        request.COOKIES = {settings.SESSION_COOKIE_NAME: signed_cookie.decode()}
 
         middleware = UnsignCookieSessionMiddleware(Mock())
         middleware.process_request(request)

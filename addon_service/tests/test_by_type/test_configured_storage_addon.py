@@ -5,6 +5,7 @@ from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from itsdangerous import Signer
 from rest_framework.test import APITestCase
 
 from addon_service.common import hmac as hmac_utils
@@ -26,7 +27,9 @@ class BaseAPITest(APITestCase):
             credentials = base64.b64encode(b"admin:password").decode()
             self.client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
         elif auth_type == "session":
-            self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = "some auth"
+            self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = (
+                Signer(settings.OSF_AUTH_COOKIE_SECRET).sign("some auth").decode()
+            )
         elif auth_type == "no_auth":
             self.client.cookies.clear()
             self.client.credentials()
@@ -210,7 +213,9 @@ class TestWBConfigRetrieval(APITestCase):
     def test_get_waterbutler_credentials__error__no_headers(self):
         # credentials request requires HMAC-signed headers
         # Cookie + OSF-side permissions will not suffice
-        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = "some auth"
+        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = (
+            Signer(settings.OSF_AUTH_COOKIE_SECRET).sign("some_auth").decode()
+        )
         _mock_osf = MockOSF()
         _mock_osf.configure_user_role(
             self._user.user_uri, self._configured_storage_addon.resource_uri, "admin"

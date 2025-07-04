@@ -6,6 +6,7 @@ from unittest.mock import (
 
 from django.test import TestCase
 from django.urls import reverse
+from itsdangerous import Signer
 from rest_framework.test import APITestCase
 
 from addon_service import models as db
@@ -24,6 +25,7 @@ from addon_toolkit.credentials import (
     AccessTokenCredentials,
     UsernamePasswordCredentials,
 )
+from app import settings
 
 
 MOCK_CREDENTIALS = {
@@ -101,7 +103,9 @@ class TestAuthorizedLinkAccountAPI(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.client.cookies["osf"] = self._user.user_uri
+        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = (
+            Signer(settings.OSF_AUTH_COOKIE_SECRET).sign(self._user.user_uri).decode()
+        )
         self._mock_osf = MockOSF()
         self._mock_osf.configure_assumed_caller(self._user.user_uri)
         self.enterContext(self._mock_osf.mocking())
@@ -343,7 +347,9 @@ class TestCreateAuthorizedLinkAccount(APITestCase):
         cls._external_service = _factories.ExternalLinkOAuth2ServiceFactory()
 
     def setUp(self):
-        self.client.cookies["osf"] = self._user.user_uri
+        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = (
+            Signer(settings.OSF_AUTH_COOKIE_SECRET).sign(self._user.user_uri).decode()
+        )
 
         self._mock_osf = MockOSF()
         self._mock_osf.configure_assumed_caller(self._user.user_uri)
