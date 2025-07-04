@@ -31,6 +31,7 @@ class UnsignCookieSessionMiddleware(SessionMiddleware):
                     itsdangerous.Signer(settings.OSF_AUTH_COOKIE_SECRET).unsign(cookie)
                 )
             except itsdangerous.BadSignature:
+                request.session = SessionStore
                 return None
             request.session = SessionStore(session_key=session_key)
         else:

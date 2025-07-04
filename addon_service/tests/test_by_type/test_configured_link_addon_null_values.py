@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
+from itsdangerous import Signer
 from rest_framework.test import APITestCase
 
 from addon_service import models as db
@@ -14,6 +15,7 @@ from addon_service.tests import _factories
 from addon_service.tests._helpers import MockOSF
 from addon_toolkit import AddonCapabilities
 from addon_toolkit.interfaces.link import SupportedResourceTypes
+from app import settings
 
 
 def mock_target_url(self):
@@ -68,7 +70,9 @@ class TestConfiguredLinkAddonSerializerNullValues(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.client.cookies["osf"] = self._user.user_uri
+        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = (
+            Signer(settings.OSF_AUTH_COOKIE_SECRET).sign(self._user.user_uri).decode()
+        )
         self._mock_osf = MockOSF()
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._resource.resource_uri, "admin"
