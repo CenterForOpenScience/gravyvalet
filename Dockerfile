@@ -2,7 +2,7 @@
 FROM python:3.13 AS gv-base
 
 # System Dependencies:
-RUN apt-get update && apt-get install -y libpq-dev
+RUN apt-get update && apt-get install -y libpq-dev libxml2-dev libxslt-dev
 
 COPY pyproject.toml /code/
 COPY poetry.lock /code/
@@ -15,7 +15,7 @@ ENV PATH="$PATH:/root/.local/bin"
 FROM python:3.13-slim AS gv-runtime-base
 
 # System Dependencies:
-RUN apt-get update && apt-get install -y libpq-dev
+RUN apt-get update && apt-get install -y libpq-dev libxml2-dev libxslt-dev
 
 COPY pyproject.toml /code/
 COPY poetry.lock /code/

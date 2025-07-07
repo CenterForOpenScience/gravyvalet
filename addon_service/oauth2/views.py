@@ -4,6 +4,7 @@ from http import HTTPStatus
 from asgiref.sync import sync_to_async
 from django.db import transaction
 from django.http import HttpResponse
+from drf_spectacular.utils import extend_schema
 
 from addon_service.models import (
     OAuth2ClientConfig,
@@ -12,6 +13,8 @@ from addon_service.models import (
 from addon_service.oauth2.utils import get_initial_access_token
 
 
+# Exclude oAuth views from openapi schema as they are from internal use only
+@extend_schema(exclude=True)
 @transaction.non_atomic_requests  # async views and ATOMIC_REQUESTS do not mix
 async def oauth2_callback_view(request):
     """

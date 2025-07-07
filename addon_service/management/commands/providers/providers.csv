@@ -13,4 +13,4 @@ b670cf7a-752f-49ed-8367-8238cf8a24d1,Figshare,1,1,1007,{all},https://api.figshar
 2acd3e09-5e27-4e5b-a3d1-579f16663cfc,Bitbucket,1,1,1012,{account repository team},https://api.bitbucket.org/2.0/,bitbucket,,1b2d71cc-425e-4aa6-886c-e2ff247c4f2c,bitbucket.svg,,10,10,511,,,storage
 102c6356-e31a-4316-a9fe-8b2bcb20fdd6,Google Drive,1,1,1005,{https://www.googleapis.com/auth/drive},https://www.googleapis.com/,googledrive,,5cf93c06-c27f-4446-b8ac-ffac209ba465,google_drive.svg,,10,10,511,,,storage
 5bc440c8-a03a-4aa6-bd9e-856aee9883e9,Owncloud,3,2,1009,{},,owncloud,,,owncloud.svg,,10,10,511,,,storage
-edf57d0c-ae0a-4c85-b759-017fc8b009f0,Link dataverse,6,2,1030,{},https://demo.dataverse.org,,,,dataverse.svg,{},link,,,4294967295,,link
+edf57d0c-ae0a-4c85-b759-017fc8b009f0,Link dataverse,6,2,1030,{},https://demo.dataverse.org,,,,dataverse.svg,{},,,104,4294967295,,link

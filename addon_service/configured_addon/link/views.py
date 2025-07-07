@@ -1,5 +1,9 @@
 from http import HTTPMethod
 
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+)
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -13,6 +17,17 @@ from .serializers import (
 )
 
 
+@extend_schema_view(
+    create=extend_schema(
+        description="Create new configured link addon for given authorized link account, linking it to desired project.\n "
+        "To configure it properly, you must specify `root_folder` on the provider's side.\n "
+        "Note that everything under this folder is going to be accessible to everyone who has access to this project"
+    ),
+    get=extend_schema(
+        description="Get configured link addon by it's pk. "
+        "\nIf you want to fetch all configured link addons, you should do so through resource_reference related view",
+    ),
+)
 class ConfiguredLinkAddonViewSet(ConfiguredAddonViewSet):
     queryset = ConfiguredLinkAddon.objects.active().select_related(
         "base_account__authorizedlinkaccount",

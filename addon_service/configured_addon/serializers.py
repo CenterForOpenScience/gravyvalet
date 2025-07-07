@@ -33,7 +33,7 @@ class ConfiguredAddonSerializer(serializers.HyperlinkedModelSerializer):
 
     current_user_is_owner = serializers.SerializerMethodField()
 
-    def get_current_user_is_owner(self, configured_addon: ConfiguredAddon):
+    def get_current_user_is_owner(self, configured_addon: ConfiguredAddon) -> bool:
         return configured_addon.owner_uri == get_user_uri(self.context["request"])
 
     def create(self, validated_data):

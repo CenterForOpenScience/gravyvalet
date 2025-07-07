@@ -111,6 +111,7 @@ INSTALLED_APPS = [
     "rest_framework_json_api",
     "addon_service",
     "django_celery_beat",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -196,12 +197,13 @@ DATABASE_ROUTERS = ["addon_service.osf_models.db_router.OsfDatabaseRouter"]
 REST_FRAMEWORK = {
     "PAGE_SIZE": 101,
     "EXCEPTION_HANDLER": "addon_service.exception_handler.api_exception_handler",
-    "DEFAULT_PAGINATION_CLASS": "rest_framework_json_api.pagination.JsonApiPageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "drf_spectacular_jsonapi.schemas.pagination.JsonApiPageNumberPagination",
     "DEFAULT_PARSER_CLASSES": (
         "rest_framework_json_api.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular_jsonapi.schemas.openapi.JsonApiAutoSchema",
     "DEFAULT_RENDERER_CLASSES": (
         "rest_framework_json_api.renderers.JSONRenderer",
         "rest_framework_json_api.renderers.BrowsableAPIRenderer",
@@ -210,7 +212,6 @@ REST_FRAMEWORK = {
         "addon_service.common.queryparams_filter.AllowedQueryParamsFilter",
         "rest_framework_json_api.filters.OrderingFilter",
         "rest_framework_json_api.django_filters.DjangoFilterBackend",
-        "rest_framework.filters.SearchFilter",
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "addon_service.authentication.GVCombinedAuthentication",
@@ -222,6 +223,14 @@ REST_FRAMEWORK = {
     "TEST_REQUEST_DEFAULT_FORMAT": "vnd.api+json",
 }
 
+SPECTACULAR_SETTINGS = {
+    "TITLE": "GravyValet API",
+    "DESCRIPTION": "Addons service designed for use with OSF",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "PREPROCESSING_HOOKS": ["drf_spectacular_jsonapi.hooks.fix_nested_path_parameters"],
+}
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 

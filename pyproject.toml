@@ -27,6 +27,8 @@ django-celery-beat = "^2.7.0"
 tqdm = "^4.67.1"
 itsdangerous = "^2.2.0"
 redis = "^5.2.1"
+drf-spectacular = "^0.28.0"
+drf-spectacular-jsonapi = {git = "https://github.com/opaduchak/drf-spectacular-json-api.git", branch = "osf-fixes"}
 
 
 [tool.poetry.group.dev.dependencies]

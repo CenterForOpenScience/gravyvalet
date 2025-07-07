@@ -90,7 +90,7 @@ class ExternalService(AddonsServiceBaseModel):
         return ServiceTypes.HOSTED in self.service_type
 
     @property
-    def external_service_name(self):
+    def external_service_name(self) -> str:
         number = self.int_addon_imp
         return known_imps.AddonImpNumbers(number).name.lower()
 

@@ -1,5 +1,6 @@
 from http import HTTPMethod
 
+import drf_spectacular.utils
 from django.http import Http404
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -14,6 +15,18 @@ from .models import ConfiguredStorageAddon
 from .serializers import ConfiguredStorageAddonSerializer
 
 
+@drf_spectacular.utils.extend_schema_view(
+    create=drf_spectacular.utils.extend_schema(
+        description="Create new configured storage addon for given authorized storage account, linking it to desired project.\n "
+        "To configure it properly, you must specify `root_folder` on the provider's side.\n "
+        "Note that everything under this folder is going to be accessible to everyone who has access to this project"
+    ),
+    get=drf_spectacular.utils.extend_schema(
+        description="Get configured storage addon by it's pk. "
+        "\nIf you want to fetch all configured storage addons, you should do so through resource_reference related view",
+    ),
+    get_wb_credentials=drf_spectacular.utils.extend_schema(exclude=True),
+)
 class ConfiguredStorageAddonViewSet(ConfiguredAddonViewSet):
     queryset = ConfiguredStorageAddon.objects.active().select_related(
         "base_account__authorizedstorageaccount",

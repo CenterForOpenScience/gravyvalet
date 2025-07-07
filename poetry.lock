@@ -902,6 +902,70 @@ django-polymorphic = ["django-polymorphic (>=3.0)"]
 openapi = ["pyyaml (>=5.4)", "uritemplate (>=3.0.1)"]
 
 [[package]]
+name = "drf-extensions"
+version = "0.8.0"
+description = "Extensions for Django REST Framework"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "drf_extensions-0.8.0-py2.py3-none-any.whl", hash = "sha256:ab7bd854c9061c27ab55233b66d758001e5c2d81aaa9d117cbbe1c9ea49c77ab"},
+    {file = "drf_extensions-0.8.0.tar.gz", hash = "sha256:c3f27bca74a2def53e8454a5c7b327595195df51e121743120b2f51ef5a52aaa"},
+]
+
+[package.dependencies]
+Django = ">=2.2,<6.0"
+djangorestframework = ">=3.10.3"
+packaging = ">=24.1"
+
+[[package]]
+name = "drf-spectacular"
+version = "0.28.0"
+description = "Sane and flexible OpenAPI 3 schema generation for Django REST framework"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "drf_spectacular-0.28.0-py3-none-any.whl", hash = "sha256:856e7edf1056e49a4245e87a61e8da4baff46c83dbc25be1da2df77f354c7cb4"},
+    {file = "drf_spectacular-0.28.0.tar.gz", hash = "sha256:2c778a47a40ab2f5078a7c42e82baba07397bb35b074ae4680721b2805943061"},
+]
+
+[package.dependencies]
+Django = ">=2.2"
+djangorestframework = ">=3.10.3"
+inflection = ">=0.3.1"
+jsonschema = ">=2.6.0"
+PyYAML = ">=5.1"
+uritemplate = ">=2.0.0"
+
+[package.extras]
+offline = ["drf-spectacular-sidecar"]
+sidecar = ["drf-spectacular-sidecar"]
+
+[[package]]
+name = "drf-spectacular-jsonapi"
+version = "0.5.2"
+description = "open api 3 schema generator for drf-json-api package based on drf-spectacular package."
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = []
+develop = false
+
+[package.dependencies]
+Django = ">=3.2"
+djangorestframework = ">=3.13"
+djangorestframework-jsonapi = ">=6.0.0"
+drf-extensions = ">=0.7.1"
+drf-spectacular = ">=0.25.0"
+
+[package.source]
+type = "git"
+url = "https://github.com/opaduchak/drf-spectacular-json-api.git"
+reference = "osf-fixes"
+resolved_reference = "4a4b62908585fd7ab24e9f43ff4cb09dea4e049d"
+
+[[package]]
 name = "factory-boy"
 version = "3.3.1"
 description = "A versatile test fixtures replacement based on thoughtbot's factory_bot for Ruby."
@@ -1506,6 +1570,18 @@ files = [
 ]
 
 [[package]]
+name = "packaging"
+version = "25.0"
+description = "Core utilities for Python packages"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"},
+    {file = "packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"},
+]
+
+[[package]]
 name = "pdoc"
 version = "14.5.1"
 description = "API Documentation for Python Projects"
@@ -1951,7 +2027,7 @@ version = "6.0.2"
 description = "YAML parser and emitter for Python"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "PyYAML-6.0.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:0a9a2848a5b7feac301353437eb7d5957887edbf81d56e903999a75a3d743086"},
     {file = "PyYAML-6.0.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:29717114e51c84ddfba879543fb232a6ed60086602313ca38cce623c1d62cfbf"},
@@ -2439,6 +2515,18 @@ files = [
 markers = {dev = "sys_platform == \"win32\"", release = "sys_platform == \"win32\""}
 
 [[package]]
+name = "uritemplate"
+version = "4.1.1"
+description = "Implementation of RFC 6570 URI Templates"
+optional = false
+python-versions = ">=3.6"
+groups = ["main"]
+files = [
+    {file = "uritemplate-4.1.1-py2.py3-none-any.whl", hash = "sha256:830c08b8d99bdd312ea4ead05994a38e8936266f84b9a7878232db50b044e02e"},
+    {file = "uritemplate-4.1.1.tar.gz", hash = "sha256:4346edfc5c3b79f694bccd6d6099a322bbeb628dbf2cd86eea55a456ce5124f0"},
+]
+
+[[package]]
 name = "urllib3"
 version = "2.2.2"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -2653,4 +2741,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "bc1ceda74871d00d3d7b3777b6ba9edfb18c1a3af3497451a2800815818e272a"
+content-hash = "995ab5635fe48f9e7c79a483b889bc8242022b1aec820b2a501992fb2ac648ce"
