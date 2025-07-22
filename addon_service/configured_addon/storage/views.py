@@ -68,4 +68,5 @@ class ConfiguredStorageAddonViewSet(ConfiguredAddonViewSet):
         if addon.external_service.credentials_format is CredentialsFormats.OAUTH2:
             addon.base_account.refresh_oauth_access_token__blocking()
         self.resource_name = "waterbutler-credentials"  # for the jsonapi resource type
+
         return Response(WaterButlerConfigSerializer(addon).data)

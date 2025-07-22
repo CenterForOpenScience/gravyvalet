@@ -109,6 +109,10 @@ class GravyvaletHttpRequestor(HttpRequestor):
             json=request.json,
             data=request.content,
         ) as _response:
+            print(_response)
+            _logger.info(
+                f"Response status: {_response.status}, headers: {_response.headers}"
+            )
             if (
                 _response.status == HTTPStatus.UNAUTHORIZED
                 and _private.account.credentials_format == CredentialsFormats.OAUTH2

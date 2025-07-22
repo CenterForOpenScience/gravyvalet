@@ -18,7 +18,10 @@ services:
       # OSFDB_HOST: 192.168.168.167
       ALLOWED_HOSTS: 0.0.0.0,localhost,192.168.168.167
       CORS_ALLOWED_ORIGINS: http://localhost:5000,http://192.168.168.167:5000
-      SECRET_KEY: so-secret
+      SECRET_KEY: secret
+      SESSION_COOKIE_SECURE: false
+      SESSION_COOKIE_HTTPONLY: true
+      SESSION_COOKIE_SAMESITE: Lax
       OSF_BASE_URL: "http://192.168.168.167:5000"
       OSF_API_BASE_URL: "http://192.168.168.167:8000"
       OSF_AUTH_COOKIE_NAME: osf
@@ -68,6 +71,8 @@ services:
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_DB: gravyvalet
+    ports:
+      - 5433:5432
 
   rabbitmq:
     image: rabbitmq:management
