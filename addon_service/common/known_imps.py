@@ -11,6 +11,7 @@ from addon_imps.citations import (
 )
 from addon_imps.computing import boa
 from addon_imps.link import dataverse as link_dataverse
+from addon_imps.link import zenodo
 from addon_imps.storage import (
     bitbucket,
     box_dot_com,
@@ -99,6 +100,7 @@ class KnownAddonImps(enum.Enum):
 
     # Type: Link
     LINK_DATAVERSE = link_dataverse.DataverseLinkImp
+    ZENODO = zenodo.ZenodoLinkImp
 
     if __debug__:
         BLARG = my_blarg.MyBlargStorage
@@ -136,6 +138,7 @@ class AddonImpNumbers(enum.Enum):
 
     # Type: Link
     LINK_DATAVERSE = 1030
+    ZENODO = 1031
 
     if __debug__:
         BLARG = -7
