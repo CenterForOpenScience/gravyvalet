@@ -130,3 +130,10 @@ class S3StorageImp(storage.StorageAddonClientRequestorImp):
                 item_name=bucket["Name"] + "/",
                 item_type=storage.ItemType.FOLDER,
             )
+
+    async def get_external_account_id(self, auth_result_extras: dict[str, str]) -> str:
+        try:
+            self.client.list_buckets()
+            return ""
+        except BotoExceptions.ClientError:
+            raise ValidationError("Fail to validate access key and secret key")

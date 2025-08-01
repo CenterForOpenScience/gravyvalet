@@ -86,7 +86,7 @@ class ExternalService(AddonsServiceBaseModel):
         return ServiceTypes(self.int_service_type)
 
     @property
-    def configurable_api_root(self):
+    def configurable_api_root(self) -> bool:
         return ServiceTypes.HOSTED in self.service_type
 
     @property
