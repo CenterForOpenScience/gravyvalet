@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -27,12 +29,11 @@ class ExternalService(AddonsServiceBaseModel):
         validators=[validate_service_type],
         verbose_name="Service type",
     )
-    icon_name = models.FilePathField(
-        path=settings.PROVIDER_ICONS_DIR,
-        recursive=False,
-        match=r".*\.(jpg|png|svg)$",
+    icon_name = models.CharField(
+        max_length=255,
         blank=True,
         null=True,
+        help_text="Relative path to icon file within configured icon directories",
     )
     int_addon_imp = models.IntegerField(
         null=False,
@@ -93,6 +94,18 @@ class ExternalService(AddonsServiceBaseModel):
     def external_service_name(self) -> str:
         number = self.int_addon_imp
         return AddonRegistry.get_name_by_number(number).lower()
+
+    @property
+    def icon_url(self) -> str | None:
+        if self.icon_name:
+            icon_path = Path(self.icon_name)
+            if self.icon_name.startswith(str(settings.PROVIDER_ICONS_DIR)):
+                return f"/static/provider_icons/{icon_path.name}"
+            else:
+                # the icon offered by a Foreign Addon.
+                return f"/{Path(*icon_path.parts[-4:])}"
+
+        return None
 
     def clean_fields(self, *args, **kwargs):
         super().clean_fields(*args, **kwargs)
