@@ -46,11 +46,11 @@ class EnumNameMultipleChoiceField(forms.MultipleChoiceField):
 
 
 class GravyvaletModelAdmin(admin.ModelAdmin):
-    enum_choice_fields: dict[str, type[enum.Enum]] | None = None
-    enum_multiple_choice_fields: dict[str, type[enum.Enum]] | None = None
+    enum_choice_fields: dict[str, type[enum.Enum]] = {}
+    enum_multiple_choice_fields: dict[str, type[enum.Enum]] = {}
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
-        if self.enum_choice_fields and db_field.name in self.enum_choice_fields:
+        if db_field.name in self.enum_choice_fields:
             _enum = self.enum_choice_fields[db_field.name]
             return forms.ChoiceField(
                 label=db_field.verbose_name,
@@ -59,10 +59,7 @@ class GravyvaletModelAdmin(admin.ModelAdmin):
                     *self._list_enum_members(_enum),
                 ],
             )
-        if (
-            self.enum_multiple_choice_fields
-            and db_field.name in self.enum_multiple_choice_fields
-        ):
+        if db_field.name in self.enum_multiple_choice_fields:
             _enum = self.enum_multiple_choice_fields[db_field.name]
             return EnumNameMultipleChoiceField(
                 choices=self._list_enum_members(_enum),
