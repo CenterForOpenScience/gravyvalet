@@ -27,8 +27,8 @@ class ExternalServiceSerializer(serializers.HyperlinkedModelSerializer):
 
     def get_icon_url(self, obj: ExternalService):
         request = self.context.get("request")
-        if request and obj.icon_name:
-            return f"{request.build_absolute_uri('/')}static/provider_icons/{obj.icon_name.split('/')[-1]}"
+        if request and obj.icon_url:
+            return request.build_absolute_uri(obj.icon_url)
         return None
 
     external_service_name = serializers.CharField(read_only=True)

@@ -1,6 +1,7 @@
 import importlib
 
 from django.apps import AppConfig
+from django.conf import settings
 
 from app.celery import app as celery_app
 
@@ -22,3 +23,6 @@ class AddonServiceConfig(AppConfig):
 
         # dj_control_room_base is installed only for dj_celery_panel's templates/static; hide its demo panel
         admin.site.unregister(BasePanelPlaceholder)
+        from addon_service.common.known_imps import AddonImpRegistry
+
+        AddonImpRegistry.register_addon_imps(settings.ADDON_IMPS)

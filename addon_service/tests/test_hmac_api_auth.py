@@ -169,6 +169,11 @@ class TestOsfUtilsHmac(SimpleTestCase):
 class TestHmacApiAuth(APITestCase):
     @classmethod
     def setUpTestData(cls):
+        """Reset registry after test."""
+        from addon_service.common.known_imps import AddonImpRegistry
+
+        AddonImpRegistry.clear()
+        AddonImpRegistry.register_addon_imps({"BLARG": -7})
         cls._user = _factories.UserReferenceFactory()
         cls._resource = _factories.ResourceReferenceFactory()
         cls._service = _factories.ExternalStorageOAuth2ServiceFactory()

@@ -1,10 +1,14 @@
 import enum
+from collections.abc import Callable
+from pathlib import Path
 
 from django import forms
+from django.apps import apps
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 
 from addon_service.common.enum_utils import combine_flags
+from addon_toolkit.interfaces.foreign_addon_imp_config import ForeignAddonImpConfig
 
 
 __all__ = ("GravyvaletModelAdmin",)
@@ -48,8 +52,43 @@ class EnumNameMultipleChoiceField(forms.MultipleChoiceField):
 class GravyvaletModelAdmin(admin.ModelAdmin):
     enum_choice_fields: dict[str, type[enum.Enum]] = {}
     enum_multiple_choice_fields: dict[str, type[enum.Enum]] = {}
+    dynamic_choice_fields: dict[str, Callable[[], set[tuple[str, int]]]] = {}
+
+    def get_icon_choices(self):
+        """Get icon choices from multiple directories."""
+        from django.conf import settings
+
+        icon_files = {}  # absolute path -> display name
+        extensions = ["jpg", "jpeg", "png", "svg"]
+
+        static_icon_dir = settings.PROVIDER_ICONS_DIR
+        if static_icon_dir.exists():
+            for ext in extensions:
+                for icon_file in static_icon_dir.glob(f"*.{ext}"):
+                    icon_files[str(icon_file.resolve())] = icon_file.name
+
+        # Get icons from foreign addon imps
+        for app_config in apps.get_app_configs():
+            if isinstance(app_config, ForeignAddonImpConfig):
+                icon_dir = Path(app_config.path) / "static" / app_config.name / "icons"
+                if icon_dir.exists():
+                    for ext in extensions:
+                        for icon_file in icon_dir.glob(f"*.{ext}"):
+                            icon_files[str(icon_file.resolve())] = (
+                                f"{app_config.verbose_name} - {icon_file.name}"
+                            )
+
+        return [("", "---------")] + list(icon_files.items())
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
+        # Handle icon_name field specially
+        if db_field.name == "icon_name":
+            return forms.ChoiceField(
+                choices=self.get_icon_choices(),
+                required=False,
+                help_text="Select an icon from available icon directories",
+            )
+
         if db_field.name in self.enum_choice_fields:
             _enum = self.enum_choice_fields[db_field.name]
             return forms.ChoiceField(
@@ -65,6 +104,14 @@ class GravyvaletModelAdmin(admin.ModelAdmin):
                 choices=self._list_enum_members(_enum),
                 widget=forms.CheckboxSelectMultiple,
                 enum_cls=_enum,
+            )
+        if db_field.name in self.dynamic_choice_fields:
+            return forms.ChoiceField(
+                label=db_field.verbose_name,
+                choices=[
+                    (None, ""),
+                    *self.dynamic_choice_fields[db_field.name](),
+                ],
             )
 
         return super().formfield_for_dbfield(db_field, request, **kwargs)
