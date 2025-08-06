@@ -56,6 +56,56 @@ To configure OAuth addons:
 4. There fill your client id and client secret (instructions to obtain them are [here](./services_setup_doc/README.md))
 5. Now you should be able to connect these addons according to existing user flows (in ordinary osf app)
 
+## ...use foreign addon imps
+
+Foreign addon imps allow you to extend gravyvalet with additional integrations
+without modifying the core code.
+
+To use foreign addon imps:
+
+1. Install the foreign addon imp package(s):
+```bash
+pip install foreign-addon-imp-package-you-want
+```
+
+2. Add the foreign addon imp(s) to `INSTALLED_APPS` in your Django settings:
+```python
+INSTALLED_APPS = [
+    # ... existing apps ...
+    'foreign_addon_imp_package_you_want.app_name',
+    # ...
+    'addon_service',
+    # ...
+]
+```
+
+3. Register each foreign addon imp to `ADDON_IMPS` with a unique ID number:
+```python
+ADDON_IMPS = {
+    # ... other addons ...
+    "YOUR_ADDON_IMP_NAME": 5001,  # Use a unique number not used by other addons
+}
+```
+
+The name of each addon imp must be documented in the document of the foreign
+addon imp package. If 2 addon imp applications you want to use adopted identical
+names, use the package name instaed:
+
+```python
+ADDON_IMPS = {
+    # ... other addons ...
+    'foreign_addon_imp_package_you_want.app_name': 5001,
+}
+```
+
+The ID numbers must be:
+- Unique across all addon imps
+- Never changed once assigned (changing would break existing configurations)
+
+4. Restart gravyvalet to load the new foreign addon imps
+
+After these steps, the foreign addon imps will be available.
+
 ## ...configure a good environment
 see `app/env.py` for details on all environment variables used.
 
