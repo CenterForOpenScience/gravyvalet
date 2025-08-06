@@ -3,7 +3,7 @@ import typing
 from functools import cached_property
 
 from addon_service.addon_operation.models import AddonOperationModel
-from addon_service.common import known_imps
+from addon_service.common.known_imps import AddonRegistry
 from addon_service.common.static_dataclass_model import StaticDataclassModel
 from addon_toolkit import AddonImp
 
@@ -19,11 +19,11 @@ class AddonImpModel(StaticDataclassModel):
 
     @classmethod
     def init_args_from_static_key(cls, static_key: str) -> tuple:
-        return (known_imps.get_imp_by_name(static_key),)
+        return (AddonRegistry.get_imp_by_name(static_key),)
 
     @classmethod
     def iter_all(cls) -> typing.Iterator[typing.Self]:
-        for _imp in known_imps.KnownAddonImps:
+        for _imp in AddonRegistry.get_all_addon_imps():
             yield cls(_imp.value)
 
     @property
@@ -35,7 +35,7 @@ class AddonImpModel(StaticDataclassModel):
 
     @cached_property
     def name(self) -> str:
-        return known_imps.get_imp_name(self.imp_cls)
+        return AddonRegistry.get_imp_name(self.imp_cls)
 
     @cached_property
     def imp_docstring(self) -> str:

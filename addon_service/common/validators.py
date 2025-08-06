@@ -13,9 +13,9 @@ from addon_toolkit.interfaces.computing import ComputingAddonImp
 from addon_toolkit.interfaces.link import LinkAddonImp
 from addon_toolkit.interfaces.storage import StorageAddonImp
 
-from . import known_imps
 from .credentials_formats import CredentialsFormats
 from .invocation_status import InvocationStatus
+from .known_imps import AddonRegistry
 from .service_types import ServiceTypes
 
 
@@ -48,7 +48,7 @@ def validate_credentials_format(value):
 def _validate_imp_number(value, cls):
     """validator for `AddonImpNumbers` integer values"""
     try:
-        _imp_cls = known_imps.get_imp_by_number(value)
+        _imp_cls = AddonRegistry.get_imp_by_number(value)
     except KeyError:
         raise ValidationError(f"invalid imp number: {value}")
 

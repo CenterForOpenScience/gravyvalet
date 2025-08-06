@@ -2,8 +2,8 @@ from django.conf import settings
 from django.core.management.base import LabelCommand
 
 from addon_service import models as db
-from addon_service.common import known_imps
 from addon_service.common.credentials_formats import CredentialsFormats
+from addon_service.common.known_imps import AddonRegistry
 from addon_toolkit import AddonCapabilities
 
 
@@ -16,7 +16,7 @@ class Command(LabelCommand):
     def handle_label(self, label, **options):
         if not settings.DEBUG:
             raise Exception("must have DEBUG set to eat garbage")
-        _blarg_imp = known_imps.get_imp_by_name("BLARG")
+        _blarg_imp = AddonRegistry.get_imp_by_name("BLARG")
         _ess = db.ExternalStorageService.objects.create(
             service_name=label,
             addon_imp=db.AddonImpModel(_blarg_imp),

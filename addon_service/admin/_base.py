@@ -1,4 +1,5 @@
 import enum
+from collections.abc import Callable
 
 from django import forms
 from django.contrib import admin
@@ -48,6 +49,7 @@ class EnumNameMultipleChoiceField(forms.MultipleChoiceField):
 class GravyvaletModelAdmin(admin.ModelAdmin):
     enum_choice_fields: dict[str, type[enum.Enum]] = {}
     enum_multiple_choice_fields: dict[str, type[enum.Enum]] = {}
+    dynamic_choice_fields: dict[str, Callable[[], set[tuple[str, int]]]] = {}
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name in self.enum_choice_fields:
@@ -65,6 +67,14 @@ class GravyvaletModelAdmin(admin.ModelAdmin):
                 choices=self._list_enum_members(_enum),
                 widget=forms.CheckboxSelectMultiple,
                 enum_cls=_enum,
+            )
+        if db_field.name in self.dynamic_choice_fields:
+            return forms.ChoiceField(
+                label=db_field.verbose_name,
+                choices=[
+                    (None, ""),
+                    *self.dynamic_choice_fields[db_field.name](),
+                ],
             )
 
         return super().formfield_for_dbfield(db_field, request, **kwargs)
