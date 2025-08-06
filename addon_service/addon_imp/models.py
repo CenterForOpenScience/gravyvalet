@@ -24,7 +24,7 @@ class AddonImpModel(StaticDataclassModel):
     @classmethod
     def iter_all(cls) -> typing.Iterator[typing.Self]:
         for _imp in AddonRegistry.get_all_addon_imps():
-            yield cls(_imp.value)
+            yield cls(_imp)
 
     @property
     def static_key(self) -> str:
