@@ -1,9 +1,17 @@
-"""the single static source of truth for addon implementations known to the addon service
+"""Addon implementation registry for the addon service
 
-import and add new implementations here to make them available in the api
+supports both static built-in addons and dynamically registered addons.
+import and add new static implementations here to make them available.
 """
 
 import enum
+import logging
+from collections.abc import (
+    Iterable,
+    Iterator,
+)
+
+from django.apps import apps
 
 from addon_imps.citations import (
     mendeley,
@@ -24,57 +32,123 @@ from addon_imps.storage import (
     owncloud,
     s3,
 )
-from addon_service.common.enum_decorators import enum_names_same_as
 from addon_toolkit import AddonImp
-from addon_toolkit.interfaces.citation import CitationAddonImp
-from addon_toolkit.interfaces.computing import ComputingAddonImp
-from addon_toolkit.interfaces.link import LinkAddonImp
-from addon_toolkit.interfaces.storage import StorageAddonImp
+from addon_toolkit.interfaces.foreign_addon_config import ForeignAddonConfig
 
+
+logger = logging.getLogger(__name__)
 
 if __debug__:
     from addon_imps.storage import my_blarg
 
-__all__ = (
-    "AddonImpNumbers",
-    "KnownAddonImps",
-    "get_imp_by_name",
-    "get_imp_by_number",
-    "get_imp_name",
-)
+__all__ = ("AddonRegistry",)
+
+
+class AddonRegistry:
+    """
+    Registry for addons in use.
+    """
+
+    _name_imp_map: dict[str, type[AddonImp]] = {}
+    _number_name_map: dict[int, str] = {}
+
+    @classmethod
+    def register_addon_apps(cls, addon_apps: dict[str, int]) -> None:
+        foreign_addon_imps = {
+            ks: cfg.imp
+            for cfg in apps.get_app_configs()
+            if isinstance(cfg, ForeignAddonConfig)
+            for ks in (cfg.addon_name, cfg.name)
+        }
+        for name, number in addon_apps.items():
+            if name in KnownAddonImps.__members__:
+                cls.register(name, number, KnownAddonImps[name].value)
+            elif name in foreign_addon_imps:
+                cls.register(name, number, foreign_addon_imps[name])
+            else:
+                logger.warning(
+                    f"No addon app has name {name}. "
+                    "Forgot to add an app to INSTALLED_APPS?"
+                )
+
+    @classmethod
+    def register(cls, addon_name: str, imp_number: int, imp: AddonImp) -> None:
+        if imp_number in cls._number_name_map:
+            if (
+                addon_name in cls._name_imp_map
+                and addon_name == cls._number_name_map.get(imp_number)
+            ):
+                logger.info(
+                    f"Addon {addon_name} has already been registered correctrly."
+                )
+                return
+            else:
+                logger.error(
+                    f"imp number {imp_number} is specified for 2 addons -- "
+                    f"{addon_name} and {cls._number_name_map[imp_number]}"
+                )
+            raise ValueError("imp number conflict")
+
+        cls._name_imp_map[addon_name] = imp
+        cls._number_name_map[imp_number] = addon_name
+
+    @classmethod
+    def get_all_addon_imps(cls) -> Iterable[type[AddonImp]]:
+        return cls._name_imp_map.values()
+
+    @classmethod
+    def iter_by_type(cls, addon_type: type[AddonImp]) -> Iterator[tuple[int, str]]:
+        return (
+            (number, name)
+            for number, name in cls._number_name_map.items()
+            if issubclass(cls._name_imp_map[name], addon_type)
+        )
+
+    @classmethod
+    def get_imp_by_name(cls, imp_name: str) -> type[AddonImp]:
+        return cls._name_imp_map[imp_name]
+
+    @classmethod
+    def get_imp_name(cls, imp: type[AddonImp]) -> str:
+        for name, registered_imp in cls._name_imp_map.items():
+            if registered_imp == imp:
+                return name
+        raise ValueError(f"Unknown addon imp: {imp}")
+
+    @classmethod
+    def get_imp_by_number(cls, imp_number: int) -> type[AddonImp]:
+        return cls.get_imp_by_name(cls.get_name_by_number(imp_number))
+
+    @classmethod
+    def get_imp_number(cls, imp: type[AddonImp]) -> int:
+        imp_name = cls.get_imp_name(imp)
+        for number, name in cls._number_name_map.items():
+            if name == imp_name:
+                return number
+        raise ValueError(f"Unknown addon imp : {imp}")
+
+    @classmethod
+    def get_name_by_number(cls, imp_number: int) -> str:
+        return cls._number_name_map[imp_number]
+
+    @classmethod
+    def clear(cls) -> None:
+        """Clear all registrations."""
+        cls._name_imp_map.clear()
+        cls._number_name_map.clear()
 
 
 ###
-# Public interface for accessing concrete AddonImps via their API-facing name or integer ID (and vice-versa)
-
-
-def get_imp_by_name(imp_name: str) -> type[AddonImp]:
-    return KnownAddonImps[imp_name].value
-
-
-def get_imp_name(imp: type[AddonImp]) -> str:
-    return KnownAddonImps(imp).name
-
-
-def get_imp_by_number(imp_number: int) -> type[AddonImp]:
-    _imp_name = AddonImpNumbers(imp_number).name
-    return get_imp_by_name(_imp_name)
-
-
-def get_imp_number(imp: type[AddonImp]) -> int:
-    _imp_name = get_imp_name(imp)
-    return AddonImpNumbers[_imp_name].value
-
-
-###
-# Static registry of known addon implementations -- add new imps to the enums below
+# Static registry of known addon implementations -- add new imps to
+# KnownAddonImps below.
 
 
 @enum.unique
 class KnownAddonImps(enum.Enum):
     """Static mapping from API-facing name for an AddonImp to the Imp itself.
 
-    Note: Grouped by type and then ordered by respective AddonImpNumbers.
+    Note: Grouped by type and then ordered by respective imp numbers assigned
+    in apps.settings.
     """
 
     # Type: Storage
@@ -102,56 +176,3 @@ class KnownAddonImps(enum.Enum):
 
     if __debug__:
         BLARG = my_blarg.MyBlargStorage
-
-
-@enum_names_same_as(KnownAddonImps)
-@enum.unique
-class AddonImpNumbers(enum.Enum):
-    """Static mapping from each AddonImp name to a unique integer (for database use)
-
-    Note: Ideally, we should "prefix" the number by type and take future scalability into account.
-    e.g. Storage type uses 10xx, Citation type uses 11xx, Cloud Computing type uses 12xx and LINK type uses 13xx.
-    Consider this a future improvement when we run out of 1001~1019 for both storage and citation addons.
-    """
-
-    # Type: Storage
-    BOX = 1001
-    S3 = 1003
-    GOOGLEDRIVE = 1005
-    DROPBOX = 1006
-    FIGSHARE = 1007
-    ONEDRIVE = 1008
-    OWNCLOUD = 1009
-    DATAVERSE = 1010
-    GITLAB = 1011
-    BITBUCKET = 1012
-    GITHUB = 1013
-
-    # Type: Citation
-    ZOTERO = 1002
-    MENDELEY = 1004
-
-    # Type: Cloud Computing
-    BOA = 1020
-
-    # Type: Link
-    LINK_DATAVERSE = 1030
-
-    if __debug__:
-        BLARG = -7
-
-
-def filter_addons_by_type(addon_type):
-    return frozenset(
-        {
-            AddonImpNumbers[item.name]
-            for item in KnownAddonImps
-            if issubclass(item.value, addon_type)
-        }
-    )
-
-
-StorageAddonImpNumbers = filter_addons_by_type(StorageAddonImp)
-CitationAddonImpNumbers = filter_addons_by_type(CitationAddonImp)
-ComputingAddonImpNumbers = filter_addons_by_type(ComputingAddonImp)
-LinkAddonImpNumbers = filter_addons_by_type(LinkAddonImp)

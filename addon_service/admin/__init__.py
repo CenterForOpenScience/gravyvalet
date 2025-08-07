@@ -1,11 +1,15 @@
 from django.contrib import admin
 
 from addon_service import models
-from addon_service.common import known_imps
 from addon_service.common.credentials_formats import CredentialsFormats
+from addon_service.common.known_imps import AddonRegistry
 from addon_service.common.service_types import ServiceTypes
 from addon_service.external_service.computing.models import ComputingSupportedFeatures
 from addon_service.external_service.storage.models import StorageSupportedFeatures
+from addon_toolkit.interfaces.citation import CitationAddonImp
+from addon_toolkit.interfaces.computing import ComputingAddonImp
+from addon_toolkit.interfaces.link import LinkAddonImp
+from addon_toolkit.interfaces.storage import StorageAddonImp
 
 from ..external_service.citation.models import CitationSupportedFeatures
 from ..external_service.link.models import (
@@ -26,12 +30,14 @@ class ExternalStorageServiceAdmin(GravyvaletModelAdmin):
     )
     raw_id_fields = ("oauth2_client_config", "oauth1_client_config")
     enum_choice_fields = {
-        "int_addon_imp": known_imps.StorageAddonImpNumbers,
         "int_credentials_format": CredentialsFormats,
         "int_service_type": ServiceTypes,
     }
     enum_multiple_choice_fields = {
         "int_supported_features": StorageSupportedFeatures,
+    }
+    dynamic_choice_fields = {
+        "int_addon_imp": lambda: AddonRegistry.iter_by_type(StorageAddonImp),
     }
 
 
@@ -45,12 +51,14 @@ class ExternalCitationServiceAdmin(GravyvaletModelAdmin):
     )
     raw_id_fields = ("oauth2_client_config", "oauth1_client_config")
     enum_choice_fields = {
-        "int_addon_imp": known_imps.CitationAddonImpNumbers,
         "int_credentials_format": CredentialsFormats,
         "int_service_type": ServiceTypes,
     }
     enum_multiple_choice_fields = {
         "int_supported_features": CitationSupportedFeatures,
+    }
+    dynamic_choice_fields = {
+        "int_addon_imp": lambda: AddonRegistry.iter_by_type(CitationAddonImp),
     }
 
 
@@ -64,13 +72,15 @@ class ExternalLinkServiceAdmin(GravyvaletModelAdmin):
     )
     raw_id_fields = ("oauth2_client_config", "oauth1_client_config")
     enum_choice_fields = {
-        "int_addon_imp": known_imps.LinkAddonImpNumbers,
         "int_credentials_format": CredentialsFormats,
         "int_service_type": ServiceTypes,
     }
     enum_multiple_choice_fields = {
         "int_supported_features": LinkSupportedFeatures,
         "int_supported_resource_types": SupportedResourceTypes,
+    }
+    dynamic_choice_fields = {
+        "int_addon_imp": lambda: AddonRegistry.iter_by_type(LinkAddonImp),
     }
 
 
@@ -84,12 +94,14 @@ class ExternalComputingServiceAdmin(GravyvaletModelAdmin):
     )
     raw_id_fields = ("oauth2_client_config",)
     enum_choice_fields = {
-        "int_addon_imp": known_imps.ComputingAddonImpNumbers,
         "int_credentials_format": CredentialsFormats,
         "int_service_type": ServiceTypes,
     }
     enum_multiple_choice_fields = {
         "int_supported_features": ComputingSupportedFeatures,
+    }
+    dynamic_choice_fields = {
+        "int_addon_imp": lambda: AddonRegistry.iter_by_type(ComputingAddonImp),
     }
 
 

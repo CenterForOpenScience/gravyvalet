@@ -9,12 +9,12 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from addon_service import models as db
-from addon_service.common import known_imps
 from addon_service.common.aiohttp_session import (
     close_singleton_client_session__blocking,
 )
 from addon_service.common.credentials_formats import CredentialsFormats
 from addon_service.common.invocation_status import InvocationStatus
+from addon_service.common.known_imps import AddonRegistry
 from addon_service.common.service_types import ServiceTypes
 from addon_service.tasks.invocation import perform_invocation__blocking
 from addon_toolkit import AddonCapabilities
@@ -75,8 +75,8 @@ class Command(BaseCommand):
             client_secret=client_secret,
         )
         _box_service, _ = db.ExternalStorageService.objects.update_or_create(
-            int_addon_imp=known_imps.get_imp_number(
-                known_imps.get_imp_by_name("BOX_DOT_COM")
+            int_addon_imp=AddonRegistry.get_imp_number(
+                AddonRegistry.get_imp_by_name("BOX_DOT_COM")
             ),
             defaults=dict(
                 name="my-box-dot-com",
