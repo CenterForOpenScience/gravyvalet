@@ -139,8 +139,15 @@ class GitlabStorageImp(storage.StorageAddonHttpRequestorImp):
             await self.check_preconditions(response)
             content = await response.json_content()
             ref = content.get("default_branch")
-        if file_item := await self._get_file(parsed_id, ref):
+
+        try:
+            file_item = await self._get_file(parsed_id, ref)
+        except ValidationError:
+            file_item = None
+
+        if file_item:
             return file_item
+
         # try to list files under folder, if it succeeds, proceed to return folder, else propagate the error
         await self.list_child_items(parsed_id.raw_id)
         return ItemResult(
