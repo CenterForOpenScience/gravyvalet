@@ -1,3 +1,5 @@
+import logging
+
 import celery
 from django.db import transaction
 
@@ -15,6 +17,8 @@ __all__ = (
     "perform_invocation__blocking",
     "perform_invocation__celery",
 )
+
+logger = logging.getLogger(__name__)
 
 
 def perform_invocation__blocking(invocation: AddonOperationInvocation) -> None:
@@ -34,12 +38,14 @@ def perform_invocation__blocking(invocation: AddonOperationInvocation) -> None:
                 _operation.declaration,
                 invocation.operation_kwargs,
             )
+            logger.info(f"Invocation result: {_result}")
         invocation.operation_result = json_for_typed_value(
             _operation.declaration.result_dataclass,
             _result,
         )
         invocation.invocation_status = InvocationStatus.SUCCESS
     except BaseException as _e:
+        logger.info(f"Invocation failed: {_e}")
         invocation.set_exception(_e)
         raise  # TODO: or swallow?
     finally:
