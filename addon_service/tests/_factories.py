@@ -3,8 +3,8 @@ from django.conf import settings
 from factory.django import DjangoModelFactory
 
 from addon_service import models as db
-from addon_service.common import known_imps
 from addon_service.common.credentials_formats import CredentialsFormats
+from addon_service.common.known_imps import AddonRegistry
 from addon_service.common.service_types import ServiceTypes
 from addon_service.external_service.storage.models import StorageSupportedFeatures
 from addon_toolkit import AddonCapabilities
@@ -76,7 +76,7 @@ class ExternalStorageServiceFactory(DjangoModelFactory):
     display_name = factory.Faker("word")
     max_concurrent_downloads = factory.Faker("pyint")
     max_upload_mb = factory.Faker("pyint")
-    int_addon_imp = known_imps.get_imp_number(known_imps.get_imp_by_name("BLARG"))
+    int_addon_imp = AddonRegistry.get_imp_number(AddonRegistry.get_imp_by_name("BLARG"))
     supported_scopes = ["service.url/grant_all"]
 
     @classmethod
@@ -198,8 +198,8 @@ class ExternalLinkServiceFactory(DjangoModelFactory):
         model = db.ExternalLinkService
 
     display_name = factory.Faker("word")
-    int_addon_imp = known_imps.get_imp_number(
-        known_imps.get_imp_by_name("LINK_DATAVERSE")
+    int_addon_imp = AddonRegistry.get_imp_number(
+        AddonRegistry.get_imp_by_name("LINK_DATAVERSE")
     )
     supported_scopes = ["service.url/grant_all"]
 

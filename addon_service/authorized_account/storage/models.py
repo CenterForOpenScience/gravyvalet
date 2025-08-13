@@ -6,7 +6,7 @@ from addon_toolkit.interfaces.storage import StorageConfig
 
 
 class AuthorizedStorageAccount(AuthorizedAccount):
-    """Model for describing a user's account on an ExternalService.
+    """Model for describing a user's account on an ExternalStorageService.
 
     This model collects all of the information required to actually perform remote
     operations against the service and to aggregate accounts under a known user.

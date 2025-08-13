@@ -1,11 +1,13 @@
+from pathlib import Path
+
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
 
 from addon_service.addon_imp.models import AddonImpModel
-from addon_service.common import known_imps
 from addon_service.common.base_model import AddonsServiceBaseModel
 from addon_service.common.credentials_formats import CredentialsFormats
+from addon_service.common.known_imps import AddonRegistry
 from addon_service.common.service_types import ServiceTypes
 from addon_service.common.validators import (
     validate_credentials_format,
@@ -27,12 +29,11 @@ class ExternalService(AddonsServiceBaseModel):
         validators=[validate_service_type],
         verbose_name="Service type",
     )
-    icon_name = models.FilePathField(
-        path=settings.PROVIDER_ICONS_DIR,
-        recursive=False,
-        match=r".*\.(jpg|png|svg)$",
+    icon_name = models.CharField(
+        max_length=255,
         blank=True,
         null=True,
+        help_text="Relative path to icon file within configured icon directories",
     )
     int_addon_imp = models.IntegerField(
         null=False,
@@ -65,11 +66,11 @@ class ExternalService(AddonsServiceBaseModel):
 
     @property
     def addon_imp(self) -> AddonImpModel:
-        return AddonImpModel(known_imps.get_imp_by_number(self.int_addon_imp))
+        return AddonImpModel(AddonRegistry.get_imp_by_number(self.int_addon_imp))
 
     @addon_imp.setter
     def addon_imp(self, value: AddonImpModel):
-        self.int_addon_imp = known_imps.get_imp_number(value.imp_cls)
+        self.int_addon_imp = AddonRegistry.get_imp_number(value.imp_cls)
 
     @property
     def auth_uri(self):
@@ -92,7 +93,19 @@ class ExternalService(AddonsServiceBaseModel):
     @property
     def external_service_name(self) -> str:
         number = self.int_addon_imp
-        return known_imps.AddonImpNumbers(number).name.lower()
+        return AddonRegistry.get_name_by_number(number).lower()
+
+    @property
+    def icon_url(self) -> str | None:
+        if self.icon_name:
+            icon_path = Path(self.icon_name)
+            if self.icon_name.startswith(str(settings.PROVIDER_ICONS_DIR)):
+                return f"/static/provider_icons/{icon_path.name}"
+            else:
+                # the icon offered by a Foreign Addon.
+                return f"/{Path(*icon_path.parts[-4:])}"
+
+        return None
 
     def clean_fields(self, *args, **kwargs):
         super().clean_fields(*args, **kwargs)
