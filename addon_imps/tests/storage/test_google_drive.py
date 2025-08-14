@@ -6,6 +6,7 @@ from unittest.mock import (
 )
 
 from addon_imps.storage.google_drive import (
+    ROOT_ITEM,
     File,
     GoogleDriveStorageImp,
 )
@@ -58,12 +59,12 @@ class TestGoogleDriveStorageImp(unittest.IsolatedAsyncioTestCase):
         result = await self.imp.list_root_items()
 
         expected_result = ItemSampleResult(
-            items=[mock_response],
+            items=[ROOT_ITEM],
             total_count=1,
         )
 
         self.assertEqual(expected_result, result)
-        self.imp.get_item_info.assert_awaited_once_with("root")
+        self.imp.get_item_info.assert_not_called()
 
     async def test_list_child_items(self):
         args = namedtuple(
@@ -157,14 +158,8 @@ class TestGoogleDriveStorageImp(unittest.IsolatedAsyncioTestCase):
             ],
         )
 
-    async def test_get_item_info(self):
-        cases = [("", "root"), ("foo", "foo")]
-        for item_id in cases:
-            self.network.reset_mock()
-            with self.subTest(case=f"case: {item_id=}"):
-                await self._test_item_info(*item_id)
-
-    async def _test_item_info(self, item_id: str, url_segment: str):
+    async def test_get_item_info_root(self):
+        self.network.reset_mock()
         self._patch_get(
             {
                 "kind": "drive#file",
@@ -175,8 +170,24 @@ class TestGoogleDriveStorageImp(unittest.IsolatedAsyncioTestCase):
                 "id": "1023",
             }
         )
-        result = await self.imp.get_item_info(item_id)
-        self._assert_get(f"drive/v3/files/{url_segment}")
+        result = await self.imp.get_item_info("root")
+        self.network.GET.assert_not_called()
+        assert result == ROOT_ITEM
+
+    async def test_get_item_info(self):
+        self.network.reset_mock()
+        self._patch_get(
+            {
+                "kind": "drive#file",
+                "driveId": "123",
+                "extra_attribute": "dasdasd",
+                "mimeType": "application/vnd.google-apps.folder",
+                "name": "foobar",
+                "id": "1023",
+            }
+        )
+        result = await self.imp.get_item_info("foo")
+        self._assert_get("drive/v3/files/foo")
         assert result == ItemResult(
             item_id="1023", item_name="foobar", item_type=ItemType.FOLDER
         )
