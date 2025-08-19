@@ -12,10 +12,6 @@ from .serializers import ExternalStorageServiceSerializer
     list=extend_schema(
         description="Get the list of all available external storage services"
     ),
-    get=extend_schema(
-        description="Get particular external storage service",
-    ),
-    get_wb_credentials=extend_schema(exclude=True),
 )
 class ExternalStorageServiceViewSet(ReadOnlyModelViewSet):
     queryset = ExternalStorageService.objects.all().select_related(
