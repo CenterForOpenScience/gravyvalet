@@ -5,7 +5,7 @@ services:
   gravyvalet:
     build:
       context: .
-      target: gv-dev
+      target: dev
     restart: unless-stopped
     command: python manage.py runserver 0.0.0.0:8004
     environment: &gv_environment
