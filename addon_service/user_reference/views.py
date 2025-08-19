@@ -12,10 +12,10 @@ from .serializers import UserReferenceSerializer
 
 @extend_schema_view(
     list=extend_schema(
-        description="Get user reference by user_uri. Even through this is a list method, this endpoint returns only one entity"
+        description="Get user reference by user_uri. Even though this is a list method, this endpoint returns only one entity"
     ),
     retrieve=extend_schema(
-        description="Get user reference by it's pk",
+        description="Get user reference by its pk",
     ),
 )
 class UserReferenceViewSet(RestrictedReadOnlyViewSet):

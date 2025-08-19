@@ -16,7 +16,7 @@ from .serializers import ConfiguredCitationAddonSerializer
         "Note that everything under this folder is going to be accessible to everyone who has access to this project"
     ),
     get=extend_schema(
-        description="Get configured citation addon by it's pk. "
+        description="Get configured citation addon by its pk. "
         "\nIf you want to fetch all configured citation addons, you should do so through resource_reference related view",
     ),
 )

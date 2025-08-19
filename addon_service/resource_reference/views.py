@@ -12,10 +12,10 @@ from .models import ResourceReference
 
 @extend_schema_view(
     list=extend_schema(
-        description="Get resource reference by resource_uri. Even through this is a list method, this endpoint returns only one entity"
+        description="Get resource reference by resource_uri. Even though this is a list method, this endpoint returns only one entity"
     ),
     retrieve=extend_schema(
-        description="Get resource reference by it's pk",
+        description="Get resource reference by its pk",
     ),
 )
 class ResourceReferenceViewSet(RestrictedReadOnlyViewSet):
