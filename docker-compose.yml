@@ -36,7 +36,7 @@ services:
   celeryworker:
     build:
       context: .
-      target: gv-deploy
+      target: dev
     restart: unless-stopped
     command: python -m celery --app app worker --uid daemon -l info
     depends_on:
@@ -50,7 +50,7 @@ services:
   celerybeat:
     build:
       context: .
-      target: gv-deploy
+      target: dev
     restart: unless-stopped
     command: python -m celery --app app beat --uid daemon -l info
     depends_on:
@@ -76,8 +76,6 @@ services:
     volumes:
       - rabbitmq_vol:/var/lib/rabbitmq
     stdin_open: true
-
-
 
 volumes:
   postgres_data_vol:
