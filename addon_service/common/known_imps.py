@@ -12,6 +12,7 @@ from addon_imps.citations import (
 from addon_imps.computing import boa
 from addon_imps.link import dataverse as link_dataverse
 from addon_imps.storage import (
+    azure_blob_storage,
     bitbucket,
     box_dot_com,
     dataverse,
@@ -89,6 +90,7 @@ class KnownAddonImps(enum.Enum):
     GITLAB = gitlab.GitlabStorageImp
     BITBUCKET = bitbucket.BitbucketStorageImp
     GITHUB = github.GitHubStorageImp
+    AZUREBLOBSTORAGE = azure_blob_storage.AzureBlobStorageImp
 
     # Type: Citation
     ZOTERO = zotero_org.ZoteroOrgCitationImp
@@ -126,6 +128,7 @@ class AddonImpNumbers(enum.Enum):
     GITLAB = 1011
     BITBUCKET = 1012
     GITHUB = 1013
+    AZUREBLOBSTORAGE = 1014
 
     # Type: Citation
     ZOTERO = 1002
