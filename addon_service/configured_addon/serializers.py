@@ -39,10 +39,14 @@ class ConfiguredAddonSerializer(serializers.HyperlinkedModelSerializer):
     def create(self, validated_data):
         validated_data = self.fix_dotted_base_account(validated_data)
         base_account = validated_data["base_account"]
-        if ConfiguredAddon.objects.filter(
-            base_account__external_service=base_account.external_service,
-            authorized_resource__resource_uri=validated_data["resource_uri"],
-        ).exists():
+        validate_one_addon = getattr(self.Meta, "one_addon_per_node", True)
+        if (
+            validate_one_addon
+            and ConfiguredAddon.objects.filter(
+                base_account__external_service=base_account.external_service,
+                authorized_resource__resource_uri=validated_data["resource_uri"],
+            ).exists()
+        ):
             raise ValidationError(
                 f"ConfiguredAddon for requested addon and authorized_resource {validated_data['resource_uri']} already exists"
             )
@@ -60,6 +64,7 @@ class ConfiguredAddonSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         resource_name = "configured-addons"
         model = ConfiguredAddon
+        one_addon_per_node = True
         fields = [
             "id",
             "url",
