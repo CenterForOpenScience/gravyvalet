@@ -39,7 +39,7 @@ class MockOSF:
     def __init__(self, permissions=None):
         """A lightweight, configurable  mock of OSF for testing remote permissions.
 
-        Accepts a mapping of arbitrary resource_uris to user permissiosn and `public` status
+        Accepts a mapping of arbitrary resource_uris to user permissions and `public` status
         {
             'osf.io/abcde': {'osf.io/bcdef': 'write', 'osf.io/cdefg': 'admin', 'public': True},
             'osf.io/zyxwv': {'osf.io/yxwvut': 'read', 'public': False}

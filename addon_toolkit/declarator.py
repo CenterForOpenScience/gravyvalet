@@ -127,7 +127,7 @@ class ClassDeclarator(Declarator):
     with shorthand declarator:
     >>> semver = ClassDeclarator(SemanticVersionDeclaration, field_for_subject='subj')
 
-    for declarating classes:
+    for declaring classes:
     >>> @semver(
     ...   major=4,
     ...   minor=2,
@@ -152,7 +152,7 @@ class ClassDeclarator(Declarator):
         ...
     ValueError: no declaration found for <class 'addon_toolkit.declarator.Foo'>
 
-    to recognize a subclass of a declarated class, use `get_declaration_for_class` (returns the first declaration found on items in `__mro__`)
+    to recognize a subclass of a declared class, use `get_declaration_for_class` (returns the first declaration found on items in `__mro__`)
     >>> semver.get_declaration_for_class(Foo)
     SemanticVersionDeclaration(major=4, minor=2, patch=9, subj=<class 'addon_toolkit.declarator.MyLongLivedBaseClass'>)
 

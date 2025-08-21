@@ -40,7 +40,7 @@ class RestrictedReadOnlyViewSet(ReadOnlyModelViewSet):
     `v1/user-references/?filter[user_uri]={uri}`
     to act as an alternative to
     `v1/user-references/{pk}`
-    in the case where the caller only has the publicly avaialable uri as a key
+    in the case where the caller only has the publicly available uri as a key
     """
 
     def list(self, request, *args, **kwargs):
