@@ -22,7 +22,7 @@ from .serializers import ConfiguredStorageAddonSerializer
         "Note that everything under this folder is going to be accessible to everyone who has access to this project"
     ),
     get=drf_spectacular.utils.extend_schema(
-        description="Get configured storage addon by it's pk. "
+        description="Get configured storage addon by its pk. "
         "\nIf you want to fetch all configured storage addons, you should do so through resource_reference related view",
     ),
     get_wb_credentials=drf_spectacular.utils.extend_schema(exclude=True),
