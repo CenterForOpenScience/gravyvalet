@@ -16,6 +16,7 @@ from addon_service.external_service.citation.models import ExternalCitationServi
 from addon_service.external_service.computing.models import ExternalComputingService
 from addon_service.external_service.link.models import ExternalLinkService
 from addon_service.external_service.storage.models import ExternalStorageService
+from addon_service.external_service.redirect.models import ExternalRedirectService
 from addon_service.oauth1.models import OAuth1ClientConfig
 from addon_service.oauth2.models import (
     OAuth2ClientConfig,
@@ -47,4 +48,5 @@ __all__ = (
     "ExternalLinkService",
     "AuthorizedLinkAccount",
     "ConfiguredLinkAddon",
+    "ExternalRedirectService",
 )

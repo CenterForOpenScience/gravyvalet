@@ -36,9 +36,9 @@ class ExternalServiceSerializer(serializers.HyperlinkedModelSerializer):
         child=serializers.CharField(), read_only=True
     )
 
-    included_serializers = {
-        "addon_imp": "addon_service.serializers.AddonImpSerializer",
-    }
+    # included_serializers = {
+    #     "addon_imp": "addon_service.serializers.AddonImpSerializer",
+    # }
 
     class Meta:
         model = ExternalService

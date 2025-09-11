@@ -92,6 +92,25 @@ class ExternalComputingServiceAdmin(GravyvaletModelAdmin):
         "int_supported_features": ComputingSupportedFeatures,
     }
 
+@admin.register(models.ExternalRedirectService)
+class ExternalRedirectServiceAdmin(GravyvaletModelAdmin):
+    list_display = ("display_name", "created", "modified")
+    readonly_fields = (
+        "id",
+        "created",
+        "modified",
+    )
+    raw_id_fields = ("oauth2_client_config", "oauth1_client_config")
+    enum_choice_fields = {
+        "int_addon_imp": known_imps.StorageAddonImpNumbers,
+        "int_credentials_format": CredentialsFormats,
+        "int_service_type": ServiceTypes,
+    }
+    enum_multiple_choice_fields = {
+        "int_supported_features": StorageSupportedFeatures,
+    }
+
+
 
 @admin.register(models.OAuth2ClientConfig)
 @linked_many_field("external_storage_services")

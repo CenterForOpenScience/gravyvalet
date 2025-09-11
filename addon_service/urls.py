@@ -68,6 +68,7 @@ _register_viewset(views.AddonOperationInvocationViewSet)
 _register_viewset(views.AddonOperationViewSet)
 _register_viewset(views.AddonImpViewSet)
 _register_viewset(views.UserReferenceViewSet)
+_register_viewset(views.ExternalRedirectServiceViewSet)
 
 
 ###
