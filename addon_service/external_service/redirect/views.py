@@ -17,5 +17,5 @@ from .serializers import ExternalRedirectServiceSerializer
     ),
 )
 class ExternalRedirectServiceViewSet(ReadOnlyModelViewSet):
-    queryset = ExternalRedirectService.objects.all().select_related("oauth2_client_config")
+    queryset = ExternalRedirectService.objects.all()
     serializer_class = ExternalRedirectServiceSerializer
