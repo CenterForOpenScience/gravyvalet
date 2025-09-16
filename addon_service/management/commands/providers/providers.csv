@@ -14,3 +14,4 @@ b670cf7a-752f-49ed-8367-8238cf8a24d1,Figshare,1,1,1007,{all},https://api.figshar
 102c6356-e31a-4316-a9fe-8b2bcb20fdd6,Google Drive,1,1,1005,{https://www.googleapis.com/auth/drive},https://www.googleapis.com/,googledrive,,5cf93c06-c27f-4446-b8ac-ffac209ba465,google_drive.svg,,10,10,511,,,storage
 5bc440c8-a03a-4aa6-bd9e-856aee9883e9,Owncloud,3,2,1009,{},,owncloud,,,owncloud.svg,,10,10,511,,,storage
 edf57d0c-ae0a-4c85-b759-017fc8b009f0,Link dataverse,6,2,1030,{},https://demo.dataverse.org,,,,dataverse.svg,{},,,104,4294967295,,link
+2c527e49-1f13-4d54-829d-04eeb6ea978f,Azure Blob Storage,1,1,1014,{https://storage.azure.com/user_impersonation offline_access},https://cosstrageaccount.blob.core.windows.net/,azureblobstorage,,1840d9c0-7da5-4ee4-ab51-a0f67d27a115,azure_blob_storage.svg,,10,10,511,,,storage
