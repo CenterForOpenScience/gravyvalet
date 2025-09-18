@@ -102,7 +102,7 @@ class ExternalRedirectServiceAdmin(GravyvaletModelAdmin):
     )
     raw_id_fields = ("oauth2_client_config", "oauth1_client_config")
     enum_choice_fields = {
-        "int_addon_imp": known_imps.StorageAddonImpNumbers,
+        "int_addon_imp": known_imps.RedirectAddonImpNumbers,
         "int_credentials_format": CredentialsFormats,
         "int_service_type": ServiceTypes,
     }
