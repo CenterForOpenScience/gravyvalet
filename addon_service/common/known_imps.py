@@ -24,12 +24,14 @@ from addon_imps.storage import (
     owncloud,
     s3,
 )
+from addon_imps.redirect import redirect_dummy
 from addon_service.common.enum_decorators import enum_names_same_as
 from addon_toolkit import AddonImp
 from addon_toolkit.interfaces.citation import CitationAddonImp
 from addon_toolkit.interfaces.computing import ComputingAddonImp
 from addon_toolkit.interfaces.link import LinkAddonImp
 from addon_toolkit.interfaces.storage import StorageAddonImp
+from addon_toolkit.interfaces.redirect import RedirectAddonImp
 
 
 if __debug__:
@@ -100,6 +102,9 @@ class KnownAddonImps(enum.Enum):
     # Type: Link
     LINK_DATAVERSE = link_dataverse.DataverseLinkImp
 
+    # Type: Redirect
+    REDIRECT_DUMMY = redirect_dummy.DummyRedirectImp
+
     if __debug__:
         BLARG = my_blarg.MyBlargStorage
 
@@ -137,6 +142,9 @@ class AddonImpNumbers(enum.Enum):
     # Type: Link
     LINK_DATAVERSE = 1030
 
+    # Type: Redirect 
+    REDIRECT_DUMMY = 1040
+
     if __debug__:
         BLARG = -7
 
@@ -155,3 +163,4 @@ StorageAddonImpNumbers = filter_addons_by_type(StorageAddonImp)
 CitationAddonImpNumbers = filter_addons_by_type(CitationAddonImp)
 ComputingAddonImpNumbers = filter_addons_by_type(ComputingAddonImp)
 LinkAddonImpNumbers = filter_addons_by_type(LinkAddonImp)
+RedirectAddonImpNumbers = filter_addons_by_type(RedirectAddonImp)
