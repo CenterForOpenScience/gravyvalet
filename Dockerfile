@@ -12,7 +12,7 @@ ENV PATH="$PATH:/root/.local/bin"
 # END gv-base
 
 # BEGIN gv-runtime-base
-FROM python:3.13-slim AS gv-runtime-base
+FROM python:3.13.7-slim AS gv-runtime-base
 
 # System Dependencies:
 RUN apt-get update && apt-get install -y libpq-dev libxml2-dev libxslt-dev
