@@ -1,12 +1,15 @@
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+)
 from rest_framework.response import Response
 
 from addon_service.common.permissions import (
     IsAuthenticated,
-    SessionUserIsOwner,
     SessionUserMayAccessInvocation,
     SessionUserMayPerformInvocation,
 )
-from addon_service.common.viewsets import RetrieveWriteViewSet
+from addon_service.common.viewsets import RetrieveCreateViewSet
 from addon_service.tasks.invocation import (
     perform_invocation__blocking,
     perform_invocation__celery,
@@ -19,17 +22,28 @@ from ..authorized_account.citation.serializers import (
 from ..authorized_account.computing.serializers import (
     AuthorizedComputingAccountSerializer,
 )
+from ..authorized_account.link.serializers import AuthorizedLinkAccountSerializer
 from ..authorized_account.models import AuthorizedAccount
 from ..authorized_account.storage.serializers import AuthorizedStorageAccountSerializer
 from ..configured_addon.citation.serializers import ConfiguredCitationAddonSerializer
 from ..configured_addon.computing.serializers import ConfiguredComputingAddonSerializer
+from ..configured_addon.link.serializers import ConfiguredLinkAddonSerializer
 from ..configured_addon.models import ConfiguredAddon
 from ..configured_addon.storage.serializers import ConfiguredStorageAddonSerializer
 from .models import AddonOperationInvocation
 from .serializers import AddonOperationInvocationSerializer
 
 
-class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
+@extend_schema_view(
+    create=extend_schema(
+        description="Perform some action using external service, for instance list files on storage provider. "
+        "In order to perform such action you need to include configured_addon relationship"
+    ),
+    retrieve=extend_schema(
+        description="Get singular instance of addon operation invocation by it's pk. May be useful to view action log",
+    ),
+)
+class AddonOperationInvocationViewSet(RetrieveCreateViewSet):
     queryset = AddonOperationInvocation.objects.all()
     serializer_class = AddonOperationInvocationSerializer
 
@@ -37,8 +51,6 @@ class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
         match self.action:
             case "retrieve" | "retrieve_related":
                 return [IsAuthenticated(), SessionUserMayAccessInvocation()]
-            case "partial_update" | "update" | "destroy":
-                return [IsAuthenticated(), SessionUserIsOwner()]
             case "create":
                 return [SessionUserMayPerformInvocation()]
             case None:
@@ -63,6 +75,10 @@ class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
                 serializer = AuthorizedComputingAccountSerializer(
                     instance, context={"request": request}
                 )
+            elif hasattr(instance, "authorizedlinkaccount"):
+                serializer = AuthorizedLinkAccountSerializer(
+                    instance, context={"request": request}
+                )
             else:
                 raise ValueError("unknown authorized account type")
         elif isinstance(instance, ConfiguredAddon):
@@ -76,6 +92,10 @@ class AddonOperationInvocationViewSet(RetrieveWriteViewSet):
                 )
             elif hasattr(instance, "configuredcomputingaddon"):
                 serializer = ConfiguredComputingAddonSerializer(
+                    instance, context={"request": request}
+                )
+            elif hasattr(instance, "configuredlinkaddon"):
+                serializer = ConfiguredLinkAddonSerializer(
                     instance, context={"request": request}
                 )
             else:

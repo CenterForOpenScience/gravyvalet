@@ -1,3 +1,8 @@
+from drf_spectacular.utils import (
+    extend_schema,
+    extend_schema_view,
+)
+
 from addon_imps.storage.google_drive import GoogleDriveStorageImp
 from addon_service.authorized_account.views import AuthorizedAccountViewSet
 
@@ -8,6 +13,13 @@ from .serializers import (
 )
 
 
+@extend_schema_view(
+    create=extend_schema(
+        description="Create new authorized storage account for given external storage service."
+        '\n For OAuth services it\'s required to create account with `"initiate_oauth"=true` '
+        "in order to proceed with OAuth flow"
+    ),
+)
 class AuthorizedStorageAccountViewSet(AuthorizedAccountViewSet):
     queryset = AuthorizedStorageAccount.objects.all()
     serializer_class = AuthorizedStorageAccountSerializer

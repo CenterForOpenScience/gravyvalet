@@ -24,6 +24,7 @@ class _DrfJsonApiHelpers(AutoPrefetchMixin, PreloadIncludesMixin, RelatedMixin):
 
 
 class RestrictedReadOnlyViewSet(ReadOnlyModelViewSet):
+    filter_backends = [RestrictedListEndpointFilterBackend]
     """ReadOnlyViewSet that requires `list` actions return only one result.
 
     UserReference and ResourceReference endpoints are major entry points into
@@ -47,8 +48,6 @@ class RestrictedReadOnlyViewSet(ReadOnlyModelViewSet):
         RestrictedListEndpointFilterBackend and check_object_permissions
         to enforce permissions on returned entities.
         """
-        self.filter_backends = [RestrictedListEndpointFilterBackend]
-
         qs = self.filter_queryset(self.get_queryset())
         try:
             self.check_object_permissions(self.request, qs.get())
@@ -72,6 +71,17 @@ class _CreateWithPermissionsMixin(drf_mixins.CreateModelMixin):
         if serializer.instance._state.adding:
             # the serializer didn't save it
             _instance.save()
+
+
+class RetrieveCreateViewSet(
+    _DrfJsonApiHelpers,
+    _CreateWithPermissionsMixin,
+    drf_mixins.RetrieveModelMixin,
+    GenericViewSet,
+):
+    """viewset allowing create, retrieve, update"""
+
+    http_method_names = ["get", "post", "head", "options"]
 
 
 class RetrieveWriteViewSet(

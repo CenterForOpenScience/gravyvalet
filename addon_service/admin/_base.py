@@ -56,10 +56,7 @@ class GravyvaletModelAdmin(admin.ModelAdmin):
                 label=db_field.verbose_name,
                 choices=[
                     (None, ""),
-                    *(
-                        (_member.value, _member.name)
-                        for _member in _enum.__members__.values()
-                    ),
+                    *self._list_enum_members(_enum),
                 ],
             )
         if (
@@ -68,14 +65,17 @@ class GravyvaletModelAdmin(admin.ModelAdmin):
         ):
             _enum = self.enum_multiple_choice_fields[db_field.name]
             return EnumNameMultipleChoiceField(
-                choices=[
-                    *(
-                        (_member.value, _member.name)
-                        for _member in _enum.__members__.values()
-                    ),
-                ],
+                choices=self._list_enum_members(_enum),
                 widget=forms.CheckboxSelectMultiple,
                 enum_cls=_enum,
             )
 
         return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+    def _list_enum_members(self, _enum):
+        if hasattr(_enum, "__members__"):
+            iterator = _enum.__members__.values()
+        else:
+            iterator = _enum
+
+        return [(_member.value, _member.name) for _member in iterator]

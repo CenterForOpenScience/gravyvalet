@@ -2,5 +2,9 @@
 db.sqlite3
 __pycache__
 .venv
-
+.idea/
+.DS_Store
+.DS_Store?
+*.swp
+*~
 addon_service/static/gravyvalet_code_docs/

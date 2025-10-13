@@ -1,15 +1,16 @@
-id,display_name,int_credentials_format,int_service_type,int_addon_imp,supported_scopes,api_base_url,wb_key,oauth1_client_config_id,oauth2_client_config_id,icon_name,api_base_url_options,max_concurrent_downloads,max_upload_mb,int_supported_features,service_type
-d424bec8-811b-4d23-bf1c-f4e8219e0454,Mendeley,1,1,1004,{all},https://api.mendeley.com,mendeley,,b3fd76fc-3368-47b4-9053-ff4b7ca4baa2,mendeley.svg,,,,3,citation
-fce6ada4-9a6e-4986-94c8-9a378170f5fb,Zotero,5,1,1002,{all},https://api.zotero.org,zotero_org,e3663c71-3520-4fce-b0ff-e56c81a73d54,,zotero.svg,,,,3,citation
-455cfb5f-6ca0-4d60-8fc8-279f7b229da2,Boa,3,1,1020,{all},https://boa.com,boa,,,boa.png,,,,1,computing
-d5ad0101-b732-4a08-8306-384d66beef0e,Gitlab,4,1,1011,{},https://gitlab.com,gitlab,,,gitlab.svg,{},10,10,511,storage
-e3cb1bc9-83ec-49fa-86de-1d04d3f94834,Dataverse,6,3,1010,{},https://demo.dataverse.org,dataverse,,,dataverse.svg,,10,10,511,storage
-4a2aa5c7-c5be-4e3f-abd8-04fb34928bd3,s3,2,1,1003,{},https://api.github.com,s3,,,s3.svg,,10,10,511,storage
-4854b243-593a-4c6f-96e8-5bb2a2df9134,BOX,1,1,1001,{root_readwrite},https://api.box.com/2.0/,box,,4258d732-db77-42aa-b275-8da841adf77f,box.svg,,10,10,2047,storage
-9e7148ae-4919-4676-bb44-a7a6662c6dd0,Dropbox,1,1,1006,{files.metadata.write files.content.write files.content.read files.metadata.read},https://api.dropboxapi.com/2/,dropbox,,90b44f3d-66e3-444c-9261-534b9e37b21a,dropbox.svg,,10,10,511,storage
-15b66b0c-4db9-4425-b2e0-dfd701a55b05,OneDrive,1,1,1008,{User.Read offline_access Files.Read Files.Read.All Files.ReadWrite},https://graph.microsoft.com/v1.0/,onedrive,,a64e222c-a37b-4f34-9f27-83611d851f5c,onedrive.svg,,10,10,2047,storage
-babfcfcc-0e47-4c8d-9ca1-3b335bb8cf55,Github,1,1,1013,{repo contents},https://api.github.com,github,,285f28ee-15b5-429e-b7ba-3371a19678a8,github.svg,,10,10,2047,storage
-b670cf7a-752f-49ed-8367-8238cf8a24d1,Figshare,1,1,1007,{all},https://api.figshare.com/v2/,figshare,,5c161353-7444-478e-881f-3b8aec3a002a,figshare.svg,,10,10,511,storage
-2acd3e09-5e27-4e5b-a3d1-579f16663cfc,Bitbucket,1,1,1012,{account repository team},https://api.bitbucket.org/2.0/,bitbucket,,1b2d71cc-425e-4aa6-886c-e2ff247c4f2c,bitbucket.svg,,10,10,511,storage
-102c6356-e31a-4316-a9fe-8b2bcb20fdd6,Google Drive,1,1,1005,{https://www.googleapis.com/auth/drive},https://www.googleapis.com/,googledrive,,5cf93c06-c27f-4446-b8ac-ffac209ba465,google_drive.svg,,10,10,511,storage
-5bc440c8-a03a-4aa6-bd9e-856aee9883e9,Owncloud,3,2,1009,{},,owncloud,,,owncloud.svg,,10,10,511,storage
+id,display_name,int_credentials_format,int_service_type,int_addon_imp,supported_scopes,api_base_url,wb_key,oauth1_client_config_id,oauth2_client_config_id,icon_name,api_base_url_options,max_concurrent_downloads,max_upload_mb,int_supported_features,int_supported_resource_types,browser_base_url,service_type
+d424bec8-811b-4d23-bf1c-f4e8219e0454,Mendeley,1,1,1004,{all},https://api.mendeley.com,mendeley,,b3fd76fc-3368-47b4-9053-ff4b7ca4baa2,mendeley.svg,,,,3,,,citation
+fce6ada4-9a6e-4986-94c8-9a378170f5fb,Zotero,5,1,1002,{all},https://api.zotero.org,zotero_org,e3663c71-3520-4fce-b0ff-e56c81a73d54,,zotero.svg,,,,3,,,citation
+455cfb5f-6ca0-4d60-8fc8-279f7b229da2,Boa,3,1,1020,{all},https://boa.com,boa,,,boa.png,,,,1,,,computing
+d5ad0101-b732-4a08-8306-384d66beef0e,Gitlab,4,1,1011,{},https://gitlab.com,gitlab,,,gitlab.svg,{},10,10,511,,,storage
+e3cb1bc9-83ec-49fa-86de-1d04d3f94834,Dataverse,6,3,1010,{},https://demo.dataverse.org,dataverse,,,dataverse.svg,,10,10,511,,,storage
+4a2aa5c7-c5be-4e3f-abd8-04fb34928bd3,s3,2,1,1003,{},https://api.github.com,s3,,,s3.svg,,10,10,511,,,storage
+4854b243-593a-4c6f-96e8-5bb2a2df9134,BOX,1,1,1001,{root_readwrite},https://api.box.com/2.0/,box,,4258d732-db77-42aa-b275-8da841adf77f,box.svg,,10,10,2047,,,storage
+9e7148ae-4919-4676-bb44-a7a6662c6dd0,Dropbox,1,1,1006,{files.metadata.write files.content.write files.content.read files.metadata.read},https://api.dropboxapi.com/2/,dropbox,,90b44f3d-66e3-444c-9261-534b9e37b21a,dropbox.svg,,10,10,511,,,storage
+15b66b0c-4db9-4425-b2e0-dfd701a55b05,OneDrive,1,1,1008,{User.Read offline_access Files.Read Files.Read.All Files.ReadWrite},https://graph.microsoft.com/v1.0/,onedrive,,a64e222c-a37b-4f34-9f27-83611d851f5c,onedrive.svg,,10,10,2047,,,storage
+babfcfcc-0e47-4c8d-9ca1-3b335bb8cf55,Github,1,1,1013,{repo contents},https://api.github.com,github,,285f28ee-15b5-429e-b7ba-3371a19678a8,github.svg,,10,10,2047,,,storage
+b670cf7a-752f-49ed-8367-8238cf8a24d1,Figshare,1,1,1007,{all},https://api.figshare.com/v2/,figshare,,5c161353-7444-478e-881f-3b8aec3a002a,figshare.svg,,10,10,511,,,storage
+2acd3e09-5e27-4e5b-a3d1-579f16663cfc,Bitbucket,1,1,1012,{account repository team},https://api.bitbucket.org/2.0/,bitbucket,,1b2d71cc-425e-4aa6-886c-e2ff247c4f2c,bitbucket.svg,,10,10,511,,,storage
+102c6356-e31a-4316-a9fe-8b2bcb20fdd6,Google Drive,1,1,1005,{https://www.googleapis.com/auth/drive},https://www.googleapis.com/,googledrive,,5cf93c06-c27f-4446-b8ac-ffac209ba465,google_drive.svg,,10,10,511,,,storage
+5bc440c8-a03a-4aa6-bd9e-856aee9883e9,Owncloud,3,2,1009,{},,owncloud,,,owncloud.svg,,10,10,511,,,storage
+edf57d0c-ae0a-4c85-b759-017fc8b009f0,Link dataverse,6,2,1030,{},https://demo.dataverse.org,,,,dataverse.svg,{},,,104,4294967295,,link

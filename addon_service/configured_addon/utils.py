@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from addon_toolkit.interfaces.citation import CitationAddonImp
 from addon_toolkit.interfaces.computing import ComputingAddonImp
+from addon_toolkit.interfaces.link import LinkAddonImp
 from addon_toolkit.interfaces.storage import StorageAddonImp
 
 
@@ -18,5 +19,6 @@ def get_config_for_addon(addon: ConfiguredAddon):
         return addon.configuredcitationaddon.config
     elif issubclass(addon.imp_cls, ComputingAddonImp):
         return addon.configuredcomputingaddon.config
-
+    elif issubclass(addon.imp_cls, LinkAddonImp):
+        return addon.configuredlinkaddon.config
     raise ValueError(f"this function implementation does not support {addon.imp_cls}")

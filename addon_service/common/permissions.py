@@ -6,20 +6,21 @@ from rest_framework import (
 
 from addon_service.common import hmac as hmac_utils
 from addon_service.common import osf
+from addon_service.common.get_user_uri import get_user_uri
 
 
 class IsAuthenticated(permissions.BasePermission):
     """allow any logged-in user"""
 
     def has_permission(self, request, view):
-        return request.session.get("user_reference_uri") is not None
+        return get_user_uri(request) is not None
 
 
 class SessionUserIsOwner(permissions.BasePermission):
     """for object permissions on objects with `owner_uri`"""
 
     def has_object_permission(self, request, view, obj):
-        session_user_uri = request.session.get("user_reference_uri")
+        session_user_uri = get_user_uri(request)
         if session_user_uri:
             return session_user_uri == obj.owner_uri
         return False
@@ -31,7 +32,7 @@ class SessionUserIsOwnerOrResourceAdmin(permissions.BasePermission):
     message = "Permission denied, to perform this action you should be the one who created this addon or project admin"
 
     def has_object_permission(self, request, view, obj):
-        _user_uri = request.session.get("user_reference_uri")
+        _user_uri = get_user_uri(request)
         return (_user_uri == obj.owner_uri) or osf.has_osf_permission_on_resource(
             request,
             obj.resource_uri,
@@ -54,7 +55,7 @@ class SessionUserMayConnectAddon(permissions.BasePermission):
     """for object permissions on objects with `owner_uri` and `resource_uri`"""
 
     def has_object_permission(self, request, view, obj):
-        _user_uri = request.session.get("user_reference_uri")
+        _user_uri = get_user_uri(request)
         return (
             # must be account owner
             (_user_uri == obj.owner_uri)
@@ -71,7 +72,7 @@ class SessionUserMayAccessInvocation(permissions.BasePermission):
     """for object permissions on `addon_service.models.AddonOperationInvocation`"""
 
     def has_object_permission(self, request, view, obj):
-        _user_uri = request.session.get("user_reference_uri")
+        _user_uri = get_user_uri(request)
         return bool(
             # must be the invoker:
             (_user_uri == obj.by_user.user_uri)
@@ -90,7 +91,7 @@ class SessionUserMayPerformInvocation(permissions.BasePermission):
     """for object permissions on `addon_service.models.AddonOperationInvocation`"""
 
     def has_object_permission(self, request, view, obj):
-        _user_uri = request.session.get("user_reference_uri")
+        _user_uri = get_user_uri(request)
         _thru_addon = obj.thru_addon
         _thru_account = obj.thru_account
         if _thru_addon is None:

@@ -14,10 +14,25 @@ jobs:
         postgres-version: ['15']
     runs-on: ubuntu-latest
     services:
+      redis:
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+      rabbitmq:
+        image: rabbitmq:latest
+        ports:
+          - 5672:5672
       postgres:
         image: postgres:${{ matrix.postgres-version }}
         env:
           POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: gravyvalet
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -54,7 +69,25 @@ jobs:
         run: poetry run python -Werror manage.py test
         env:
           DEBUG: 1
+          AMQP_BROKER_URL: "amqp://guest:guest@localhost:5672"
           POSTGRES_HOST: localhost
           POSTGRES_DB: gravyvalettest
           POSTGRES_USER: postgres
           SECRET_KEY: oh-so-secret
+          REDIS_HOST: redis://localhost:6379
+      - name: generate-openapi
+        if: github.ref == 'refs/heads/main'
+        run: poetry run python manage.py migrate && poetry run python manage.py openapi
+        env:
+          DEBUG: 1
+          AMQP_BROKER_URL: "amqp://guest:guest@localhost:5672"
+          POSTGRES_HOST: localhost
+          POSTGRES_DB: gravyvalet
+          POSTGRES_USER: postgres
+          SECRET_KEY: oh-so-secret
+          REDIS_HOST: redis://localhost:6379
+      - name: upload-artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          path: 'openapi.yml'

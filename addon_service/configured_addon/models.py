@@ -11,6 +11,7 @@ from addon_toolkit import (
     AddonCapabilities,
     AddonImp,
 )
+from app.celery import app
 
 
 class ConnectedAddonManager(models.Manager):
@@ -88,6 +89,20 @@ class ConfiguredAddon(AddonsServiceBaseModel):
             )
         ]
 
+    def save(self, *args, full_clean=True, **kwargs):
+        id_ = self.pk
+        super().save(*args, full_clean=full_clean, **kwargs)
+        if not id_:  # If instance is created, not updated
+            app.send_task(
+                "osf.tasks.log_gv_addon",
+                kwargs={
+                    "node_url": self.resource_uri,
+                    "user_url": self.owner_uri,
+                    "addon": self.display_name,
+                    "action": "addon_added",
+                },
+            )
+
     @property
     def connected_operation_names(self):
         return [
@@ -96,6 +111,19 @@ class ConfiguredAddon(AddonsServiceBaseModel):
                 self.connected_capabilities
             )
         ]
+
+    def delete(self, *args, **kwargs):
+        result = super().delete(*args, **kwargs)
+        if result:
+            app.send_task(
+                "osf.tasks.log_gv_addon",
+                kwargs={
+                    "node_url": self.resource_uri,
+                    "user_url": self.owner_uri,
+                    "addon": self.display_name,
+                    "action": "addon_removed",
+                },
+            )
 
     @property
     def credentials(self):
@@ -110,7 +138,7 @@ class ConfiguredAddon(AddonsServiceBaseModel):
         return self.base_account.imp_cls
 
     @property
-    def external_service_name(self):
+    def external_service_name(self) -> str:
         number = self.base_account.external_service.int_addon_imp
         return AddonImpNumbers(number).name.lower()
 

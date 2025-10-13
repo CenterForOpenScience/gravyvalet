@@ -8,6 +8,7 @@ from rest_framework_json_api import serializers
 
 from addon_service.authorized_account.models import AuthorizedAccount
 from addon_service.common.credentials_formats import CredentialsFormats
+from addon_service.common.get_user_uri import get_user_uri
 from addon_service.external_service.models import ExternalService
 from addon_service.osf_models.fields import encrypt_string
 from addon_service.serializer_fields import (
@@ -72,7 +73,7 @@ class AuthorizedAccountSerializer(serializers.HyperlinkedModelSerializer):
         api_base_url: str = "",
         **kwargs,
     ) -> AuthorizedAccount:
-        session_user_uri = self.context["request"].session.get("user_reference_uri")
+        session_user_uri = get_user_uri(self.context["request"])
         account_owner, _ = UserReference.objects.get_or_create(
             user_uri=session_user_uri
         )

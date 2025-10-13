@@ -11,6 +11,9 @@ from addon_service.authorized_account.citation.serializers import (
 from addon_service.authorized_account.computing.serializers import (
     AuthorizedComputingAccountSerializer,
 )
+from addon_service.authorized_account.link.serializers import (
+    AuthorizedLinkAccountSerializer,
+)
 from addon_service.authorized_account.polymorphic_serializers import (
     AuthorizedAccountPolymorphicSerializer,
 )
@@ -24,6 +27,9 @@ from addon_service.configured_addon.citation.serializers import (
 from addon_service.configured_addon.computing.serializers import (
     ConfiguredComputingAddonSerializer,
 )
+from addon_service.configured_addon.link.serializers import (
+    ConfiguredLinkAddonSerializer,
+)
 from addon_service.configured_addon.polymorphic_serializers import (
     ConfiguredAddonPolymorphicSerializer,
 )
@@ -36,6 +42,9 @@ from addon_service.external_service.citation.serializers import (
 )
 from addon_service.external_service.computing.serializers import (
     ExternalComputingServiceSerializer,
+)
+from addon_service.external_service.link.serializers import (
+    ExternalLinkServiceSerializer,
 )
 from addon_service.external_service.serializers import ExternalServiceSerializer
 from addon_service.external_service.storage.serializers import (
@@ -67,4 +76,7 @@ __all__ = (
     "AuthorizedAccountSerializer",
     "AuthorizedAccountPolymorphicSerializer",
     "ConfiguredAddonPolymorphicSerializer",
+    "ConfiguredLinkAddonSerializer",
+    "AuthorizedLinkAccountSerializer",
+    "ExternalLinkServiceSerializer",
 )

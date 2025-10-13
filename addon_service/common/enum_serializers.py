@@ -61,4 +61,4 @@ class EnumNameMultipleChoiceField(
 
     def to_representation(self, value):
         _member_list = super().to_representation(value)
-        return [_member.name for _member in _member_list]
+        return sorted([_member.name for _member in _member_list])

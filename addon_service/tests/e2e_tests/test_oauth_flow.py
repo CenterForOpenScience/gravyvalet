@@ -1,7 +1,6 @@
 import secrets
 
 from asgiref.sync import async_to_sync
-from django.conf import settings
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
@@ -55,8 +54,8 @@ class TestOAuth2Flow(APITestCase):
             access=self.MOCK_ACCESS_TOKEN, refresh=self.MOCK_REFRESH_TOKEN
         )
 
-        self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
         self._mock_osf = _helpers.MockOSF()
+        self._mock_osf.configure_assumed_caller(self._user.user_uri)
         self.enterContext(self._mock_osf.mocking())
 
     def test_oauth_account_setup(self):
@@ -119,8 +118,8 @@ class TestOAuth1AFlow(APITestCase):
             _static_verifier=self.MOCK_VERIFIER,
         )
 
-        self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
         self._mock_osf = _helpers.MockOSF()
+        self._mock_osf.configure_assumed_caller(self._user.user_uri)
         self.enterContext(self._mock_osf.mocking())
         self.enterContext(self._mock_service.mocking())
 

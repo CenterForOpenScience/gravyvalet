@@ -1,3 +1,5 @@
+import json
+
 from rest_framework.serializers import (
     JSONField,
     ValidationError,
@@ -21,6 +23,8 @@ class CredentialsField(JSONField):
 
     def to_internal_value(self, data):
         # this issue still hasn't been fixed on  FE, so keeping this for now
+        if not isinstance(data, dict):
+            data = json.loads(data)
         if not data or not any(data.values()):
             return None  # consider empty {} same as omitting the field
         # No access to the credentials format here, so just try all of them

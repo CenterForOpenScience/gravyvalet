@@ -21,6 +21,8 @@ class AddonServiceFilteringBackend(filters.BaseFilterBackend):
 
 class RestrictedListEndpointFilterBackend(filters.BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
+        if view.action != "list":
+            return queryset
         required_filters = set(view.required_list_filter_fields)
         filter_expressions = extract_filter_expressions(
             request.query_params, view.get_serializer()

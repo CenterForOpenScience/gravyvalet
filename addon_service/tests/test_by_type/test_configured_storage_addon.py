@@ -5,6 +5,7 @@ from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from itsdangerous import Signer
 from rest_framework.test import APITestCase
 
 from addon_service.common import hmac as hmac_utils
@@ -26,7 +27,9 @@ class BaseAPITest(APITestCase):
             credentials = base64.b64encode(b"admin:password").decode()
             self.client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
         elif auth_type == "session":
-            self.client.cookies[settings.USER_REFERENCE_COOKIE] = "some auth"
+            self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = (
+                Signer(settings.OSF_AUTH_COOKIE_SECRET).sign("some auth").decode()
+            )
         elif auth_type == "no_auth":
             self.client.cookies.clear()
             self.client.credentials()
@@ -38,8 +41,8 @@ class BaseAPITest(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.client.cookies[settings.USER_REFERENCE_COOKIE] = self._user.user_uri
         self._mock_osf = MockOSF()
+        self._mock_osf.configure_assumed_caller(self._user.user_uri)
         self._mock_osf.configure_user_role(
             self._user.user_uri, self._configured_storage_addon.resource_uri, "admin"
         )
@@ -127,6 +130,8 @@ class ConfiguredStorageAddonViewSetTests(BaseAPITest):
 
     def test_unauthorized_user(self):
         self.set_auth_header("session")
+        unauthorized_user = test_factories.UserReferenceFactory()
+        self._mock_osf.configure_assumed_caller(unauthorized_user.user_uri)
         response = self.client.get(self.related_url("base_account"))
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
 
@@ -208,7 +213,9 @@ class TestWBConfigRetrieval(APITestCase):
     def test_get_waterbutler_credentials__error__no_headers(self):
         # credentials request requires HMAC-signed headers
         # Cookie + OSF-side permissions will not suffice
-        self.client.cookies[settings.USER_REFERENCE_COOKIE] = "some auth"
+        self.client.cookies[settings.OSF_AUTH_COOKIE_NAME] = (
+            Signer(settings.OSF_AUTH_COOKIE_SECRET).sign("some_auth").decode()
+        )
         _mock_osf = MockOSF()
         _mock_osf.configure_user_role(
             self._user.user_uri, self._configured_storage_addon.resource_uri, "admin"

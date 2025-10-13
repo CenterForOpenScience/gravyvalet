@@ -2,11 +2,12 @@ from django.core.exceptions import ValidationError
 from rest_framework_json_api import serializers
 
 from addon_service.common.enum_serializers import EnumNameMultipleChoiceField
+from addon_service.common.get_user_uri import get_user_uri
 from addon_service.configured_addon.models import ConfiguredAddon
 from addon_toolkit import AddonCapabilities
 
 
-REQUIRED_FIELDS = frozenset(["url", "connected_operations", "authorized_resource"])
+REQUIRED_FIELDS = frozenset(["connected_operations", "authorized_resource"])
 
 
 class ConfiguredAddonSerializer(serializers.HyperlinkedModelSerializer):
@@ -14,7 +15,7 @@ class ConfiguredAddonSerializer(serializers.HyperlinkedModelSerializer):
         super().__init__(*args, **kwargs)
         if not REQUIRED_FIELDS.issubset(set(self.fields.keys())):
             raise Exception(
-                f"{self.__class__.__name__} requires {self.REQUIRED_FIELDS} to be instantiated"
+                f"{self.__class__.__name__} requires {REQUIRED_FIELDS} to be instantiated"
             )
 
     connected_capabilities = EnumNameMultipleChoiceField(enum_cls=AddonCapabilities)
@@ -32,10 +33,8 @@ class ConfiguredAddonSerializer(serializers.HyperlinkedModelSerializer):
 
     current_user_is_owner = serializers.SerializerMethodField()
 
-    def get_current_user_is_owner(self, configured_addon: ConfiguredAddon):
-        return configured_addon.owner_uri == self.context["request"].session.get(
-            "user_reference_uri"
-        )
+    def get_current_user_is_owner(self, configured_addon: ConfiguredAddon) -> bool:
+        return configured_addon.owner_uri == get_user_uri(self.context["request"])
 
     def create(self, validated_data):
         validated_data = self.fix_dotted_base_account(validated_data)

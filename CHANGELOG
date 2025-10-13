@@ -1,0 +1,28 @@
+# Changelog
+
+We follow the CalVer (https://calver.org/) versioning scheme: YY.MINOR.MICRO.
+
+25.3.0 (2025-08-08)
+===================
+
+- GV support for WB upgrade
+- Post-VRL: two docker images
+
+25.2.2 (2025-07-10)
+===================
+
+- Fix branch name for OpenApi schema generation
+
+25.2.1 (2025-07-10)
+===================
+
+- Add generation of OpenApi schema to CI/CD
+
+25.2.0 (2025-07-08)
+===================
+
+- Verified Resource Linking project release - GV
+- GV session optimization
+- GV node log for add-ons
+- GV swagger API
+

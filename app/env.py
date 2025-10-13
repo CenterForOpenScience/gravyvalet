@@ -16,7 +16,6 @@ SENTRY_DSN = os.environ.get("SENTRY_DSN")
 SECURE_PROXY_SSL_HEADER = os.environ.get("SECURE_PROXY_SSL_HEADER")
 NEW_RELIC_CONFIG_FILE = os.environ.get("NEW_RELIC_CONFIG_FILE")
 NEW_RELIC_ENVIRONMENT = os.environ.get("NEW_RELIC_ENVIRONMENT")
-SESSION_COOKIE_DOMAIN = os.environ.get("SESSION_COOKIE_DOMAIN")
 
 
 ###
@@ -36,6 +35,8 @@ OSFDB_PORT = os.environ.get("OSFDB_PORT", "5432")
 OSFDB_CONN_MAX_AGE = os.environ.get("OSFDB_CONN_MAX_AGE", 0)
 OSFDB_SSLMODE = os.environ.get("OSFDB_SSLMODE", "prefer")
 
+REDIS_HOST = os.environ.get("REDIS_HOST", "redis://192.168.168.167:6379")
+
 ###
 # for interacting with osf
 
@@ -45,7 +46,16 @@ OSF_HMAC_KEY = os.environ.get("OSF_HMAC_KEY")
 OSF_HMAC_EXPIRATION_SECONDS = int(os.environ.get("OSF_HMAC_EXPIRATION_SECONDS", 110))
 OSF_BASE_URL = os.environ.get("OSF_BASE_URL", "https://osf.example")
 OSF_API_BASE_URL = os.environ.get("OSF_API_BASE_URL", "https://api.osf.example")
-OSF_AUTH_COOKIE_NAME = os.environ.get("OSF_AUTH_COOKIE_NAME", "osf_staging")
+OSF_AUTH_COOKIE_NAME = os.environ.get("OSF_AUTH_COOKIE_NAME", "osf")
+OSF_AUTH_COOKIE_SECRET = os.environ.get("OSF_AUTH_COOKIE_SECRET", "CHANGEME")
+SESSION_COOKIE_DOMAIN = os.environ.get("SESSION_COOKIE_DOMAIN", None)
+SESSION_COOKIE_SECURE = os.environ.get(
+    "SESSION_COOKIE_SECURE", True
+)  # Change to False for local dev
+SESSION_COOKIE_HTTPONLY = os.environ.get("SESSION_COOKIE_HTTPONLY", True)
+SESSION_COOKIE_SAMESITE = os.environ.get(
+    "SESSION_COOKIE_SAMESITE", "None"
+)  # Change to "Lax" for local dev
 
 ###
 # amqp/celery
