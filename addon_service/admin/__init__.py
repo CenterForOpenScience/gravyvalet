@@ -92,6 +92,7 @@ class ExternalComputingServiceAdmin(GravyvaletModelAdmin):
         "int_supported_features": ComputingSupportedFeatures,
     }
 
+
 @admin.register(models.ExternalRedirectService)
 class ExternalRedirectServiceAdmin(GravyvaletModelAdmin):
     list_display = ("display_name", "created", "modified")
@@ -109,7 +110,6 @@ class ExternalRedirectServiceAdmin(GravyvaletModelAdmin):
     enum_multiple_choice_fields = {
         "int_supported_features": StorageSupportedFeatures,
     }
-
 
 
 @admin.register(models.OAuth2ClientConfig)

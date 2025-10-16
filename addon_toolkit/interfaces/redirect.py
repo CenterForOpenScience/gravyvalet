@@ -4,7 +4,9 @@ import dataclasses
 
 from addon_toolkit.imp import AddonImp
 
+
 @dataclasses.dataclass
 class RedirectAddonImp(AddonImp):
     """base class for redirect addon implementations"""
+
     pass

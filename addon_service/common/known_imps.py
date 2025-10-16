@@ -11,6 +11,7 @@ from addon_imps.citations import (
 )
 from addon_imps.computing import boa
 from addon_imps.link import dataverse as link_dataverse
+from addon_imps.redirect import redirect_dummy
 from addon_imps.storage import (
     bitbucket,
     box_dot_com,
@@ -24,14 +25,13 @@ from addon_imps.storage import (
     owncloud,
     s3,
 )
-from addon_imps.redirect import redirect_dummy
 from addon_service.common.enum_decorators import enum_names_same_as
 from addon_toolkit import AddonImp
 from addon_toolkit.interfaces.citation import CitationAddonImp
 from addon_toolkit.interfaces.computing import ComputingAddonImp
 from addon_toolkit.interfaces.link import LinkAddonImp
-from addon_toolkit.interfaces.storage import StorageAddonImp
 from addon_toolkit.interfaces.redirect import RedirectAddonImp
+from addon_toolkit.interfaces.storage import StorageAddonImp
 
 
 if __debug__:
@@ -142,7 +142,7 @@ class AddonImpNumbers(enum.Enum):
     # Type: Link
     LINK_DATAVERSE = 1030
 
-    # Type: Redirect 
+    # Type: Redirect
     REDIRECT_DUMMY = 1040
 
     if __debug__:
