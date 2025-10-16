@@ -31,6 +31,7 @@ from addon_service.external_service.computing.views import (
     ExternalComputingServiceViewSet,
 )
 from addon_service.external_service.link.views import ExternalLinkServiceViewSet
+from addon_service.external_service.redirect.views import ExternalRedirectServiceViewSet
 from addon_service.external_service.storage.views import ExternalStorageServiceViewSet
 from addon_service.oauth1.views import oauth1_callback_view
 from addon_service.oauth2.views import oauth2_callback_view
@@ -70,6 +71,7 @@ __all__ = (
     "AuthorizedStorageAccountViewSet",
     "ConfiguredStorageAddonViewSet",
     "ExternalStorageServiceViewSet",
+    "ExternalRedirectServiceViewSet",
     "ResourceReferenceViewSet",
     "UserReferenceViewSet",
     "oauth2_callback_view",
