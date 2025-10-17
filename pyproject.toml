@@ -41,7 +41,7 @@ pdoc = "14.5.1"
 psycopg = {version = ">=3.2.6", extras = ["binary"]}
 
 [tool.poetry.group.release.dependencies]
-sentry-sdk = "2.7.1"
+sentry-sdk = "2.41.0"
 newrelic = "^10.2.0"
 psycopg = {version = ">=3.2.6", extras = ["c"]}
 
