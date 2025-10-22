@@ -24,7 +24,7 @@ from .serializers import (
         "Note that everything under this folder is going to be accessible to everyone who has access to this project"
     ),
     get=extend_schema(
-        description="Get configured link addon by it's pk. "
+        description="Get configured link addon by its pk. "
         "\nIf you want to fetch all configured link addons, you should do so through resource_reference related view",
     ),
 )

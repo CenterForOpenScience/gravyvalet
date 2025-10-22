@@ -21,7 +21,7 @@ from .serializers import ConfiguredComputingAddonSerializer
         "Note that everything under this folder is going to be accessible to everyone who has access to this project"
     ),
     get=extend_schema(
-        description="Get configured computing addon by it's pk. "
+        description="Get configured computing addon by its pk. "
         "\nIf you want to fetch all configured computing addons, you should do so through resource_reference related view",
     ),
     get_wb_credentials=extend_schema(exclude=True),

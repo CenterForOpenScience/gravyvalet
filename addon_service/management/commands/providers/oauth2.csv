@@ -8,3 +8,4 @@ a64e222c-a37b-4f34-9f27-83611d851f5c,https://login.microsoftonline.com/common/oa
 4258d732-db77-42aa-b275-8da841adf77f,https://www.box.com/api/oauth2/authorize,http://localhost:5000/oauth/callback/box/,https://www.box.com/api/oauth2/token,client_id,client_secret,
 b3fd76fc-3368-47b4-9053-ff4b7ca4baa2,https://api.mendeley.com/oauth/authorize,http://localhost:5000/oauth/callback/mendeley/,https://api.mendeley.com/oauth/token,client_id,client_secret,
 285f28ee-15b5-429e-b7ba-3371a19678a8,https://github.com/login/oauth/authorize,http://localhost:5000/oauth/callback/github,https://github.com/login/oauth/access_token,client_id,client_secret,1
+1840d9c0-7da5-4ee4-ab51-a0f67d27a115,https://login.microsoftonline.com/common/oauth2/v2.0/authorize,http://localhost:5000/oauth/callback/azureblobstorage/,https://login.microsoftonline.com/common/oauth2/v2.0/token,client_id,client_secret,

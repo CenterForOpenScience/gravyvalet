@@ -40,7 +40,7 @@ from .serializers import AddonOperationInvocationSerializer
         "In order to perform such action you need to include configured_addon relationship"
     ),
     retrieve=extend_schema(
-        description="Get singular instance of addon operation invocation by it's pk. May be useful to view action log",
+        description="Get singular instance of addon operation invocation by its pk. May be useful to view action log",
     ),
 )
 class AddonOperationInvocationViewSet(RetrieveCreateViewSet):

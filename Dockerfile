@@ -29,7 +29,7 @@ FROM gv-base AS dev
 
 # install dev and non-dev dependencies:
 RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.8.3
-RUN python -m venv .venv
+RUN poetry config virtualenvs.create false
 RUN poetry install --without release
 
 COPY . /code/
