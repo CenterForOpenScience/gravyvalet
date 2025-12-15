@@ -88,6 +88,6 @@ jobs:
           REDIS_HOST: redis://localhost:6379
       - name: upload-artifact
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: 'openapi.yml'
