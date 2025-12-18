@@ -83,7 +83,7 @@ class GitlabStorageImp(storage.StorageAddonHttpRequestorImp):
             {
                 "membership": "true",
                 "simple": "true",
-                "pagination": "true",
+                "pagination": "keyset",
                 "sort": "asc",
                 "per_page": "30",
             },
