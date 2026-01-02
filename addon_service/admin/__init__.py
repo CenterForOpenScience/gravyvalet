@@ -107,9 +107,6 @@ class ExternalRedirectServiceAdmin(GravyvaletModelAdmin):
         "int_credentials_format": CredentialsFormats,
         "int_service_type": ServiceTypes,
     }
-    enum_multiple_choice_fields = {
-        "int_supported_features": StorageSupportedFeatures,
-    }
 
 
 @admin.register(models.OAuth2ClientConfig)
