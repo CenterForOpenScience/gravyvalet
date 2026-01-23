@@ -72,7 +72,6 @@ class TestGitlabStorageImp(unittest.IsolatedAsyncioTestCase):
             {
                 "membership": "true",
                 "simple": "true",
-                "pagination": "keyset",
                 "order_by": "name",
                 "sort": "asc",
                 "per_page": "30",
@@ -135,10 +134,9 @@ class TestGitlabStorageImp(unittest.IsolatedAsyncioTestCase):
         self._assert_get(
             "projects/1/repository/tree",
             {
-                "pagination": "keyset",
                 "path": "",
-                "sort": "asc",
                 "order_by": "name",
+                "sort": "asc",
                 "per_page": "30",
             },
         )
