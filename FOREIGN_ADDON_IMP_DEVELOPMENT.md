@@ -88,9 +88,17 @@ Before choosing a name, check built-in addon imp names in
 names enumerated.
 
 Document the name clearly so users know exactly what to use. Since users
-can use the package name of the addon imp application instaed of
+can use the package name of the addon imp application instead of
 `addon_imp_name` value, document the package name too is a recommended
 manner.
+
+> ** Storage addons integrated with osf.io: use `addon_imp_name`, NOT
+> the package name, as the `ADDON_IMPS` key.**
+> For a storage service triplet (i.e. addon, addon imp, and provider),
+> the `ADDON_IMPS` key MUST be the `addon_imp_name`, and
+> `addon_imp_name.lower()` must be equal to the addon `short_name`, the
+> provider entry-point name, and the service's `wb_key`.
+> (`addon_imp_name` lowercase == `short_name` == `wb_key` == WB entry-point name)
 
 ### Adding Icons for Your Addon Imp
 

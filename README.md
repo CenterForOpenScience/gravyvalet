@@ -98,6 +98,9 @@ ADDON_IMPS = {
 }
 ```
 
+This does not work for storage addons integrated with osf.io, whose key must be the addon imp
+name. See `FOREIGN_ADDON_IMP_DEVELOPMENT.md`.
+
 The ID numbers must be:
 - Unique across all addon imps
 - Never changed once assigned (changing would break existing configurations)
