@@ -4,7 +4,7 @@ from addon_toolkit.interfaces.link import LinkConfig
 
 
 class AuthorizedLinkAccount(AuthorizedAccount):
-    """Model for describing a user's account on an ExternalService.
+    """Model for describing a user's account on an ExternalLinkService.
 
     This model collects all of the information required to actually perform remote
     operations against the service and to aggregate accounts under a known user.
