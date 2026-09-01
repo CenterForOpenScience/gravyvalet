@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gravyvalet"
-version = "25.3.0"
+version = "26.1.1"
 description = "gravyvalet fetches, serves, and holds small ladlefuls of precious bytes."
 authors = []
 license = ""
