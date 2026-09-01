@@ -2,6 +2,11 @@
 
 We follow the CalVer (https://calver.org/) versioning scheme: YY.MINOR.MICRO.
 
+26.1.1 (2026-09-01)
+===================
+
+- Hotfix to add build_spec.yaml
+
 25.3.0 (2025-08-08)
 ===================
 
