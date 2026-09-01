@@ -84,7 +84,9 @@ class GitlabStorageImp(storage.StorageAddonHttpRequestorImp):
                 "membership": "true",
                 "simple": "true",
                 "pagination": "true",
+                "order_by": "name",
                 "sort": "asc",
+                "per_page": "30",
             },
         )
         async with self.network.GET(
@@ -185,6 +187,7 @@ class GitlabStorageImp(storage.StorageAddonHttpRequestorImp):
                 "path": parsed_id.file_path,
                 "sort": "asc",
                 "order_by": "name",
+                "per_page": "30",
             },
         )
         async with self.network.GET(
