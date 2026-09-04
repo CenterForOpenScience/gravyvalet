@@ -48,3 +48,10 @@ psycopg = {version = ">=3.2.6", extras = ["c"]}
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.codespell]
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+skip = '.git*,*.svg,*.lock'
+check-hidden = true
+ignore-regex = '\bassertIn\b'
+# ignore-words-list = ''
