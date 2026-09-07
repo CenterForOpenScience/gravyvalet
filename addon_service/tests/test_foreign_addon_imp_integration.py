@@ -323,6 +323,22 @@ class TestForeignAddonImpAPIIntegration(TestCase):
 class TestForeignAddonImpRegistryPersistence(TestCase):
     """Test that foreign addon imp registration persists correctly."""
 
+    def setUp(self):
+        """Save registry before each test (the tests clear and repopulate it)."""
+        self._original_name_imp_map = AddonImpRegistry._name_imp_map.copy()
+        self._original_number_name_map = AddonImpRegistry._number_name_map.copy()
+
+    def tearDown(self):
+        """Restore original registry state after each test.
+
+        Without this, the class leaks a mocks-only registry to every test
+        module that runs after it -- their real-imp lookups then fail with
+        "Unknown addon imp".
+        """
+        AddonImpRegistry.clear()
+        AddonImpRegistry._name_imp_map.update(self._original_name_imp_map)
+        AddonImpRegistry._number_name_map.update(self._original_number_name_map)
+
     def test_registry_state_after_multiple_registrations(self):
         """Test registry state remains consistent after multiple operations."""
         AddonImpRegistry.clear()
