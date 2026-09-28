@@ -63,10 +63,16 @@ without modifying the core code.
 
 To use foreign addon imps:
 
-1. Install the foreign addon imp package(s):
+1. Install the foreign addon imp package(s) into the Python environment gravyvalet runs in.
+gravyvalet manages its dependencies with [Poetry](https://python-poetry.org/):
 ```bash
-pip install foreign-addon-imp-package-you-want
+# records the dependency in pyproject.toml and poetry.lock
+poetry add foreign-addon-imp-package-you-want
+# or, to leave those files untouched
+poetry run pip install foreign-addon-imp-package-you-want
 ```
+When running with docker, the package has to be part of the image: a package installed into a
+running container is lost when the container is recreated.
 
 2. Add the foreign addon imp(s) to `INSTALLED_APPS` in your Django settings:
 ```python
@@ -89,7 +95,7 @@ ADDON_IMPS = {
 
 The name of each addon imp must be documented in the document of the foreign
 addon imp package. If 2 addon imp applications you want to use adopted identical
-names, use the package name instaed:
+names, use the package name instead:
 
 ```python
 ADDON_IMPS = {

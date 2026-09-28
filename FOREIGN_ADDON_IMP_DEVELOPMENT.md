@@ -153,10 +153,16 @@ setup(
 
 Users can install and use your foreign addon imps by:
 
-1. Installing your package:
+1. Installing your package into the Python environment gravyvalet runs in. gravyvalet manages its
+dependencies with [Poetry](https://python-poetry.org/):
 ```bash
-pip install your-addon-imp-package
+# records the dependency in pyproject.toml and poetry.lock
+poetry add your-addon-imp-package
+# or, to leave those files untouched
+poetry run pip install your-addon-imp-package
 ```
+   When running with docker, the package has to be part of the image: a package installed into a
+   running container is lost when the container is recreated.
 
 2. Adding it to Django's `INSTALLED_APPS`:
 ```python
