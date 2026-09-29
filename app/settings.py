@@ -114,6 +114,35 @@ INSTALLED_APPS = [
     "drf_spectacular",
 ]
 
+ADDON_IMPS = {
+    # Type: Storage
+    "BOX": 1001,
+    "S3": 1003,
+    "GOOGLEDRIVE": 1005,
+    "DROPBOX": 1006,
+    "FIGSHARE": 1007,
+    "ONEDRIVE": 1008,
+    "OWNCLOUD": 1009,
+    "DATAVERSE": 1010,
+    "GITLAB": 1011,
+    "BITBUCKET": 1012,
+    "GITHUB": 1013,
+    "AZUREBLOBSTORAGE": 1014,
+    # Type: Citation
+    "ZOTERO": 1002,
+    "MENDELEY": 1004,
+    # Type: Cloud Computing
+    "BOA": 1020,
+    # Type: Link
+    "LINK_DATAVERSE": 1030,
+    # Type: Redirect
+    "REDIRECT_DUMMY": 1040,
+    # Foreign Addon Imps
+}
+
+if __debug__:
+    ADDON_IMPS["BLARG"] = -7
+
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
