@@ -60,6 +60,8 @@ app = Celery(
 )
 
 app.config_from_object("django.conf:settings", namespace="CELERY")
+# Make this app the fallback for celery.current_app in every thread, not only the importing one
+app.set_default()
 
 ###
 # additional consumer for custom (non-celery) messages from osf
