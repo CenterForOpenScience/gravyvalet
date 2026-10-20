@@ -273,7 +273,7 @@ OSF_BACKCHANNEL_QUEUE_NAME = env.OSF_BACKCHANNEL_QUEUE_NAME
 GV_QUEUE_NAME_PREFIX = env.GV_QUEUE_NAME_PREFIX
 
 DJ_CELERY_PANEL_SETTINGS = {
-    "queues_backend": "addon_service.admin.celery_panel.RoutedTasksQueuesBackend",
+    "queues_backend": "app.celery_panel.RoutedTasksQueuesBackend",
     # No result backend is configured, so list the tasks workers are running right now
     "tasks_backend": "dj_celery_panel.celery_utils.CeleryTasksInspectBackend",
     # Beat runs DatabaseScheduler, so the database holds the effective schedule
