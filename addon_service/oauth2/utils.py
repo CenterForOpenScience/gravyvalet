@@ -4,7 +4,6 @@ from http import HTTPStatus
 from secrets import token_urlsafe
 from typing import Iterable
 
-from addon_service.common import urllib_fallback
 from addon_service.common.aiohttp_session import get_singleton_client_session
 from addon_toolkit.iri_utils import iri_with_query
 
@@ -121,53 +120,19 @@ async def get_refreshed_access_token(
 async def _token_request(
     token_endpoint_url: str, request_body: dict[str, str]
 ) -> FreshTokenResult:
-    _status, _content_type, _payload = await _post_token_request(
-        token_endpoint_url, request_body
-    )
-    if _content_type == "application/x-www-form-urlencoded":
-        response_data = dict(urllib.parse.parse_qsl(_payload))
-        if expires := response_data.get("expires_in"):
-            response_data["expires_in"] = int(expires)
-
-        return FreshTokenResult.from_token_response_json(response_data)
-    if not HTTPStatus(_status).is_success:
-        raise RuntimeError(
-            f"token request to {token_endpoint_url} failed: {_status} {str(_payload)[:200]}"
-        )
-        # TODO: https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2
-    return FreshTokenResult.from_token_response_json(_payload)
-
-
-async def _post_token_request(
-    token_endpoint_url: str, request_body: dict[str, str]
-) -> tuple[int, str, str | dict]:
-    """returns (status, content_type, payload), payload being text unless json"""
     _client = await get_singleton_client_session()
-    async with _client.post(token_endpoint_url, data=request_body) as _response:
-        if not urllib_fallback.is_bot_challenge(
-            _response.status, _response.content_type
-        ):
-            return (
-                _response.status,
-                _response.content_type,
-                (
-                    await _response.json()
-                    if _response.content_type == "application/json"
-                    else await _response.text()
-                ),
-            )
-    _buffered = await urllib_fallback.send(
-        "POST", token_endpoint_url, data=request_body
-    )
-    return (
-        _buffered.status,
-        _buffered.content_type,
-        (
-            _buffered.json()
-            if _buffered.content_type == "application/json"
-            else _buffered.text
-        ),
-    )
+    async with _client.post(token_endpoint_url, data=request_body) as _token_response:
+        if _token_response.content_type == "application/x-www-form-urlencoded":
+            response_text = await _token_response.text()
+            response_data = dict(urllib.parse.parse_qsl(response_text))
+            if expires := response_data.get("expires_in"):
+                response_data["expires_in"] = int(expires)
+
+            return FreshTokenResult.from_token_response_json(response_data)
+        if not HTTPStatus(_token_response.status).is_success:
+            raise RuntimeError(await _token_response.json())
+            # TODO: https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2
+        return FreshTokenResult.from_token_response_json(await _token_response.json())
 
 
 def _parse_scope_param_value(scope_value: str | None) -> list[str] | None:

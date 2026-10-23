@@ -1,7 +1,14 @@
 from http import HTTPStatus
+from unittest import IsolatedAsyncioTestCase
 
 from django.test import SimpleTestCase
 from django.urls import reverse
+
+from addon_service.common.aiohttp_session import (
+    USER_AGENT,
+    close_singleton_client_session,
+    get_singleton_client_session,
+)
 
 
 class TestOAuth2CallbackViewErrors(SimpleTestCase):
@@ -24,3 +31,12 @@ class TestOAuth2CallbackViewErrors(SimpleTestCase):
         self.assertTrue(_resp["Content-Type"].startswith("text/plain"))
         self.assertNotIn("<script", _resp.content.decode())
         self.assertNotIn("<img", _resp.content.decode())
+
+
+class TestSingletonClientSession(IsolatedAsyncioTestCase):
+    async def test_identifying_user_agent(self):
+        _session = await get_singleton_client_session()
+        try:
+            self.assertEqual(_session.headers["User-Agent"], USER_AGENT)
+        finally:
+            await close_singleton_client_session()

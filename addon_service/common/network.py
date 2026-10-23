@@ -14,10 +14,7 @@ from urllib.parse import (
 import aiohttp
 from asgiref.sync import sync_to_async
 
-from addon_service.common import (
-    exceptions,
-    urllib_fallback,
-)
+from addon_service.common import exceptions
 from addon_service.common.credentials_formats import CredentialsFormats
 from addon_toolkit.constrained_network.http import (
     HttpRequestInfo,
@@ -62,27 +59,6 @@ class _AiohttpResponseInfo(HttpResponseInfo):
     async def text_content(self) -> str:
         _response = _PrivateResponse.get(self).aiohttp_response
         return await _response.text()
-
-
-class _BufferedResponseInfo(HttpResponseInfo):
-    """an imp-friendly face for a response already read into memory (see `urllib_fallback`)"""
-
-    def __init__(self, response: urllib_fallback.BufferedResponse):
-        self._response = response
-
-    @property
-    def http_status(self) -> HTTPStatus:
-        return HTTPStatus(self._response.status)
-
-    @property
-    def headers(self) -> Multidict:
-        return Multidict(self._response.headers)
-
-    async def json_content(self) -> typing.Any:
-        return self._response.json()
-
-    async def text_content(self) -> str:
-        return self._response.text
 
 
 class GravyvaletHttpRequestor(HttpRequestor):
@@ -133,33 +109,13 @@ class GravyvaletHttpRequestor(HttpRequestor):
             json=request.json,
             data=request.content,
         ) as _response:
-            self._raise_if_expired_token(_response.status)
-            if not urllib_fallback.is_bot_challenge(
-                _response.status, _response.content_type
+            if (
+                _response.status == HTTPStatus.UNAUTHORIZED
+                and _private.account.credentials_format == CredentialsFormats.OAUTH2
             ):
-                yield _AiohttpResponseInfo(_response)
-                return
-        # the provider's CDN challenged aiohttp: resend (it was not processed) with urllib
-        _logger.info(f"bot challenge from {_url}, retrying with urllib")
-        _buffered = await urllib_fallback.send(
-            request.http_method,
-            _url,
-            headers=combined_headers.items(),
-            params=request.query.items() if request.query else None,
-            json_body=request.json,
-            data=request.content,
-        )
-        self._raise_if_expired_token(_buffered.status)
-        yield _BufferedResponseInfo(_buffered)
-
-    def _raise_if_expired_token(self, status: int) -> None:
-        if (
-            status == HTTPStatus.UNAUTHORIZED
-            and _PrivateNetworkInfo.get(self).account.credentials_format
-            == CredentialsFormats.OAUTH2
-        ):
-            # Assume unauthorized because of token expiration.
-            raise exceptions.ExpiredAccessToken
+                # Assume unauthorized because of token expiration.
+                raise exceptions.ExpiredAccessToken
+            yield _AiohttpResponseInfo(_response)
 
 
 ###
