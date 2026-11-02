@@ -2,6 +2,11 @@
 
 We follow the CalVer (https://calver.org/) versioning scheme: YY.MINOR.MICRO.
 
+26.2.0 (2026-11-02)
+===================
+
+- Mendeley OAuth fix and dj-celery-panel integration
+
 26.1.1 (2026-09-01)
 ===================
 
