@@ -111,6 +111,8 @@ INSTALLED_APPS = [
     "rest_framework_json_api",
     "addon_service",
     "django_celery_beat",
+    "dj_control_room_base",
+    "dj_celery_panel",
     "drf_spectacular",
 ]
 
@@ -269,6 +271,14 @@ OSF_SENSITIVE_DATA_SALT = env.OSF_SENSITIVE_DATA_SALT
 AMQP_BROKER_URL = env.AMQP_BROKER_URL
 OSF_BACKCHANNEL_QUEUE_NAME = env.OSF_BACKCHANNEL_QUEUE_NAME
 GV_QUEUE_NAME_PREFIX = env.GV_QUEUE_NAME_PREFIX
+
+DJ_CELERY_PANEL_SETTINGS = {
+    "queues_backend": "app.celery_panel.RoutedTasksQueuesBackend",
+    # No result backend is configured, so list the tasks workers are running right now
+    "tasks_backend": "dj_celery_panel.celery_utils.CeleryTasksInspectBackend",
+    # Beat runs DatabaseScheduler, so the database holds the effective schedule
+    "periodic_tasks_backend": "dj_celery_panel.celery_utils.CeleryPeriodicTasksDjangoCeleryBeatBackend",
+}
 
 # Celery Beat
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"

@@ -14,6 +14,10 @@ __all__ = (
     "close_singleton_client_session__blocking",
 )
 
+# an identifying user-agent: some providers' CDNs (e.g. Mendeley, behind Cloudflare)
+# challenge or block requests sent with aiohttp's default `Python/x.y aiohttp/z` user-agent
+USER_AGENT = "GravyValet/1.0"
+
 __SINGLETON_CLIENT_SESSION_STORE: MutableMapping[threading.Thread, ClientSession] = (
     weakref.WeakKeyDictionary()
 )
@@ -30,6 +34,7 @@ async def get_singleton_client_session() -> aiohttp.ClientSession:
     if thread_id not in __SINGLETON_CLIENT_SESSION_STORE:
         __SINGLETON_CLIENT_SESSION_STORE[thread_id] = aiohttp.ClientSession(
             cookie_jar=aiohttp.DummyCookieJar(),  # ignore all cookies
+            headers={"User-Agent": USER_AGENT},
         )
     return __SINGLETON_CLIENT_SESSION_STORE[thread_id]
 

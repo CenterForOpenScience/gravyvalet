@@ -14,6 +14,7 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     path("v1/", include("addon_service.urls")),
+    path("admin/dj-celery-panel/", include("dj_celery_panel.urls")),
     path("admin/", admin.site.urls),
     path(
         "docs",
