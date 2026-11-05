@@ -1,3 +1,6 @@
+from collections import defaultdict
+from fnmatch import fnmatchcase
+
 from dj_celery_panel.celery_utils import (
     CeleryQueuesInspectBackend,
     QueueDetailPage,
@@ -6,16 +9,14 @@ from dj_celery_panel.celery_utils import (
 
 
 class RoutedTasksQueuesBackend(CeleryQueuesInspectBackend):
-    """dj-celery-panel queues backend that also lists the tasks routed to each queue
-    and the configured queues that no active worker consumes.
+    """dj-celery-panel queues backend that also lists the tasks routed to each queue, the
+    task_routes entries that match no task, and the configured queues that no active worker consumes.
 
     Routes are resolved the same way Celery does when sending a task, so explicit
     queue= overrides passed to apply_async() at call time are not reflected.
     """
 
-    BACKEND_DESCRIPTION = (
-        "Queue bindings, routing configuration, routed tasks and unconsumed queues"
-    )
+    BACKEND_DESCRIPTION = "Queue bindings, routing configuration, routed tasks, unmatched routing entries and unconsumed queues"
 
     def get_queues(self):
         page = super().get_queues()
@@ -27,20 +28,31 @@ class RoutedTasksQueuesBackend(CeleryQueuesInspectBackend):
             for name, queue in sorted(self.app.amqp.queues.items())
             if name not in listed
         ]
-        return QueueListPage(queues=page.queues + unconsumed, error=page.error)
+        routed_tasks = self.get_routed_tasks_by_queue()
+        unmatched_entries = self.get_unmatched_routing_entries_by_queue()
+        return QueueListPage(
+            queues=[
+                {
+                    **queue,
+                    "routed_tasks_count": len(routed_tasks[queue["name"]]),
+                    "unmatched_routing_entries": unmatched_entries[queue["name"]],
+                }
+                for queue in page.queues + unconsumed
+            ],
+            error=page.error,
+        )
 
     def get_queue_detail(self, queue_name):
         page = super().get_queue_detail(queue_name)
-        queue, error = page.queue, page.error
+        queue = page.queue
         if queue is None:
             # membership check first: indexing Queues creates missing ones
             if queue_name not in self.app.amqp.queues:
                 return page
             queue = self.describe_unconsumed_queue(self.app.amqp.queues[queue_name])
-            error = "No active worker consumes this queue"
         return QueueDetailPage(
             queue={**queue, "routed_tasks": self.get_routed_tasks(queue_name)},
-            error=error,
+            error=page.error,
         )
 
     def describe_unconsumed_queue(self, queue):
@@ -62,13 +74,37 @@ class RoutedTasksQueuesBackend(CeleryQueuesInspectBackend):
         }
 
     def get_routed_tasks(self, queue_name):
+        return self.get_routed_tasks_by_queue()[queue_name]
+
+    def get_registered_tasks(self):
         # AddonServiceConfig.ready() imports every task module, so the local registry is complete
+        return {
+            name: task
+            for name, task in self.app.tasks.items()
+            if not name.startswith("celery.")
+        }
+
+    def get_routed_tasks_by_queue(self):
         router = self.app.amqp.router
-        routed_tasks = []
-        for name, task in self.app.tasks.items():
-            if name.startswith("celery."):
-                continue
+        routed_tasks = defaultdict(list)
+        for name, task in sorted(self.get_registered_tasks().items()):
             options = dict(task._get_exec_options())
-            if router.route(options, name)["queue"].name == queue_name:
-                routed_tasks.append(name)
-        return sorted(routed_tasks)
+            routed_tasks[router.route(options, name)["queue"].name].append(name)
+        return routed_tasks
+
+    def get_unmatched_routing_entries_by_queue(self):
+        # Celery matches task_routes entries against task names as fnmatch globs, so an entry
+        # that matches no registered task name routes nothing: the task is gone, renamed,
+        # or its module isn't in the celery app's include.
+        # Entries routed to queues outside task_queues (osf.*, website.*) are for OSF tasks
+        # sent by name with send_task(), which are never registered here, so they are skipped
+        task_names = self.get_registered_tasks()
+        router = self.app.amqp.router
+        unmatched_entries = defaultdict(list)
+        for entry, route in sorted(self.app.conf.task_routes.items()):
+            queue_name = router.expand_destination(dict(route))["queue"].name
+            if queue_name in self.app.amqp.queues and not any(
+                fnmatchcase(name, entry) for name in task_names
+            ):
+                unmatched_entries[queue_name].append(entry)
+        return unmatched_entries
