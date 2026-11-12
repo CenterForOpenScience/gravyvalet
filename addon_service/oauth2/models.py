@@ -126,7 +126,7 @@ class OAuth2TokenMetadata(AddonsServiceBaseModel):
         )
         if len(client_configs) != 1:
             raise ValidationError(
-                "OAuth2 Token Metadata is linked to mulitple services/clients"
+                "OAuth2 Token Metadata is linked to multiple services/clients"
             )
 
     @sync_to_async
