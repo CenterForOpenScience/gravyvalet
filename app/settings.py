@@ -12,12 +12,16 @@ _logger = logging.getLogger(__name__)
 if env.SENTRY_DSN:
     try:
         import sentry_sdk
+        from sentry_sdk.integrations.logging import LoggingIntegration
     except ImportError:
         _logger.warning("SENTRY_DSN defined but sentry_sdk not installed!")
     else:
         sentry_sdk.init(
             dsn=env.SENTRY_DSN,
             environment=env.OSF_BASE_URL,
+            # Same as the default in sentry-sdk 2.x. From 3.x it is no longer a default integration
+            # and creates events from logger.error() and above only with event_level set
+            integrations=[LoggingIntegration(event_level=logging.ERROR)],
         )
 
 if env.NEW_RELIC_CONFIG_FILE:
@@ -273,7 +277,7 @@ OSF_BACKCHANNEL_QUEUE_NAME = env.OSF_BACKCHANNEL_QUEUE_NAME
 GV_QUEUE_NAME_PREFIX = env.GV_QUEUE_NAME_PREFIX
 
 DJ_CELERY_PANEL_SETTINGS = {
-    "queues_backend": "app.celery_panel.RoutedTasksQueuesBackend",
+    "queues_backend": "app.celery.panel.RoutedTasksQueuesBackend",
     # No result backend is configured, so list the tasks workers are running right now
     "tasks_backend": "dj_celery_panel.celery_utils.CeleryTasksInspectBackend",
     # Beat runs DatabaseScheduler, so the database holds the effective schedule

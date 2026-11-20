@@ -1,19 +1,28 @@
 import enum
+import logging
 
 from celery import (
     Celery,
     bootsteps,
+)
+from celery.signals import (
+    beat_init,
+    worker_init,
 )
 from kombu import (
     Consumer,
     Queue,
 )
 
+from app.celery import checks
 from app.env import (
     AMQP_BROKER_URL,
     GV_QUEUE_NAME_PREFIX,
     OSF_BACKCHANNEL_QUEUE_NAME,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class TaskUrgency(enum.Enum):
@@ -62,6 +71,51 @@ app = Celery(
 app.config_from_object("django.conf:settings", namespace="CELERY")
 # Make this app the fallback for celery.current_app in every thread, not only the importing one
 app.set_default()
+
+
+@worker_init.connect
+def check_routing(sender, **kwargs):
+    """Sent once the worker has imported celery's `include` modules, so the registry has every task."""
+    tasks = checks.get_registered_tasks(sender.app)
+    for message, found in (
+        (
+            "Tasks sent to the default queue without a route naming it",
+            checks.find_tasks_sent_to_default_queue_implicitly(sender.app, tasks),
+        ),
+        (
+            "Routes to queues missing from celery's task_queues",
+            checks.find_routes_to_undeclared_queues(sender.app),
+        ),
+        (
+            "Routes matching no registered task",
+            checks.find_routes_matching_no_task(sender.app, tasks),
+        ),
+        (
+            "Tasks setting routing attributes instead of using celery's task_routes",
+            checks.find_tasks_setting_routing_attributes(tasks),
+        ),
+    ):
+        if found:
+            logger.error(f"[Celery Config Check] {message}: %s", found)
+
+
+@beat_init.connect
+def check_periodic_tasks(sender, **kwargs):
+    """Sent once beat has imported celery's `include` modules and synced CELERY_BEAT_SCHEDULE to the database,
+    so the enabled PeriodicTask rows are every entry beat will run.
+    """
+    from django_celery_beat.models import PeriodicTask
+
+    enabled = PeriodicTask.objects.enabled().values_list("name", "task")
+    unregistered = checks.find_periodic_tasks_with_unregistered_task(
+        sender.app, enabled
+    )
+    if unregistered:
+        logger.error(
+            "[Celery Config Check] Enabled periodic tasks running unregistered Celery tasks: %s",
+            unregistered,
+        )
+
 
 ###
 # additional consumer for custom (non-celery) messages from osf
