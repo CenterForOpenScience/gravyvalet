@@ -59,11 +59,17 @@ app = Celery(
         "addon_service.management.commands.refresh_addon_tokens.*": {
             "queue": gv_chill_queue
         },
+        "stress_testing.cleanup_history": {"queue": gv_chill_queue},
+        "stress_testing.sync_overdue_suites": {"queue": gv_chill_queue},
+        "stress_testing.scenario": {"queue": gv_chill_queue},
+        "stress_testing.simulated_workload": {"queue": gv_chill_queue},
+        "stress_testing.start_celery_stress_test": {"queue": gv_chill_queue},
         "osf.*": {"queue": osf_high_queue},
         "website.*": {"queue": osf_high_queue},
     },
     include=[
         "addon_service.tasks",
+        "addon_service.celery_stress_test.tasks",
         "addon_service.management.commands.refresh_addon_tokens",
     ],
 )
