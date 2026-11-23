@@ -11,7 +11,6 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-
 from addon_service.celery_stress_test import views as stress_test_views
 
 
