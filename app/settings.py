@@ -115,6 +115,7 @@ INSTALLED_APPS = [
     "rest_framework_json_api",
     "addon_service",
     "django_celery_beat",
+    "django_celery_results",
     "dj_control_room_base",
     "dj_celery_panel",
     "drf_spectacular",
@@ -278,15 +279,29 @@ GV_QUEUE_NAME_PREFIX = env.GV_QUEUE_NAME_PREFIX
 
 DJ_CELERY_PANEL_SETTINGS = {
     "queues_backend": "app.celery.panel.RoutedTasksQueuesBackend",
-    # No result backend is configured, so list the tasks workers are running right now
+    # Keep the task list based on live worker inspection.
     "tasks_backend": "dj_celery_panel.celery_utils.CeleryTasksInspectBackend",
     # Beat runs DatabaseScheduler, so the database holds the effective schedule
     "periodic_tasks_backend": "dj_celery_panel.celery_utils.CeleryPeriodicTasksDjangoCeleryBeatBackend",
 }
 
+# Store Celery results and workflow chord state in Django's database, as OSF does.
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_TASK_IGNORE_RESULT = True  # Scenario tasks explicitly opt in.
+CELERY_STRESS_TEST_QUEUES = tuple(
+    f"{GV_QUEUE_NAME_PREFIX}.{urgency}" for urgency in ("INTERACTIVE", "REACTIVE", "CHILL")
+)
+CELERY_STRESS_TEST_DEFAULT_QUEUE = f"{GV_QUEUE_NAME_PREFIX}.CHILL"
+CELERY_STRESS_TEST_MAX_TASKS = 20_000
+CELERY_STRESS_TEST_RETENTION_DAYS = 30
+
 # Celery Beat
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_BEAT_SCHEDULE = {
+    "cleanup-celery-test-history": {
+        "task": "stress_testing.cleanup_history",
+        "schedule": crontab(minute=30, hour=3),
+    },
     "refresh_addon_tokens": {
         "task": "addon_service.management.commands.refresh_addon_tokens.refresh_addon_tokens",
         "schedule": crontab(minute=0, hour=7),  # Daily 2:00 a.m,

@@ -7,6 +7,11 @@ from addon_service.authorized_account.citation.models import AuthorizedCitationA
 from addon_service.authorized_account.computing.models import AuthorizedComputingAccount
 from addon_service.authorized_account.link.models import AuthorizedLinkAccount
 from addon_service.authorized_account.storage.models import AuthorizedStorageAccount
+from addon_service.celery_stress_test.models import (
+    CeleryTestSuite,
+    CeleryTestTask,
+    CeleryTestTaskAttempt,
+)
 from addon_service.configured_addon.citation.models import ConfiguredCitationAddon
 from addon_service.configured_addon.computing.models import ConfiguredComputingAddon
 from addon_service.configured_addon.link.models import ConfiguredLinkAddon
@@ -27,6 +32,9 @@ from addon_service.user_reference.models import UserReference
 
 
 __all__ = (
+    "CeleryTestSuite",
+    "CeleryTestTask",
+    "CeleryTestTaskAttempt",
     "AddonImpModel",
     "AddonOperationInvocation",
     "AddonOperationModel",
